@@ -1,0 +1,260 @@
+@page "/json-to-java"
+@using System.Text.Json
+
+<PageTitle>JSON to Java</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">JSON to Java</FluentLabel>
+        <FluentLabel Typo="Typography.Body">JSON'dan Java class tanımları oluşturun (POJO).</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentTextField @bind-Value="@rootClassName" Label="Root class adı" Placeholder="RootObject" Style="width: 100%;" />
+            
+            <FluentTextField @bind-Value="@packageName" Label="Package adı" Placeholder="com.example.model" Style="width: 100%;" />
+            
+            <FluentCheckbox @bind-Value="@useRecords" Label="Record kullan (Java 14+)" />
+            
+            <FluentCheckbox @bind-Value="@useLombok" Label="Lombok annotations ekle" />
+            
+            <FluentCheckbox @bind-Value="@useJackson" Label="Jackson annotations ekle" />
+            
+            <FluentCheckbox @bind-Value="@generateGettersSetters" Label="Getter/Setter metodları oluştur" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">JSON Giriş</FluentLabel>
+            <FluentTextArea @bind-Value="@inputJson" 
+                           Placeholder='{"name": "John", "age": 30, "isActive": true}'
+                           Rows="12"
+                           Style="width: 100%; font-family: monospace;"
+                           @oninput="OnInputChanged" />
+        </FluentStack>
+    </FluentCard>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <FluentMessageBar Title="JSON Hatası" Intent="MessageIntent.Error">
+            @errorMessage
+        </FluentMessageBar>
+    }
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
+                <FluentLabel Typo="Typography.H5">Java Code</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputCode)">
+                    Kopyala
+                </FluentButton>
+            </FluentStack>
+            <FluentTextArea Value="@outputCode" 
+                           ReadOnly="true"
+                           Rows="20"
+                           Style="width: 100%; font-family: monospace;" />
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string inputJson = string.Empty;
+    private string outputCode = string.Empty;
+    private string rootClassName = "RootObject";
+    private string packageName = "com.example.model";
+    private bool useRecords = false;
+    private bool useLombok = true;
+    private bool useJackson = true;
+    private bool generateGettersSetters = false;
+    private string errorMessage = string.Empty;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputJson = e.Value?.ToString() ?? string.Empty;
+        GenerateJava();
+    }
+
+
+    private void GenerateJava()
+    {
+        errorMessage = string.Empty;
+        
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputCode = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(inputJson);
+            var code = new System.Text.StringBuilder();
+            
+            if (!string.IsNullOrWhiteSpace(packageName))
+            {
+                code.AppendLine($"package {packageName};");
+                code.AppendLine();
+            }
+            
+            code.AppendLine("import java.util.List;");
+            if (useJackson)
+            {
+                code.AppendLine("import com.fasterxml.jackson.annotation.JsonProperty;");
+            }
+            if (useLombok && !useRecords)
+            {
+                code.AppendLine("import lombok.Data;");
+            }
+            code.AppendLine();
+            
+            GenerateClass(code, rootClassName, doc.RootElement, 0);
+            
+            outputCode = code.ToString();
+        }
+        catch (JsonException ex)
+        {
+            errorMessage = $"JSON Error: {ex.Message}";
+            outputCode = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            outputCode = string.Empty;
+        }
+    }
+
+    private void GenerateClass(System.Text.StringBuilder sb, string className, JsonElement element, int indent)
+    {
+        var indentStr = new string(' ', indent * 4);
+        
+        if (useLombok && !useRecords && indent == 0)
+        {
+            sb.AppendLine($"{indentStr}@Data");
+        }
+        
+        if (useRecords)
+        {
+            sb.Append($"{indentStr}public record {className}(");
+            GenerateRecordParams(sb, element);
+            sb.AppendLine(") {}");
+        }
+        else
+        {
+            sb.AppendLine($"{indentStr}public class {className} {{");
+            
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var property in element.EnumerateObject())
+                {
+                    var propName = ToCamelCase(property.Name);
+                    var (type, needsClass) = GetJavaType(property.Value);
+                    
+                    if (useJackson && propName != property.Name)
+                    {
+                        sb.AppendLine($"{indentStr}    @JsonProperty(\"{property.Name}\")");
+                    }
+                    
+                    sb.AppendLine($"{indentStr}    private {type} {propName};");
+                    sb.AppendLine();
+                    
+                    if (generateGettersSetters && !useLombok)
+                    {
+                        var capitalizedName = char.ToUpper(propName[0]) + propName.Substring(1);
+                        sb.AppendLine($"{indentStr}    public {type} get{capitalizedName}() {{");
+                        sb.AppendLine($"{indentStr}        return {propName};");
+                        sb.AppendLine($"{indentStr}    }}");
+                        sb.AppendLine();
+                        sb.AppendLine($"{indentStr}    public void set{capitalizedName}({type} {propName}) {{");
+                        sb.AppendLine($"{indentStr}        this.{propName} = {propName};");
+                        sb.AppendLine($"{indentStr}    }}");
+                        sb.AppendLine();
+                    }
+                    
+                    if (needsClass)
+                    {
+                        GenerateClass(sb, type, property.Value, indent + 1);
+                    }
+                }
+            }
+            
+            sb.AppendLine($"{indentStr}}}");
+        }
+        
+        sb.AppendLine();
+    }
+
+    private void GenerateRecordParams(System.Text.StringBuilder sb, JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Object) return;
+        
+        var properties = element.EnumerateObject().ToList();
+        for (int i = 0; i < properties.Count; i++)
+        {
+            var property = properties[i];
+            var propName = ToCamelCase(property.Name);
+            var (type, _) = GetJavaType(property.Value);
+            
+            if (useJackson && propName != property.Name)
+            {
+                sb.Append($"@JsonProperty(\"{property.Name}\") ");
+            }
+            
+            sb.Append($"{type} {propName}");
+            
+            if (i < properties.Count - 1)
+            {
+                sb.Append(", ");
+            }
+        }
+    }
+
+    private (string type, bool needsClass) GetJavaType(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => ("String", false),
+            JsonValueKind.Number => element.TryGetInt32(out _) ? ("Integer", false) : ("Double", false),
+            JsonValueKind.True or JsonValueKind.False => ("Boolean", false),
+            JsonValueKind.Array => GetArrayType(element),
+            JsonValueKind.Object => (ToPascalCase("NestedObject"), true),
+            JsonValueKind.Null => ("Object", false),
+            _ => ("Object", false)
+        };
+    }
+
+    private (string type, bool needsClass) GetArrayType(JsonElement element)
+    {
+        var firstElement = element.EnumerateArray().FirstOrDefault();
+        if (firstElement.ValueKind == JsonValueKind.Undefined)
+            return ("List<Object>", false);
+        
+        var (itemType, needsClass) = GetJavaType(firstElement);
+        return ($"List<{itemType}>", needsClass);
+    }
+
+    private string ToCamelCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (!words.Any()) return text;
+        return words.First().ToLower() + string.Concat(words.Skip(1).Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+
+    private string ToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(words.Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputCode);
+    }
+}

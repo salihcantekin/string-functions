@@ -1,0 +1,192 @@
+@page "/json-to-typescript"
+@using System.Text.Json
+
+<PageTitle>JSON to TypeScript</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">JSON to TypeScript</FluentLabel>
+        <FluentLabel Typo="Typography.Body">JSON'dan TypeScript interface tanımları oluşturun.</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentTextField @bind-Value="@rootInterfaceName" Label="Root interface adı" Placeholder="RootObject" Style="width: 100%;" />
+            
+            <FluentCheckbox @bind-Value="@useInterface" Label="Interface kullan (type yerine)" />
+            
+            <FluentCheckbox @bind-Value="@makeOptional" Label="Tüm property'leri optional yap (?)" />
+            
+            <FluentCheckbox @bind-Value="@useCamelCase" Label="Property isimleri camelCase yap" />
+            
+            <FluentCheckbox @bind-Value="@exportTypes" Label="'export' keyword ekle" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">JSON Giriş</FluentLabel>
+            <FluentTextArea @bind-Value="@inputJson" 
+                           Placeholder='{"name": "John", "age": 30, "isActive": true}'
+                           Rows="12"
+                           Style="width: 100%; font-family: monospace;"
+                           @oninput="OnInputChanged" />
+        </FluentStack>
+    </FluentCard>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <FluentMessageBar Title="JSON Hatası" Intent="MessageIntent.Error">
+            @errorMessage
+        </FluentMessageBar>
+    }
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
+                <FluentLabel Typo="Typography.H5">TypeScript Code</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputCode)">
+                    Kopyala
+                </FluentButton>
+            </FluentStack>
+            <FluentTextArea Value="@outputCode" 
+                           ReadOnly="true"
+                           Rows="20"
+                           Style="width: 100%; font-family: monospace;" />
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string inputJson = string.Empty;
+    private string outputCode = string.Empty;
+    private string rootInterfaceName = "RootObject";
+    private bool useInterface = true;
+    private bool makeOptional = false;
+    private bool useCamelCase = true;
+    private bool exportTypes = true;
+    private string errorMessage = string.Empty;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputJson = e.Value?.ToString() ?? string.Empty;
+        GenerateTypeScript();
+    }
+
+
+    private void GenerateTypeScript()
+    {
+        errorMessage = string.Empty;
+        
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputCode = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(inputJson);
+            var code = new System.Text.StringBuilder();
+            
+            GenerateInterface(code, rootInterfaceName, doc.RootElement, 0);
+            
+            outputCode = code.ToString();
+        }
+        catch (JsonException ex)
+        {
+            errorMessage = $"JSON Error: {ex.Message}";
+            outputCode = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            outputCode = string.Empty;
+        }
+    }
+
+    private void GenerateInterface(System.Text.StringBuilder sb, string interfaceName, JsonElement element, int indent)
+    {
+        var indentStr = new string(' ', indent * 2);
+        var keyword = useInterface ? "interface" : "type";
+        var exportKeyword = exportTypes ? "export " : "";
+        var optional = makeOptional ? "?" : "";
+        
+        if (useInterface)
+        {
+            sb.AppendLine($"{indentStr}{exportKeyword}{keyword} {interfaceName} {{");
+        }
+        else
+        {
+            sb.AppendLine($"{indentStr}{exportKeyword}{keyword} {interfaceName} = {{");
+        }
+
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                var propName = useCamelCase ? ToCamelCase(property.Name) : property.Name;
+                var (type, needsInterface) = GetTypeScriptType(property.Value);
+                
+                sb.AppendLine($"{indentStr}  {propName}{optional}: {type};");
+                
+                if (needsInterface)
+                {
+                    sb.AppendLine();
+                    GenerateInterface(sb, type, property.Value, indent);
+                }
+            }
+        }
+
+        sb.AppendLine($"{indentStr}}}");
+        sb.AppendLine();
+    }
+
+    private (string type, bool needsInterface) GetTypeScriptType(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => ("string", false),
+            JsonValueKind.Number => ("number", false),
+            JsonValueKind.True or JsonValueKind.False => ("boolean", false),
+            JsonValueKind.Array => GetArrayType(element),
+            JsonValueKind.Object => (ToPascalCase("NestedObject"), true),
+            JsonValueKind.Null => ("null", false),
+            _ => ("any", false)
+        };
+    }
+
+    private (string type, bool needsInterface) GetArrayType(JsonElement element)
+    {
+        var firstElement = element.EnumerateArray().FirstOrDefault();
+        if (firstElement.ValueKind == JsonValueKind.Undefined)
+            return ("any[]", false);
+        
+        var (itemType, needsInterface) = GetTypeScriptType(firstElement);
+        return ($"{itemType}[]", needsInterface);
+    }
+
+    private string ToCamelCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (!words.Any()) return text;
+        return words.First().ToLower() + string.Concat(words.Skip(1).Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+
+    private string ToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(words.Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputCode);
+    }
+}

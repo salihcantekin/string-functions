@@ -1,0 +1,236 @@
+@page "/json-formatter"
+@using System.Text.Json
+
+<PageTitle>JSON Formatter</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">JSON Formatter</FluentLabel>
+        <FluentLabel Typo="Typography.Body">JSON formatı doğrulayın, düzenleyin ve güzelleştirin veya sıkıştırın.</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentSelect TOption="string" @bind-Value="@formatMode" Label="Format Modu" Style="width: 100%;">
+                <FluentOption Value="prettify">Güzelleştir (Prettify)</FluentOption>
+                <FluentOption Value="minify">Sıkıştır (Minify)</FluentOption>
+            </FluentSelect>
+            
+            @if (formatMode == "prettify")
+            {
+                <FluentNumberField @bind-Value="@indentSize" Label="Girinti boyutu (spaces)" Min="1" Max="8" Style="width: 100%;" />
+                
+                <FluentCheckbox @bind-Value="@sortKeys" Label="Object key'lerini sırala" />
+            }
+            
+            <FluentCheckbox @bind-Value="@escapeNonAscii" Label="ASCII olmayan karakterleri escape et" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">Giriş JSON</FluentLabel>
+            <FluentTextArea @bind-Value="@inputJson" 
+                           Placeholder='{"name": "John", "age": 30}'
+                           Rows="15"
+                           Style="width: 100%; font-family: monospace;"
+                           @oninput="OnInputChanged" />
+        </FluentStack>
+    </FluentCard>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <FluentMessageBar Title="JSON Hatası" Intent="MessageIntent.Error">
+            @errorMessage
+        </FluentMessageBar>
+    }
+    else if (isValid)
+    {
+        <FluentMessageBar Title="Geçerli JSON" Intent="MessageIntent.Success">
+            JSON formatı geçerli.
+        </FluentMessageBar>
+    }
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
+                <FluentLabel Typo="Typography.H5">Çıktı JSON</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputJson)">
+                    Kopyala
+                </FluentButton>
+            </FluentStack>
+            <FluentTextArea Value="@outputJson" 
+                           ReadOnly="true"
+                           Rows="15"
+                           Style="width: 100%; font-family: monospace;" />
+            @if (!string.IsNullOrEmpty(statistics))
+            {
+                <FluentLabel Typo="Typography.Body">@statistics</FluentLabel>
+            }
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string inputJson = string.Empty;
+    private string outputJson = string.Empty;
+    private string errorMessage = string.Empty;
+    private string statistics = string.Empty;
+    private string formatMode = "prettify";
+    private int indentSize = 2;
+    private bool sortKeys = false;
+    private bool escapeNonAscii = false;
+    private bool isValid = false;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputJson = e.Value?.ToString() ?? string.Empty;
+        ProcessJson();
+    }
+
+
+    private void ProcessJson()
+    {
+        errorMessage = string.Empty;
+        isValid = false;
+        statistics = string.Empty;
+        
+        if (string.IsNullOrWhiteSpace(inputJson))
+        {
+            outputJson = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(inputJson);
+            
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = formatMode == "prettify",
+                Encoder = escapeNonAscii 
+                    ? System.Text.Encodings.Web.JavaScriptEncoder.Default 
+                    : System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            if (formatMode == "prettify")
+            {
+                // Create custom indentation
+                var json = JsonSerializer.Serialize(doc.RootElement, options);
+                
+                if (indentSize != 2)
+                {
+                    var lines = json.Split('\n');
+                    var result = new System.Text.StringBuilder();
+                    foreach (var line in lines)
+                    {
+                        var leadingSpaces = line.TakeWhile(c => c == ' ').Count();
+                        var indentLevel = leadingSpaces / 2;
+                        var newIndent = new string(' ', indentLevel * indentSize);
+                        result.AppendLine(newIndent + line.TrimStart());
+                    }
+                    outputJson = result.ToString().TrimEnd();
+                }
+                else
+                {
+                    outputJson = json;
+                }
+                
+                if (sortKeys)
+                {
+                    outputJson = SortJsonKeys(outputJson);
+                }
+            }
+            else
+            {
+                outputJson = JsonSerializer.Serialize(doc.RootElement, options);
+            }
+
+            isValid = true;
+            
+            var originalSize = System.Text.Encoding.UTF8.GetByteCount(inputJson);
+            var formattedSize = System.Text.Encoding.UTF8.GetByteCount(outputJson);
+            var sizeDiff = formattedSize - originalSize;
+            var sizeDiffPercent = originalSize > 0 ? (sizeDiff * 100.0 / originalSize) : 0;
+            
+            statistics = $"Orijinal: {originalSize} bytes | Sonuç: {formattedSize} bytes | Fark: {sizeDiff:+#;-#;0} bytes ({sizeDiffPercent:+0.0;-0.0;0}%)";
+        }
+        catch (JsonException ex)
+        {
+            errorMessage = $"Satır {ex.LineNumber}, Pozisyon {ex.BytePositionInLine}: {ex.Message}";
+            outputJson = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            outputJson = string.Empty;
+        }
+    }
+
+    private string SortJsonKeys(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var sorted = SortJsonElement(doc.RootElement);
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = escapeNonAscii 
+                    ? System.Text.Encodings.Web.JavaScriptEncoder.Default 
+                    : System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            return JsonSerializer.Serialize(sorted, options);
+        }
+        catch
+        {
+            return json;
+        }
+    }
+
+    private object? SortJsonElement(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                var dict = new SortedDictionary<string, object?>();
+                foreach (var prop in element.EnumerateObject())
+                {
+                    dict[prop.Name] = SortJsonElement(prop.Value);
+                }
+                return dict;
+            
+            case JsonValueKind.Array:
+                return element.EnumerateArray().Select(SortJsonElement).ToList();
+            
+            case JsonValueKind.String:
+                return element.GetString();
+            
+            case JsonValueKind.Number:
+                if (element.TryGetInt64(out var longValue))
+                    return longValue;
+                return element.GetDouble();
+            
+            case JsonValueKind.True:
+                return true;
+            
+            case JsonValueKind.False:
+                return false;
+            
+            case JsonValueKind.Null:
+                return null;
+            
+            default:
+                return null;
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputJson);
+    }
+}

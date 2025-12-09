@@ -1,0 +1,151 @@
+@page "/regex-replace"
+@using System.Text.RegularExpressions
+
+<PageTitle>Regex Replace</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">Regex Replace</FluentLabel>
+        <FluentLabel Typo="Typography.Body">Regular Expression kullanarak metin içinde bul ve değiştir işlemi yapın. Gruplama ve backreference destekler.</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentTextField @bind-Value="@pattern" Label="Regex Pattern" Placeholder="(\d+)" Style="width: 100%;" />
+            
+            <FluentTextField @bind-Value="@replacement" Label="Replacement (Değiştirilecek değer)" Placeholder="Number: $1" Style="width: 100%;" />
+            
+            <FluentMessageBar Intent="MessageIntent.Info">
+                $1, $2... ile gruplara erişebilirsiniz. $& tüm eşleşmeyi temsil eder.
+            </FluentMessageBar>
+            
+            @if (!string.IsNullOrEmpty(regexError))
+            {
+                <FluentMessageBar Title="Regex Hatası" Intent="MessageIntent.Error">
+                    @regexError
+                </FluentMessageBar>
+            }
+            
+            <FluentCheckbox @bind-Value="@ignoreCase" Label="Büyük/küçük harf duyarsız (IgnoreCase)" />
+            
+            <FluentCheckbox @bind-Value="@multiline" Label="Multiline (^ ve $ satır başı/sonu)" />
+            
+            <FluentCheckbox @bind-Value="@singleline" Label="Singleline (. yeni satırı da eşleştirir)" />
+            
+            <FluentNumberField @bind-Value="@maxReplacements" Label="Maksimum değiştirme sayısı (0 = hepsini değiştir)" Min="0" Style="width: 100%;" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
+            <FluentTextArea @bind-Value="@inputText" 
+                           Placeholder="İşlenecek metni girin..."
+                           Rows="10"
+                           Style="width: 100%;"
+                           @oninput="OnInputChanged" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
+                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
+                    Kopyala
+                </FluentButton>
+            </FluentStack>
+            <FluentTextArea Value="@outputText" 
+                           ReadOnly="true"
+                           Rows="10"
+                           Style="width: 100%;" />
+            @if (replacementCount > 0)
+            {
+                <FluentLabel Typo="Typography.Body">Toplam değiştirme: @replacementCount</FluentLabel>
+            }
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string pattern = @"(\d+)";
+    private string replacement = "Number: $1";
+    private string regexError = string.Empty;
+    private bool ignoreCase = false;
+    private bool multiline = false;
+    private bool singleline = false;
+    private int maxReplacements = 0;
+    private int replacementCount = 0;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        ProcessReplace();
+    }
+
+
+    private void ProcessReplace()
+    {
+        regexError = string.Empty;
+        replacementCount = 0;
+        
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        if (string.IsNullOrEmpty(pattern))
+        {
+            outputText = inputText;
+            return;
+        }
+
+        try
+        {
+            var options = RegexOptions.None;
+            if (ignoreCase) options |= RegexOptions.IgnoreCase;
+            if (multiline) options |= RegexOptions.Multiline;
+            if (singleline) options |= RegexOptions.Singleline;
+
+            var regex = new Regex(pattern, options);
+            
+            if (maxReplacements > 0)
+            {
+                var count = 0;
+                outputText = regex.Replace(inputText, m =>
+                {
+                    if (count < maxReplacements)
+                    {
+                        count++;
+                        replacementCount++;
+                        return regex.Replace(m.Value, replacement);
+                    }
+                    return m.Value;
+                });
+            }
+            else
+            {
+                var matches = regex.Matches(inputText);
+                replacementCount = matches.Count;
+                outputText = regex.Replace(inputText, replacement);
+            }
+        }
+        catch (Exception ex)
+        {
+            regexError = ex.Message;
+            outputText = inputText;
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
+    }
+}

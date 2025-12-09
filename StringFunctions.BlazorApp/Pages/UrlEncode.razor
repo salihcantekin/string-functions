@@ -1,0 +1,80 @@
+@page "/url-encode"
+
+<PageTitle>URL Encode/Decode</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">URL Encode/Decode</FluentLabel>
+        <FluentLabel Typo="Typography.Body">String'i URL-safe formata kodlayın veya URL kodlamasını çözün.</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentSelect TOption="string" @bind-Value="@mode" Label="İşlem" Style="width: 100%;">
+                <FluentOption Value="encode">Encode (String → URL Encoded)</FluentOption>
+                <FluentOption Value="decode">Decode (URL Encoded → String)</FluentOption>
+            </FluentSelect>
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
+            <FluentTextArea @bind-Value="@inputText" 
+                           Placeholder="@(mode == "encode" ? "URL encode edilecek metni girin..." : "URL encoded string'i girin...")"
+                           Rows="10"
+                           Style="width: 100%;"
+                           @oninput="OnInputChanged" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
+                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
+                    Kopyala
+                </FluentButton>
+            </FluentStack>
+            <FluentTextArea Value="@outputText" 
+                           ReadOnly="true"
+                           Rows="10"
+                           Style="width: 100%;" />
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string mode = "encode";
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        Process();
+    }
+
+
+    private void Process()
+    {
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        outputText = mode == "encode"
+            ? Uri.EscapeDataString(inputText)
+            : Uri.UnescapeDataString(inputText);
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
+    }
+}

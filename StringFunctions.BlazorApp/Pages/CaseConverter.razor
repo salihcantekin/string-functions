@@ -1,0 +1,169 @@
+@page "/case-converter"
+@using System.Globalization
+
+<PageTitle>Case Converter</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">Case Converter</FluentLabel>
+        <FluentLabel Typo="Typography.Body">String'i farklı büyük/küçük harf formatlarına dönüştürün.</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentSelect TOption="string" @bind-Value="@caseMode" Label="Dönüşüm Tipi" Style="width: 100%;">
+                <FluentOption Value="upper">BÜYÜK HARF (UPPERCASE)</FluentOption>
+                <FluentOption Value="lower">küçük harf (lowercase)</FluentOption>
+                <FluentOption Value="title">Kelime Başları Büyük (Title Case)</FluentOption>
+                <FluentOption Value="sentence">Cümle başı büyük (Sentence case)</FluentOption>
+                <FluentOption Value="camel">camelCase</FluentOption>
+                <FluentOption Value="pascal">PascalCase</FluentOption>
+                <FluentOption Value="snake">snake_case</FluentOption>
+                <FluentOption Value="kebab">kebab-case</FluentOption>
+                <FluentOption Value="constant">CONSTANT_CASE</FluentOption>
+                <FluentOption Value="toggle">tOGGLE cASE</FluentOption>
+            </FluentSelect>
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
+            <FluentTextArea @bind-Value="@inputText" 
+                           Placeholder="Metni girin..."
+                           Rows="10"
+                           Style="width: 100%;"
+                           @oninput="OnInputChanged" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
+                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
+                    Kopyala
+                </FluentButton>
+            </FluentStack>
+            <FluentTextArea Value="@outputText" 
+                           ReadOnly="true"
+                           Rows="10"
+                           Style="width: 100%;" />
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string caseMode = "upper";
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        ProcessCase();
+    }
+
+
+    private void ProcessCase()
+    {
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        outputText = caseMode switch
+        {
+            "upper" => inputText.ToUpper(),
+            "lower" => inputText.ToLower(),
+            "title" => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(inputText.ToLower()),
+            "sentence" => ToSentenceCase(inputText),
+            "camel" => ToCamelCase(inputText),
+            "pascal" => ToPascalCase(inputText),
+            "snake" => ToSnakeCase(inputText),
+            "kebab" => ToKebabCase(inputText),
+            "constant" => ToConstantCase(inputText),
+            "toggle" => ToggleCase(inputText),
+            _ => inputText
+        };
+    }
+
+    private string ToSentenceCase(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        var sentences = text.Split(new[] { ". ", "! ", "? " }, StringSplitOptions.None);
+        return string.Join(". ", sentences.Select(s => 
+            string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s.Substring(1).ToLower()));
+    }
+
+    private string ToCamelCase(string text)
+    {
+        var words = SplitIntoWords(text);
+        if (!words.Any()) return text;
+        return words.First().ToLower() + string.Concat(words.Skip(1).Select(w => 
+            char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+
+    private string ToPascalCase(string text)
+    {
+        var words = SplitIntoWords(text);
+        return string.Concat(words.Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
+    }
+
+    private string ToSnakeCase(string text)
+    {
+        var words = SplitIntoWords(text);
+        return string.Join("_", words.Select(w => w.ToLower()));
+    }
+
+    private string ToKebabCase(string text)
+    {
+        var words = SplitIntoWords(text);
+        return string.Join("-", words.Select(w => w.ToLower()));
+    }
+
+    private string ToConstantCase(string text)
+    {
+        var words = SplitIntoWords(text);
+        return string.Join("_", words.Select(w => w.ToUpper()));
+    }
+
+    private string ToggleCase(string text)
+    {
+        return new string(text.Select(c => char.IsUpper(c) ? char.ToLower(c) : char.ToUpper(c)).ToArray());
+    }
+
+    private List<string> SplitIntoWords(string text)
+    {
+        var words = new List<string>();
+        var currentWord = new System.Text.StringBuilder();
+
+        foreach (var c in text)
+        {
+            if (char.IsLetterOrDigit(c))
+            {
+                currentWord.Append(c);
+            }
+            else if (currentWord.Length > 0)
+            {
+                words.Add(currentWord.ToString());
+                currentWord.Clear();
+            }
+        }
+
+        if (currentWord.Length > 0)
+            words.Add(currentWord.ToString());
+
+        return words.Where(w => !string.IsNullOrWhiteSpace(w)).ToList();
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
+    }
+}

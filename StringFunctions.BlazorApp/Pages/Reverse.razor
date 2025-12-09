@@ -1,0 +1,113 @@
+@page "/reverse"
+
+<PageTitle>String Reverse</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">String Reverse</FluentLabel>
+        <FluentLabel Typo="Typography.Body">String'i veya satırları tersine çevirin.</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentSelect TOption="string" @bind-Value="@reverseMode" Label="Tersine Çevirme Modu" Style="width: 100%;">
+                <FluentOption Value="full">Tüm metni tersine çevir</FluentOption>
+                <FluentOption Value="lines">Satırları tersine çevir (sırayı)</FluentOption>
+                <FluentOption Value="eachline">Her satırı kendi içinde tersine çevir</FluentOption>
+                <FluentOption Value="words">Kelimeleri tersine çevir (sırayı)</FluentOption>
+                <FluentOption Value="eachword">Her kelimeyi kendi içinde tersine çevir</FluentOption>
+            </FluentSelect>
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
+            <FluentTextArea @bind-Value="@inputText" 
+                           Placeholder="Tersine çevrilecek metni girin..."
+                           Rows="10"
+                           Style="width: 100%;"
+                           @oninput="OnInputChanged" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
+                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
+                    Kopyala
+                </FluentButton>
+            </FluentStack>
+            <FluentTextArea Value="@outputText" 
+                           ReadOnly="true"
+                           Rows="10"
+                           Style="width: 100%;" />
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string reverseMode = "full";
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        Process();
+    }
+
+
+    private void Process()
+    {
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        outputText = reverseMode switch
+        {
+            "full" => new string(inputText.Reverse().ToArray()),
+            "lines" => ReverseLines(),
+            "eachline" => ReverseEachLine(),
+            "words" => ReverseWords(),
+            "eachword" => ReverseEachWord(),
+            _ => inputText
+        };
+    }
+
+    private string ReverseLines()
+    {
+        var lines = inputText.Split('\n');
+        return string.Join("\n", lines.Reverse());
+    }
+
+    private string ReverseEachLine()
+    {
+        var lines = inputText.Split('\n');
+        return string.Join("\n", lines.Select(l => new string(l.Reverse().ToArray())));
+    }
+
+    private string ReverseWords()
+    {
+        var words = inputText.Split(new[] { ' ' }, StringSplitOptions.None);
+        return string.Join(" ", words.Reverse());
+    }
+
+    private string ReverseEachWord()
+    {
+        var words = inputText.Split(new[] { ' ' }, StringSplitOptions.None);
+        return string.Join(" ", words.Select(w => new string(w.Reverse().ToArray())));
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
+    }
+}

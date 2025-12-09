@@ -1,0 +1,198 @@
+@page "/compare"
+
+<PageTitle>String Compare</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">String Compare</FluentLabel>
+        <FluentLabel Typo="Typography.Body">İki string'i karşılaştırın ve farklılıkları görün.</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentCheckbox @bind-Value="@ignoreCase" Label="Büyük/küçük harf duyarsız" />
+            
+            <FluentCheckbox @bind-Value="@ignoreWhitespace" Label="Boşlukları yoksay" />
+            
+            <FluentCheckbox @bind-Value="@trimLines" Label="Satır başı/sonu boşlukları temizle" />
+            
+            <FluentCheckbox @bind-Value="@showLineByLine" Label="Satır satır karşılaştırma" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentGrid Spacing="3">
+        <FluentGridItem xs="12" md="6">
+            <FluentCard Style="padding: 20px;">
+                <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+                    <FluentLabel Typo="Typography.H5">String 1</FluentLabel>
+                    <FluentTextArea @bind-Value="@text1" 
+                                   Placeholder="İlk string'i girin..."
+                                   Rows="15"
+                                   Style="width: 100%;"
+                                   @oninput="OnTextChanged" />
+                    <FluentLabel Typo="Typography.Body">Karakter: @text1.Length | Satır: @text1.Split('\n').Length</FluentLabel>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+
+        <FluentGridItem xs="12" md="6">
+            <FluentCard Style="padding: 20px;">
+                <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+                    <FluentLabel Typo="Typography.H5">String 2</FluentLabel>
+                    <FluentTextArea @bind-Value="@text2" 
+                                   Placeholder="İkinci string'i girin..."
+                                   Rows="15"
+                                   Style="width: 100%;"
+                                   @oninput="OnTextChanged" />
+                    <FluentLabel Typo="Typography.Body">Karakter: @text2.Length | Satır: @text2.Split('\n').Length</FluentLabel>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+    </FluentGrid>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">Sonuç</FluentLabel>
+            
+            @if (areEqual)
+            {
+                <FluentMessageBar Title="Eşit" Intent="MessageIntent.Success">
+                    İki string birbiriyle eşleşiyor.
+                </FluentMessageBar>
+            }
+            else
+            {
+                <FluentMessageBar Title="Farklı" Intent="MessageIntent.Warning">
+                    İki string farklı.
+                </FluentMessageBar>
+                
+                @if (showLineByLine)
+                {
+                    <FluentLabel Typo="Typography.Body" Style="font-weight: 600; margin-top: 12px;">Satır Satır Karşılaştırma:</FluentLabel>
+                    <div style="font-family: monospace; background: var(--neutral-layer-1); padding: 12px; border-radius: 4px; max-height: 400px; overflow-y: auto;">
+                        @foreach (var diff in lineDifferences)
+                        {
+                            <div style="padding: 4px; @(diff.IsDifferent ? "background: var(--fill-color-warning);" : "")">
+                                <span style="color: var(--neutral-foreground-hint); min-width: 40px; display: inline-block;">@diff.LineNumber:</span>
+                                @if (diff.IsDifferent)
+                                {
+                                    <div style="margin-left: 50px;">
+                                        <div style="color: #ff6b6b;">- @diff.Line1</div>
+                                        <div style="color: #51cf66;">+ @diff.Line2</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span>  @diff.Line1</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                
+                <FluentLabel Typo="Typography.Body" Style="margin-top: 12px;">
+                    @statistics
+                </FluentLabel>
+            }
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    private string text1 = string.Empty;
+    private string text2 = string.Empty;
+    private bool ignoreCase = false;
+    private bool ignoreWhitespace = false;
+    private bool trimLines = false;
+    private bool showLineByLine = true;
+    private bool areEqual = false;
+    private string statistics = string.Empty;
+    private List<LineDifference> lineDifferences = new();
+
+    private void OnTextChanged(ChangeEventArgs e)
+    {
+        ProcessComparison();
+    }
+
+
+    private void ProcessComparison()
+    {
+        var processedText1 = ProcessText(text1);
+        var processedText2 = ProcessText(text2);
+
+        var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        areEqual = string.Equals(processedText1, processedText2, comparison);
+
+        if (!areEqual && showLineByLine)
+        {
+            CompareLineByLine();
+        }
+
+        CalculateStatistics();
+    }
+
+    private string ProcessText(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+
+        if (ignoreWhitespace)
+        {
+            text = new string(text.Where(c => !char.IsWhiteSpace(c)).ToArray());
+        }
+
+        if (trimLines)
+        {
+            var lines = text.Split('\n').Select(l => l.Trim());
+            text = string.Join("\n", lines);
+        }
+
+        return text;
+    }
+
+    private void CompareLineByLine()
+    {
+        lineDifferences.Clear();
+        var lines1 = text1.Split('\n');
+        var lines2 = text2.Split('\n');
+        var maxLines = Math.Max(lines1.Length, lines2.Length);
+
+        for (int i = 0; i < maxLines; i++)
+        {
+            var line1 = i < lines1.Length ? lines1[i] : string.Empty;
+            var line2 = i < lines2.Length ? lines2[i] : string.Empty;
+
+            var processedLine1 = ProcessText(line1);
+            var processedLine2 = ProcessText(line2);
+
+            var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            var isDifferent = !string.Equals(processedLine1, processedLine2, comparison);
+
+            lineDifferences.Add(new LineDifference
+            {
+                LineNumber = i + 1,
+                Line1 = line1,
+                Line2 = line2,
+                IsDifferent = isDifferent
+            });
+        }
+    }
+
+    private void CalculateStatistics()
+    {
+        var lengthDiff = Math.Abs(text1.Length - text2.Length);
+        var lineDiff = Math.Abs(text1.Split('\n').Length - text2.Split('\n').Length);
+        var differentLines = lineDifferences.Count(d => d.IsDifferent);
+
+        statistics = $"Karakter farkı: {lengthDiff} | Satır sayısı farkı: {lineDiff} | Farklı satır: {differentLines}";
+    }
+
+    private class LineDifference
+    {
+        public int LineNumber { get; set; }
+        public string Line1 { get; set; } = string.Empty;
+        public string Line2 { get; set; } = string.Empty;
+        public bool IsDifferent { get; set; }
+    }
+}

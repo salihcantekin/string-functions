@@ -1,0 +1,182 @@
+@page "/regex-search"
+@using System.Text.RegularExpressions
+
+<PageTitle>Regex Search</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
+    <FluentCard Style="padding: 20px;">
+        <FluentLabel Typo="Typography.H3">Regex Search</FluentLabel>
+        <FluentLabel Typo="Typography.Body">Regular Expression kullanarak metin içinde arama yapın ve eşleşmeleri bulun.</FluentLabel>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
+            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
+            
+            <FluentTextField @bind-Value="@pattern" Label="Regex Pattern" Placeholder="\d+" Style="width: 100%;" />
+            
+            @if (!string.IsNullOrEmpty(regexError))
+            {
+                <FluentMessageBar Title="Regex Hatası" Intent="MessageIntent.Error">
+                    @regexError
+                </FluentMessageBar>
+            }
+            
+            <FluentCheckbox @bind-Value="@ignoreCase" Label="Büyük/küçük harf duyarsız (IgnoreCase)" />
+            
+            <FluentCheckbox @bind-Value="@multiline" Label="Multiline (^ ve $ satır başı/sonu)" />
+            
+            <FluentCheckbox @bind-Value="@singleline" Label="Singleline (. yeni satırı da eşleştirir)" />
+            
+            <FluentCheckbox @bind-Value="@highlightMatches" Label="Eşleşmeleri vurgula" />
+            
+            <FluentCheckbox @bind-Value="@showOnlyMatches" Label="Sadece eşleşmeleri göster" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
+            <FluentTextArea @bind-Value="@inputText" 
+                           Placeholder="Arama yapılacak metni girin..."
+                           Rows="10"
+                           Style="width: 100%;"
+                           @oninput="OnInputChanged" />
+        </FluentStack>
+    </FluentCard>
+
+    <FluentCard Style="padding: 20px;">
+        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
+            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
+                <FluentLabel Typo="Typography.H5">Sonuçlar</FluentLabel>
+                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
+                    Kopyala
+                </FluentButton>
+            </FluentStack>
+            
+            @if (highlightMatches && !showOnlyMatches && !string.IsNullOrEmpty(inputText) && matches.Any())
+            {
+                <div style="background: var(--neutral-layer-1); padding: 12px; border-radius: 4px; white-space: pre-wrap; font-family: monospace;">
+                    @((MarkupString)highlightedText)
+                </div>
+            }
+            else
+            {
+                <FluentTextArea Value="@outputText" 
+                               ReadOnly="true"
+                               Rows="10"
+                               Style="width: 100%;" />
+            }
+            
+            @if (matches.Any())
+            {
+                <FluentLabel Typo="Typography.Body">Toplam eşleşme: @matches.Count</FluentLabel>
+                
+                @if (matches.Count > 0 && matches.Count <= 50)
+                {
+                    <FluentDivider />
+                    <FluentLabel Typo="Typography.Body" Style="font-weight: 600;">Eşleşmeler:</FluentLabel>
+                    @foreach (var (match, index) in matches.Select((m, i) => (m, i)))
+                    {
+                        <FluentStack Orientation="Orientation.Vertical" Style="gap: 4px; padding: 8px; background: var(--neutral-layer-1); border-radius: 4px;">
+                            <FluentLabel Typo="Typography.Body">Eşleşme #@(index + 1) - Index: @match.Index, Uzunluk: @match.Length</FluentLabel>
+                            <FluentLabel Style="font-family: monospace; color: var(--accent-fill-rest);">"@match.Value"</FluentLabel>
+                            @if (match.Groups.Count > 1)
+                            {
+                                <FluentLabel Typo="Typography.Body">Gruplar:</FluentLabel>
+                                @for (int i = 1; i < match.Groups.Count; i++)
+                                {
+                                    <FluentLabel Style="margin-left: 16px; font-family: monospace;">Group @i: "@match.Groups[i].Value"</FluentLabel>
+                                }
+                            }
+                        </FluentStack>
+                    }
+                }
+            }
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string pattern = @"\d+";
+    private string regexError = string.Empty;
+    private bool ignoreCase = false;
+    private bool multiline = false;
+    private bool singleline = false;
+    private bool highlightMatches = true;
+    private bool showOnlyMatches = false;
+    private List<Match> matches = new();
+    private string highlightedText = string.Empty;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        ProcessSearch();
+    }
+
+
+    private void ProcessSearch()
+    {
+        regexError = string.Empty;
+        matches.Clear();
+        highlightedText = string.Empty;
+        
+        if (string.IsNullOrEmpty(inputText) || string.IsNullOrEmpty(pattern))
+        {
+            outputText = inputText;
+            return;
+        }
+
+        try
+        {
+            var options = RegexOptions.None;
+            if (ignoreCase) options |= RegexOptions.IgnoreCase;
+            if (multiline) options |= RegexOptions.Multiline;
+            if (singleline) options |= RegexOptions.Singleline;
+
+            var regex = new Regex(pattern, options);
+            matches = regex.Matches(inputText).ToList();
+
+            if (showOnlyMatches)
+            {
+                outputText = string.Join("\n", matches.Select(m => m.Value));
+            }
+            else if (highlightMatches && matches.Any())
+            {
+                var result = inputText;
+                var offset = 0;
+                foreach (var match in matches)
+                {
+                    var highlightStart = $"<span style='background-color: var(--accent-fill-rest); color: var(--neutral-foreground-on-accent); padding: 2px 4px; border-radius: 2px;'>";
+                    var highlightEnd = "</span>";
+                    var insertPos = match.Index + offset;
+                    result = result.Insert(insertPos, highlightStart);
+                    offset += highlightStart.Length;
+                    insertPos = match.Index + match.Length + offset;
+                    result = result.Insert(insertPos, highlightEnd);
+                    offset += highlightEnd.Length;
+                }
+                highlightedText = result.Replace("\n", "<br/>");
+                outputText = inputText;
+            }
+            else
+            {
+                outputText = inputText;
+            }
+        }
+        catch (Exception ex)
+        {
+            regexError = ex.Message;
+            outputText = inputText;
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
+    }
+}
