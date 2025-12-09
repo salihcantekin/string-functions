@@ -1,0 +1,32 @@
+html, body {
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.3);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
+
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxkZWZzPjxwYXRoIGQ9Ik0yMy41IDZMMjMuNSAxOS41TDI3IDIzTDI3IDYiIGlkPSJhIi8+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PHBhdGggZD0iTTI3IDEwLjVMMjcgMjMuNUwyNy41IDI3TDI3LjUgMTAuNUwyNyAxMC41Wk0yNyAzMEwyNyAzNEwyNy41IDM0TDI3LjUgMzBMMjcgMzBaIiBmaWxsPSIjRjI1RjVDIi8+PHVzZSBmaWxsPSIjRjI1RjVDIiB4bGluazpocmVmPSIjYSIvPjxwYXRoIGQ9Ik0yNy41IDEwLjVMMjcuNSAzNEwyNy41IDEwLjVaIiBzdHJva2U9IiNGMjVGNUMiIHN0cm9rZS13aWR0aD0iMiIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+    .blazor-error-boundary::after {
+        content: "An error has occurred."
+    }
