@@ -14,7 +14,9 @@
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>
 <body>
-    <component type="typeof(App)" render-mode="ServerPrerendered" />
+    <fluent-design-system-provider use-defaults>
+        <component type="typeof(App)" render-mode="ServerPrerendered" />
+    </fluent-design-system-provider>
 
     <div id="blazor-error-ui">
         An unexpected error occurred.

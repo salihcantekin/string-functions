@@ -1,5 +1,7 @@
 @inherits LayoutComponentBase
 
+<FluentDesignTheme />
+
 <FluentLayout>
     <FluentHeader Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 24px;">
         <FluentStack Orientation="Orientation.Horizontal" Style="align-items: center; gap: 16px;">
@@ -7,69 +9,71 @@
         </FluentStack>
     </FluentHeader>
 
-    <FluentStack Orientation="Orientation.Horizontal" Style="height: calc(100vh - 64px);">
-        <FluentNavMenu Width="280" Style="background: #f5f5f5; border-right: 1px solid #e0e0e0;">
-            <FluentNavLink Href="/" Match="NavLinkMatch.All">
-                🏠 Home
-            </FluentNavLink>
-            
-            <FluentNavGroup Label="📝 Text Operations" Expanded="true">
-                <FluentNavLink Href="/reverse">
-                    ↔️ String Reverse
+    <FluentStack Orientation="Orientation.Horizontal" Style="height: calc(100vh - 64px); overflow: hidden;">
+        <div style="width: 280px; background: #f5f5f5; border-right: 1px solid #e0e0e0; overflow-y: auto; flex-shrink: 0;">
+            <FluentNavMenu>
+                <FluentNavLink Href="/" Match="NavLinkMatch.All">
+                    🏠 Home
                 </FluentNavLink>
-                <FluentNavLink Href="/case-converter">
-                    🔤 Case Converter
-                </FluentNavLink>
-                <FluentNavLink Href="/trim-pad">
-                    ✂️ Trim/Pad
-                </FluentNavLink>
-                <FluentNavLink Href="/line-counter">
-                    🔢 Line Counter
-                </FluentNavLink>
-                <FluentNavLink Href="/compare">
-                    📄 Compare
-                </FluentNavLink>
-            </FluentNavGroup>
+                
+                <FluentNavGroup Label="📝 Text Operations" Expanded="false">
+                    <FluentNavLink Href="/reverse">
+                        ↔️ String Reverse
+                    </FluentNavLink>
+                    <FluentNavLink Href="/case-converter">
+                        🔤 Case Converter
+                    </FluentNavLink>
+                    <FluentNavLink Href="/trim-pad">
+                        ✂️ Trim/Pad
+                    </FluentNavLink>
+                    <FluentNavLink Href="/line-counter">
+                        🔢 Line Counter
+                    </FluentNavLink>
+                    <FluentNavLink Href="/compare">
+                        📄 Compare
+                    </FluentNavLink>
+                </FluentNavGroup>
 
-            <FluentNavGroup Label="🔐 Encode/Decode" Expanded="true">
-                <FluentNavLink Href="/base64">
-                    📊 Base64
-                </FluentNavLink>
-                <FluentNavLink Href="/url-encode">
-                    🔗 URL Encode
-                </FluentNavLink>
-            </FluentNavGroup>
+                <FluentNavGroup Label="🔐 Encode/Decode" Expanded="false">
+                    <FluentNavLink Href="/base64">
+                        📊 Base64
+                    </FluentNavLink>
+                    <FluentNavLink Href="/url-encode">
+                        🔗 URL Encode
+                    </FluentNavLink>
+                </FluentNavGroup>
 
-            <FluentNavGroup Label="💻 JSON Tools" Expanded="true">
-                <FluentNavLink Href="/json-formatter">
-                    📋 JSON Formatter
-                </FluentNavLink>
-                <FluentNavLink Href="/json-compare">
-                    🔍 JSON Compare
-                </FluentNavLink>
-                <FluentNavLink Href="/json-to-csharp">
-                    🔷 JSON to C#
-                </FluentNavLink>
-                <FluentNavLink Href="/json-to-java">
-                    ☕ JSON to Java
-                </FluentNavLink>
-                <FluentNavLink Href="/json-to-typescript">
-                    📘 JSON to TypeScript
-                </FluentNavLink>
-            </FluentNavGroup>
+                <FluentNavGroup Label="💻 JSON Tools" Expanded="false">
+                    <FluentNavLink Href="/json-formatter">
+                        📋 JSON Formatter
+                    </FluentNavLink>
+                    <FluentNavLink Href="/json-compare">
+                        🔍 JSON Compare
+                    </FluentNavLink>
+                    <FluentNavLink Href="/json-to-csharp">
+                        🔷 JSON to C#
+                    </FluentNavLink>
+                    <FluentNavLink Href="/json-to-java">
+                        ☕ JSON to Java
+                    </FluentNavLink>
+                    <FluentNavLink Href="/json-to-typescript">
+                        📘 JSON to TypeScript
+                    </FluentNavLink>
+                </FluentNavGroup>
 
-            <FluentNavGroup Label="🔎 Regex Tools" Expanded="true">
-                <FluentNavLink Href="/regex-search">
-                    🔍 Regex Search
-                </FluentNavLink>
-                <FluentNavLink Href="/regex-replace">
-                    🔄 Regex Replace
-                </FluentNavLink>
-                <FluentNavLink Href="/extract">
-                    📤 Extract
-                </FluentNavLink>
-            </FluentNavGroup>
-        </FluentNavMenu>
+                <FluentNavGroup Label="🔎 Regex Tools" Expanded="false">
+                    <FluentNavLink Href="/regex-search">
+                        🔍 Regex Search
+                    </FluentNavLink>
+                    <FluentNavLink Href="/regex-replace">
+                        🔄 Regex Replace
+                    </FluentNavLink>
+                    <FluentNavLink Href="/extract">
+                        📤 Extract
+                    </FluentNavLink>
+                </FluentNavGroup>
+            </FluentNavMenu>
+        </div>
 
         <FluentBodyContent Style="padding: 24px; overflow-y: auto; flex: 1;">
             @Body
