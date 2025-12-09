@@ -3,77 +3,76 @@
 <FluentLayout>
     <FluentHeader Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 24px;">
         <FluentStack Orientation="Orientation.Horizontal" Style="align-items: center; gap: 16px;">
-            <FluentIcon Value="@(new Icons.Regular.Size24.TextGrammarWand())" Color="Color.Custom" CustomColor="white" />
-            <FluentLabel Typo="Typography.H4" Style="color: white; margin: 0;">String Functions</FluentLabel>
+            <FluentLabel Typo="Typography.H4" Style="color: white; margin: 0;">⚡ String Functions</FluentLabel>
         </FluentStack>
     </FluentHeader>
 
     <FluentStack Orientation="Orientation.Horizontal" Style="height: calc(100vh - 64px);">
         <FluentNavMenu Width="280" Style="background: #f5f5f5; border-right: 1px solid #e0e0e0;">
-            <FluentNavLink Href="/" Icon="@(new Icons.Regular.Size20.Home())" Match="NavLinkMatch.All">
-                Ana Sayfa
+            <FluentNavLink Href="/" Match="NavLinkMatch.All">
+                🏠 Ana Sayfa
             </FluentNavLink>
             
-            <FluentNavGroup Label="Metin İşlemleri" Icon="@(new Icons.Regular.Size20.TextCaseLowercase())" Expanded="true">
-                <FluentNavLink Href="/reverse" Icon="@(new Icons.Regular.Size20.ArrowSwap())">
-                    String Reverse
+            <FluentNavGroup Label="📝 Metin İşlemleri" Expanded="true">
+                <FluentNavLink Href="/reverse">
+                    ↔️ String Reverse
                 </FluentNavLink>
-                <FluentNavLink Href="/case-converter" Icon="@(new Icons.Regular.Size20.TextCaseTitle())">
-                    Case Converter
+                <FluentNavLink Href="/case-converter">
+                    🔤 Case Converter
                 </FluentNavLink>
-                <FluentNavLink Href="/trim-pad" Icon="@(new Icons.Regular.Size20.TextAlignLeft())">
-                    Trim/Pad
+                <FluentNavLink Href="/trim-pad">
+                    ✂️ Trim/Pad
                 </FluentNavLink>
-                <FluentNavLink Href="/line-counter" Icon="@(new Icons.Regular.Size20.NumberRow())">
-                    Line Counter
+                <FluentNavLink Href="/line-counter">
+                    🔢 Line Counter
                 </FluentNavLink>
-                <FluentNavLink Href="/compare" Icon="@(new Icons.Regular.Size20.DocumentCopy())">
-                    Compare
-                </FluentNavLink>
-            </FluentNavGroup>
-
-            <FluentNavGroup Label="Encode/Decode" Icon="@(new Icons.Regular.Size20.Code())" Expanded="true">
-                <FluentNavLink Href="/base64" Icon="@(new Icons.Regular.Size20.DataBarVertical())">
-                    Base64
-                </FluentNavLink>
-                <FluentNavLink Href="/url-encode" Icon="@(new Icons.Regular.Size20.Link())">
-                    URL Encode
+                <FluentNavLink Href="/compare">
+                    📄 Compare
                 </FluentNavLink>
             </FluentNavGroup>
 
-            <FluentNavGroup Label="JSON Araçları" Icon="@(new Icons.Regular.Size20.CodeText())" Expanded="true">
-                <FluentNavLink Href="/json-formatter" Icon="@(new Icons.Regular.Size20.CodeBlock())">
-                    JSON Formatter
+            <FluentNavGroup Label="🔐 Encode/Decode" Expanded="true">
+                <FluentNavLink Href="/base64">
+                    📊 Base64
                 </FluentNavLink>
-                <FluentNavLink Href="/json-compare" Icon="@(new Icons.Regular.Size20.DocumentCopy())">
-                    JSON Compare
-                </FluentNavLink>
-                <FluentNavLink Href="/json-to-csharp" Icon="@(new Icons.Regular.Size20.Code())">
-                    JSON to C#
-                </FluentNavLink>
-                <FluentNavLink Href="/json-to-java" Icon="@(new Icons.Regular.Size20.Code())">
-                    JSON to Java
-                </FluentNavLink>
-                <FluentNavLink Href="/json-to-typescript" Icon="@(new Icons.Regular.Size20.Code())">
-                    JSON to TypeScript
+                <FluentNavLink Href="/url-encode">
+                    🔗 URL Encode
                 </FluentNavLink>
             </FluentNavGroup>
 
-            <FluentNavGroup Label="Regex Araçları" Icon="@(new Icons.Regular.Size20.TextGrammarWand())" Expanded="true">
-                <FluentNavLink Href="/regex-search" Icon="@(new Icons.Regular.Size20.Search())">
-                    Regex Search
+            <FluentNavGroup Label="💻 JSON Araçları" Expanded="true">
+                <FluentNavLink Href="/json-formatter">
+                    📋 JSON Formatter
                 </FluentNavLink>
-                <FluentNavLink Href="/regex-replace" Icon="@(new Icons.Regular.Size20.ArrowSwap())">
-                    Regex Replace
+                <FluentNavLink Href="/json-compare">
+                    🔍 JSON Compare
                 </FluentNavLink>
-                <FluentNavLink Href="/extract" Icon="@(new Icons.Regular.Size20.DocumentText())">
-                    Extract
+                <FluentNavLink Href="/json-to-csharp">
+                    🔷 JSON to C#
+                </FluentNavLink>
+                <FluentNavLink Href="/json-to-java">
+                    ☕ JSON to Java
+                </FluentNavLink>
+                <FluentNavLink Href="/json-to-typescript">
+                    📘 JSON to TypeScript
+                </FluentNavLink>
+            </FluentNavGroup>
+
+            <FluentNavGroup Label="🔎 Regex Araçları" Expanded="true">
+                <FluentNavLink Href="/regex-search">
+                    🔍 Regex Search
+                </FluentNavLink>
+                <FluentNavLink Href="/regex-replace">
+                    🔄 Regex Replace
+                </FluentNavLink>
+                <FluentNavLink Href="/extract">
+                    📤 Extract
                 </FluentNavLink>
             </FluentNavGroup>
         </FluentNavMenu>
 
-        <FluentMainLayout Style="padding: 24px; overflow-y: auto; flex: 1;">
+        <FluentBodyContent Style="padding: 24px; overflow-y: auto; flex: 1;">
             @Body
-        </FluentMainLayout>
+        </FluentBodyContent>
     </FluentStack>
 </FluentLayout>
