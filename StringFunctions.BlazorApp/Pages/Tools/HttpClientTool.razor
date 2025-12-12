@@ -1,0 +1,611 @@
+@page "/http-client"
+@inject HttpClient Http
+
+<PageTitle>HTTP Client</PageTitle>
+
+<ToolPageLayout Title="HTTP Client" Description="Build and send HTTP requests, inspect responses.">
+    <OptionsContent>
+        <div class="option-group">
+            <FluentSelect TOption="string" @bind-Value="method" Style="width: 90px;">
+                <FluentOption TOption="string" Value="GET">GET</FluentOption>
+                <FluentOption TOption="string" Value="POST">POST</FluentOption>
+                <FluentOption TOption="string" Value="PUT">PUT</FluentOption>
+                <FluentOption TOption="string" Value="DELETE">DELETE</FluentOption>
+                <FluentOption TOption="string" Value="PATCH">PATCH</FluentOption>
+                <FluentOption TOption="string" Value="HEAD">HEAD</FluentOption>
+                <FluentOption TOption="string" Value="OPTIONS">OPTIONS</FluentOption>
+            </FluentSelect>
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-group" style="flex:1;">
+            <FluentTextField @bind-Value="url" 
+                            Placeholder="https://jsonplaceholder.typicode.com/todos/1" 
+                            Style="width:100%;"
+                            @onkeydown="OnUrlKeyDown" />
+        </div>
+        <div class="option-divider"></div>
+        <FluentButton Appearance="Appearance.Accent" OnClick="SendRequestAsync" Disabled="@isLoading">
+            @(isLoading ? "Sending..." : "Send")
+        </FluentButton>
+    </OptionsContent>
+    <ChildContent>
+        <div class="http-client-layout">
+            <!-- Request Panel -->
+            <div class="http-panel">
+                <div class="panel-header">Request</div>
+                <div class="panel-tabs">
+                    <button class="tab-btn @(activeRequestTab == "query" ? "active" : "")" @onclick="SetRequestTabQuery">Query</button>
+                    <button class="tab-btn @(activeRequestTab == "headers" ? "active" : "")" @onclick="SetRequestTabHeaders">Headers</button>
+                    <button class="tab-btn @(activeRequestTab == "body" ? "active" : "")" @onclick="SetRequestTabBody">Body</button>
+                </div>
+                <div class="panel-content">
+                    @if (activeRequestTab == "query")
+                    {
+                        <div class="kv-grid">
+                            @foreach (var item in queryParams)
+                            {
+                                <div class="kv-row">
+                                    <FluentCheckbox @bind-Value="item.Enabled" />
+                                    <FluentTextField @bind-Value="item.Name" Placeholder="key" Style="flex:1;" />
+                                    <FluentTextField @bind-Value="item.Value" Placeholder="value" Style="flex:1;" />
+                                    <FluentButton Appearance="Appearance.Stealth" OnClick="() => RemoveQuery(item)" Title="Remove">
+                                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" />
+                                    </FluentButton>
+                                </div>
+                            }
+                            <FluentButton Appearance="Appearance.Outline" OnClick="AddQuery">+ Add query parameter</FluentButton>
+                        </div>
+                    }
+                    else if (activeRequestTab == "headers")
+                    {
+                        <div class="kv-grid">
+                            <!-- Quick add common headers -->
+                            <div class="quick-headers">
+                                <span class="quick-label">Quick add:</span>
+                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddContentTypeHeader" Title="Add Content-Type: application/json">Content-Type</FluentButton>
+                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddAuthorizationHeader" Title="Add Authorization header">Authorization</FluentButton>
+                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddCacheControlHeader" Title="Add Cache-Control: no-cache">Cache-Control</FluentButton>
+                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddXRequestedWithHeader" Title="Add X-Requested-With">X-Requested-With</FluentButton>
+                            </div>
+                            
+                            @foreach (var item in headers)
+                            {
+                                <div class="kv-row">
+                                    <FluentCheckbox @bind-Value="item.Enabled" />
+                                    <FluentTextField @bind-Value="item.Name" Placeholder="Header name" Style="flex:1;" />
+                                    <FluentTextField @bind-Value="item.Value" Placeholder="Header value" Style="flex:1;" />
+                                    <FluentButton Appearance="Appearance.Stealth" OnClick="() => RemoveHeader(item)" Title="Remove">
+                                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" />
+                                    </FluentButton>
+                                </div>
+                            }
+                            <FluentButton Appearance="Appearance.Outline" OnClick="AddHeader">+ Add header</FluentButton>
+                        </div>
+                    }
+                    else if (activeRequestTab == "body")
+                    {
+                        <div class="body-options">
+                            <FluentSelect TOption="string" @bind-Value="bodyType" Style="width: 180px;">
+                                <FluentOption TOption="string" Value="none">No body</FluentOption>
+                                <FluentOption TOption="string" Value="json">JSON</FluentOption>
+                                <FluentOption TOption="string" Value="text">Text</FluentOption>
+                                <FluentOption TOption="string" Value="form">Form urlencoded</FluentOption>
+                            </FluentSelect>
+                            @if (bodyType == "json")
+                            {
+                                <FluentButton Appearance="Appearance.Stealth" OnClick="FormatJsonBody">Format JSON</FluentButton>
+                            }
+                        </div>
+                        @if (bodyType != "none")
+                        {
+                            <FluentTextArea @bind-Value="body" Rows="8" Resize="TextAreaResize.Vertical" Style="width:100%;" />
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Response Panel -->
+            <div class="http-panel">
+                <div class="panel-header">
+                    Response
+                    @if (statusCode is not null)
+                    {
+                        <span class="status-badge status-@GetStatusClass(statusCode.Value)">@statusCode @statusText</span>
+                        <span class="meta-item">@durationMs ms</span>
+                        @if (contentLength is not null)
+                        {
+                            <span class="meta-item">@contentLength bytes</span>
+                        }
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <FluentMessageBar Title="Error" Intent="MessageIntent.Error">@errorMessage</FluentMessageBar>
+                }
+                else
+                {
+                    <div class="panel-tabs">
+                        <button class="tab-btn @(activeResponseTab == "body" ? "active" : "")" @onclick="SetResponseTabBody">Body</button>
+                        <button class="tab-btn @(activeResponseTab == "headers" ? "active" : "")" @onclick="SetResponseTabHeaders">Headers</button>
+                        <button class="tab-btn @(activeResponseTab == "request" ? "active" : "")" @onclick="SetResponseTabRequest">Request Info</button>
+                    </div>
+                    <div class="panel-content">
+                        @if (activeResponseTab == "body")
+                        {
+                            <div class="response-body-header">
+                                <span>Response Body</span>
+                                <CopyButton Text="@responseBody" />
+                            </div>
+                            <pre class="response-body">@responseBody</pre>
+                        }
+                        else if (activeResponseTab == "headers")
+                        {
+                            <div class="headers-list">
+                                @if (responseHeaders.Count == 0)
+                                {
+                                    <span class="meta-item">No headers received</span>
+                                }
+                                else
+                                {
+                                    @foreach (var kv in responseHeaders)
+                                    {
+                                        <div class="header-row">
+                                            <span class="header-name">@kv.Key:</span>
+                                            <span class="header-value">@string.Join(", ", kv.Value)</span>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                        else if (activeResponseTab == "request")
+                        {
+                            <div class="request-info">
+                                <div><strong>Method:</strong> @method</div>
+                                <div><strong>URL:</strong> @BuildUrlWithQuery(url, queryParams.Where(p => p.Enabled))</div>
+                                <div style="margin-top:8px;"><strong>Headers:</strong></div>
+                                <div class="headers-list">
+                                    @foreach (var h in headers.Where(h => h.Enabled && !string.IsNullOrWhiteSpace(h.Name)))
+                                    {
+                                        <div class="header-row">
+                                            <span class="header-name">@h.Name:</span>
+                                            <span class="header-value">@h.Value</span>
+                                        </div>
+                                    }
+                                </div>
+                                @if (method is not ("GET" or "HEAD") && bodyType != "none" && !string.IsNullOrWhiteSpace(body))
+                                {
+                                    <div style="margin-top:8px;"><strong>Body:</strong></div>
+                                    <pre class="response-body">@body</pre>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .http-client-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 16px;
+        min-height: 500px;
+    }
+
+    .http-panel {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .panel-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-tertiary);
+    }
+
+    .tab-btn {
+        padding: 10px 16px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+        color: var(--text-primary);
+        background: var(--bg-secondary);
+    }
+
+    .tab-btn.active {
+        color: var(--accent-primary);
+        border-bottom-color: var(--accent-primary);
+        background: var(--bg-secondary);
+    }
+
+    .panel-content {
+        padding: 16px;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .kv-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .kv-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .quick-headers {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+        padding: 8px;
+        background: var(--bg-tertiary);
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+
+    .quick-label {
+        font-size: 0.8rem;
+        color: var(--text-tertiary);
+        margin-right: 4px;
+    }
+
+    .body-options {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .status-badge {
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-success { background: #44bb44; color: #fff; }
+    .status-redirect { background: #ffcc00; color: #333; }
+    .status-client-error { background: #ff8800; color: #fff; }
+    .status-server-error { background: #ff4444; color: #fff; }
+    .status-info { background: #0078d4; color: #fff; }
+
+    .meta-item {
+        font-size: 0.8rem;
+        color: var(--text-tertiary);
+    }
+
+    .response-body-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .response-body {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 12px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 400px;
+        overflow-y: auto;
+        margin: 0;
+    }
+
+    .headers-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 0.85rem;
+    }
+
+    .header-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .header-name {
+        font-weight: 600;
+        color: var(--accent-primary);
+        min-width: 120px;
+        word-break: break-all;
+    }
+
+    .header-value {
+        color: var(--text-primary);
+        word-break: break-all;
+    }
+
+    .request-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 1024px) {
+        .http-client-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private class HeaderItem
+    {
+        public bool Enabled { get; set; } = true;
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+
+    private class QueryParamItem
+    {
+        public bool Enabled { get; set; } = true;
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+
+    private string method = "GET";
+    private string url = string.Empty;
+    private string body = string.Empty;
+    private string bodyType = "json";
+    private string activeRequestTab = "headers";
+    private string activeResponseTab = "body";
+
+    private readonly List<HeaderItem> headers = new()
+    {
+        new() { Name = "Accept", Value = "application/json" },
+        new() { Name = "User-Agent", Value = "StringFunctions-HTTP-Client" }
+    };
+
+    private readonly List<QueryParamItem> queryParams = new();
+
+    private string? responseBody;
+    private readonly Dictionary<string, IEnumerable<string>> responseHeaders = new();
+    private int? statusCode;
+    private string? statusText;
+    private long? durationMs;
+    private long? contentLength;
+    private bool isLoading;
+    private string? errorMessage;
+
+    // Tab switching methods
+    private void SetRequestTabQuery() => activeRequestTab = "query";
+    private void SetRequestTabHeaders() => activeRequestTab = "headers";
+    private void SetRequestTabBody() => activeRequestTab = "body";
+    private void SetResponseTabBody() => activeResponseTab = "body";
+    private void SetResponseTabHeaders() => activeResponseTab = "headers";
+    private void SetResponseTabRequest() => activeResponseTab = "request";
+
+    private void AddHeader() => headers.Add(new HeaderItem());
+    private void RemoveHeader(HeaderItem item) => headers.Remove(item);
+
+    private void AddQuery() => queryParams.Add(new QueryParamItem());
+    private void RemoveQuery(QueryParamItem item) => queryParams.Remove(item);
+
+    // Quick add header methods
+    private void AddContentTypeHeader() => AddOrUpdateHeader("Content-Type", "application/json");
+    private void AddAuthorizationHeader() => AddOrUpdateHeader("Authorization", "Bearer ");
+    private void AddCacheControlHeader() => AddOrUpdateHeader("Cache-Control", "no-cache");
+    private void AddXRequestedWithHeader() => AddOrUpdateHeader("X-Requested-With", "XMLHttpRequest");
+
+    private void AddOrUpdateHeader(string name, string value)
+    {
+        var existing = headers.FirstOrDefault(h => h.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (existing != null)
+        {
+            existing.Value = value;
+            existing.Enabled = true;
+        }
+        else
+        {
+            headers.Add(new HeaderItem { Name = name, Value = value, Enabled = true });
+        }
+    }
+
+    private async Task OnUrlKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isLoading)
+        {
+            await SendRequestAsync();
+        }
+    }
+
+    private async Task SendRequestAsync()
+    {
+        errorMessage = null;
+        responseBody = null;
+        responseHeaders.Clear();
+        statusCode = null;
+        statusText = null;
+        durationMs = null;
+        contentLength = null;
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+            var finalUrl = BuildUrlWithQuery(url, queryParams.Where(p => p.Enabled));
+
+            using var request = new HttpRequestMessage(new HttpMethod(method), finalUrl);
+
+            foreach (var h in headers.Where(h => h.Enabled && !string.IsNullOrWhiteSpace(h.Name)))
+            {
+                if (!request.Headers.TryAddWithoutValidation(h.Name, h.Value))
+                {
+                    request.Content ??= new StringContent(string.Empty);
+                    request.Content.Headers.TryAddWithoutValidation(h.Name, h.Value);
+                }
+            }
+
+            if (method is not ("GET" or "HEAD") && bodyType != "none" && !string.IsNullOrWhiteSpace(body))
+            {
+                request.Content = bodyType switch
+                {
+                    "json" => new StringContent(body, System.Text.Encoding.UTF8, "application/json"),
+                    "form" => new StringContent(body, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded"),
+                    _ => new StringContent(body, System.Text.Encoding.UTF8, "text/plain")
+                };
+            }
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            using var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            sw.Stop();
+
+            statusCode = (int)response.StatusCode;
+            statusText = response.ReasonPhrase;
+            durationMs = sw.ElapsedMilliseconds;
+
+            foreach (var h in response.Headers)
+                responseHeaders[h.Key] = h.Value.ToArray();
+
+            if (response.Content != null)
+            {
+                foreach (var h in response.Content.Headers)
+                    responseHeaders[h.Key] = h.Value.ToArray();
+
+                contentLength = response.Content.Headers.ContentLength;
+                var text = await response.Content.ReadAsStringAsync(cts.Token);
+                responseBody = PrettyPrintBody(text);
+            }
+
+            activeResponseTab = "body";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string BuildUrlWithQuery(string baseUrl, IEnumerable<QueryParamItem> items)
+    {
+        if (string.IsNullOrWhiteSpace(baseUrl)) return string.Empty;
+
+        try
+        {
+            var uriBuilder = new UriBuilder(baseUrl);
+            var query = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+
+            foreach (var item in items.Where(p => !string.IsNullOrWhiteSpace(p.Name)))
+            {
+                query[item.Name] = item.Value;
+            }
+
+            uriBuilder.Query = query.ToString();
+            return uriBuilder.ToString();
+        }
+        catch
+        {
+            return baseUrl;
+        }
+    }
+
+    private static string PrettyPrintBody(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body)) return string.Empty;
+
+        // Try JSON first
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(body);
+            return System.Text.Json.JsonSerializer.Serialize(doc.RootElement, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+        }
+        catch
+        {
+            // Not JSON
+        }
+
+        // Try XML
+        try
+        {
+            if (body.TrimStart().StartsWith("<"))
+            {
+                var doc = System.Xml.Linq.XDocument.Parse(body);
+                return doc.ToString();
+            }
+        }
+        catch
+        {
+            // Not XML
+        }
+
+        return body;
+    }
+
+    private static string GetStatusClass(int code)
+    {
+        return code switch
+        {
+            >= 200 and < 300 => "success",
+            >= 300 and < 400 => "redirect",
+            >= 400 and < 500 => "client-error",
+            >= 500 => "server-error",
+            _ => "info"
+        };
+    }
+
+    private void FormatJsonBody()
+    {
+        if (string.IsNullOrWhiteSpace(body)) return;
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(body);
+            body = System.Text.Json.JsonSerializer.Serialize(doc.RootElement, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+}

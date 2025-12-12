@@ -209,6 +209,7 @@
                             <a href="/string-formatter" class="nav-link @(IsActive("/string-formatter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextQuote())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/string-formatter"))" /><span class="nav-text">String Formatter</span></a>
                             <a href="/guid-generator" class="nav-link @(IsActive("/guid-generator") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Key())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/guid-generator"))" /><span class="nav-text">GUID Generator</span></a>
                             <a href="/password-generator" class="nav-link @(IsActive("/password-generator") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Password())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/password-generator"))" /><span class="nav-text">Password Generator</span></a>
+                            <a href="/http-client" class="nav-link @(IsActive("/http-client") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.GlobeSearch())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/http-client"))" /><span class="nav-text">HTTP Client</span></a>
                         </div>
                     }
                 </div>
@@ -578,6 +579,7 @@
         new("String Formatter", "/string-formatter", "Dev Tools", new Icons.Regular.Size20.TextQuote()),
         new("GUID Generator", "/guid-generator", "Dev Tools", new Icons.Regular.Size20.Key()),
         new("Password Generator", "/password-generator", "Dev Tools", new Icons.Regular.Size20.Password()),
+        new("HTTP Client", "/http-client", "Dev Tools", new Icons.Regular.Size20.GlobeSearch()),
     };
 
     private IEnumerable<NavItem> filteredNavItems => string.IsNullOrWhiteSpace(searchQuery)
