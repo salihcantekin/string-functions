@@ -2,67 +2,93 @@
 
 <PageTitle>Base64 Encode/Decode</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">Base64 Encode/Decode</FluentLabel>
-        <FluentLabel Typo="Typography.Body">String'i Base64 formatına kodlayın veya Base64'ten çözün.</FluentLabel>
-    </FluentCard>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentSelect TOption="string" @bind-Value="@mode" Label="İşlem" Style="width: 100%;">
-                <FluentOption Value="encode">Encode (String → Base64)</FluentOption>
-                <FluentOption Value="decode">Decode (Base64 → String)</FluentOption>
+<ToolPageLayout Title="Base64 Encode/Decode" Description="Encode strings to Base64 or decode Base64 back to text.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Operation:</span>
+            <FluentSelect TOption="string" @bind-Value="@mode" Style="min-width: 180px;" @bind-Value:after="Process">
+                <FluentOption Value="encode">Encode (Text → Base64)</FluentOption>
+                <FluentOption Value="decode">Decode (Base64 → Text)</FluentOption>
             </FluentSelect>
-            
-            <FluentSelect TOption="string" @bind-Value="@encoding" Label="Karakter Kodlaması" Style="width: 100%;">
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-group">
+            <span class="option-label">Encoding:</span>
+            <FluentSelect TOption="string" @bind-Value="@encoding" Style="min-width: 120px;" @bind-Value:after="Process">
                 <FluentOption Value="utf8">UTF-8</FluentOption>
                 <FluentOption Value="ascii">ASCII</FluentOption>
                 <FluentOption Value="unicode">Unicode</FluentOption>
                 <FluentOption Value="utf32">UTF-32</FluentOption>
             </FluentSelect>
-        </FluentStack>
-    </FluentCard>
+        </div>
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <FluentMessageBar Title="Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @errorMessage
+            </FluentMessageBar>
+        }
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
-            <FluentTextArea @bind-Value="@inputText" 
-                           Placeholder="@(mode == "encode" ? "Kodlanacak metni girin..." : "Base64 string'i girin...")"
-                           Rows="10"
-                           Style="width: 100%;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
+        <div class="io-grid">
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input</span>
+                </div>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="@(mode == "encode" ? "Enter text to encode..." : "Enter Base64 string to decode...")"
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
 
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <FluentMessageBar Title="Hata" Intent="MessageIntent.Error">
-            @errorMessage
-        </FluentMessageBar>
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Output</span>
+                    <CopyButton Text="@outputText" />
+                </div>
+                <FluentTextArea Value="@outputText" 
+                               ReadOnly="true"
+                               Resize="TextAreaResize.Vertical" />
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .io-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
     }
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
-                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
-                    Kopyala
-                </FluentButton>
-            </FluentStack>
-            <FluentTextArea Value="@outputText" 
-                           ReadOnly="true"
-                           Rows="10"
-                           Style="width: 100%;" />
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+    .io-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .io-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+</style>
 
 @code {
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
     private string inputText = string.Empty;
     private string outputText = string.Empty;
     private string mode = "encode";
@@ -74,7 +100,6 @@
         inputText = e.Value?.ToString() ?? string.Empty;
         Process();
     }
-
 
     private void Process()
     {
@@ -113,10 +138,5 @@
             errorMessage = ex.Message;
             outputText = string.Empty;
         }
-    }
-
-    private async Task CopyToClipboard()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
     }
 }

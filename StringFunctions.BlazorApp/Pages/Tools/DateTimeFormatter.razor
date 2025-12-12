@@ -1,0 +1,353 @@
+@page "/datetime-formatter"
+@using System.Globalization
+
+<PageTitle>DateTime Formatter</PageTitle>
+
+<ToolPageLayout Title="DateTime Formatter" Description="Test and explore C# DateTime format strings interactively.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Date:</span>
+            <FluentTextField @bind-Value="@dateInput" Placeholder="2024-01-15 14:30:00" Style="width: 180px;" @bind-Value:after="UpdateFormats" />
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-group">
+            <span class="option-label">Culture:</span>
+            <FluentSelect TOption="string" @bind-Value="@selectedCulture" Style="min-width: 150px;" @bind-Value:after="UpdateFormats">
+                <FluentOption Value="en-US">English (US)</FluentOption>
+                <FluentOption Value="en-GB">English (UK)</FluentOption>
+                <FluentOption Value="tr-TR">Turkish</FluentOption>
+                <FluentOption Value="de-DE">German</FluentOption>
+                <FluentOption Value="fr-FR">French</FluentOption>
+                <FluentOption Value="es-ES">Spanish</FluentOption>
+                <FluentOption Value="ja-JP">Japanese</FluentOption>
+                <FluentOption Value="zh-CN">Chinese</FluentOption>
+                <FluentOption Value="">Invariant</FluentOption>
+            </FluentSelect>
+        </div>
+        <div class="option-divider"></div>
+        <FluentButton Appearance="Appearance.Accent" OnClick="SetNow">Use Now</FluentButton>
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <FluentMessageBar Title="Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @errorMessage
+            </FluentMessageBar>
+        }
+
+        <div class="formatter-layout">
+            <div class="custom-format-section">
+                <h3>Custom Format</h3>
+                <div class="custom-format-input">
+                    <FluentTextField @bind-Value="@customFormat" Placeholder="yyyy-MM-dd HH:mm:ss" Style="flex: 1;" @bind-Value:after="UpdateFormats" />
+                    <CopyButton Text="@customResult" />
+                </div>
+                <div class="custom-result">
+                    <code>@customResult</code>
+                </div>
+                <p class="format-code">dateTime.ToString("@customFormat")</p>
+            </div>
+
+            <CollapsiblePanel Title="Standard Formats" Subtitle="@($"{standardFormats.Count} formats")" @bind-IsExpanded="standardExpanded">
+                <div class="panel-content">
+                    @foreach (var format in standardFormats)
+                    {
+                        <div class="format-row">
+                            <code class="format-spec">"@format.Spec"</code>
+                            <span class="format-name">@format.Name</span>
+                            <code class="format-result">@format.Result</code>
+                            <CopyButton Text="@format.Result" />
+                        </div>
+                    }
+                </div>
+            </CollapsiblePanel>
+
+            <CollapsiblePanel Title="Common Patterns" Subtitle="@($"{commonPatterns.Count} patterns")" @bind-IsExpanded="patternsExpanded">
+                <div class="panel-content">
+                    @foreach (var format in commonPatterns)
+                    {
+                        <div class="format-row">
+                            <code class="format-spec">"@format.Spec"</code>
+                            <code class="format-result">@format.Result</code>
+                            <CopyButton Text="@format.Result" />
+                        </div>
+                    }
+                </div>
+            </CollapsiblePanel>
+
+            <CollapsiblePanel Title="Individual Components" Subtitle="@($"{componentFormats.Count} components")" @bind-IsExpanded="componentsExpanded">
+                <div class="panel-content">
+                    @foreach (var format in componentFormats)
+                    {
+                        <div class="format-row">
+                            <code class="format-spec">"@format.Spec"</code>
+                            <span class="format-name">@format.Name</span>
+                            <code class="format-result">@format.Result</code>
+                        </div>
+                    }
+                </div>
+            </CollapsiblePanel>
+
+            <CollapsiblePanel Title="Format Specifiers Reference" Subtitle="@($"{formatSpecifiers.Count} specifiers")" @bind-IsExpanded="referenceExpanded">
+                <div class="panel-content">
+                    <div class="reference-grid">
+                        @foreach (var spec in formatSpecifiers)
+                        {
+                            <div class="reference-item">
+                                <code>@spec.Code</code>
+                                <span>@spec.Description</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </CollapsiblePanel>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .formatter-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .custom-format-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .custom-format-section h3 {
+        margin: 0 0 12px 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .custom-format-input {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .custom-result {
+        background: var(--bg-tertiary);
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+    }
+
+    .custom-result code {
+        color: var(--accent-primary);
+    }
+
+    .format-code {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0;
+        font-family: monospace;
+    }
+
+    .panel-content {
+        padding-top: 8px;
+    }
+
+    .format-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .format-row:last-child {
+        border-bottom: none;
+    }
+
+    .format-spec {
+        background: var(--bg-tertiary);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--accent-primary);
+        min-width: 120px;
+    }
+
+    .format-name {
+        color: var(--text-secondary);
+        flex: 1;
+        font-size: 0.8rem;
+        min-width: 100px;
+    }
+
+    .format-result {
+        color: var(--text-primary);
+        font-family: monospace;
+        flex: 2;
+    }
+
+    .reference-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+
+    .reference-item {
+        display: flex;
+        gap: 8px;
+        font-size: 0.8rem;
+    }
+
+    .reference-item code {
+        background: var(--bg-tertiary);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--accent-primary);
+        min-width: 50px;
+        text-align: center;
+    }
+
+    .reference-item span {
+        color: var(--text-secondary);
+    }
+
+    @@media (max-width: 768px) {
+        .format-row {
+            flex-wrap: wrap;
+        }
+
+        .format-name {
+            order: 3;
+            width: 100%;
+            min-width: unset;
+        }
+
+        .reference-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+@code {
+    private string dateInput = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+    private string selectedCulture = "en-US";
+    private string customFormat = "yyyy-MM-dd HH:mm:ss";
+    private string customResult = string.Empty;
+    private string errorMessage = string.Empty;
+    private DateTime currentDateTime = DateTime.Now;
+    private CultureInfo culture = CultureInfo.InvariantCulture;
+
+    private bool standardExpanded = true;
+    private bool patternsExpanded = false;
+    private bool componentsExpanded = false;
+    private bool referenceExpanded = false;
+
+    private List<FormatItem> standardFormats = new();
+    private List<FormatItem> commonPatterns = new();
+    private List<FormatItem> componentFormats = new();
+
+    private readonly List<(string Code, string Description)> formatSpecifiers = new()
+    {
+        ("yyyy", "4-digit year"),
+        ("yy", "2-digit year"),
+        ("MM", "Month (01-12)"),
+        ("MMM", "Abbreviated month"),
+        ("MMMM", "Full month name"),
+        ("dd", "Day (01-31)"),
+        ("ddd", "Abbreviated day"),
+        ("dddd", "Full day name"),
+        ("HH", "Hour 24h (00-23)"),
+        ("hh", "Hour 12h (01-12)"),
+        ("mm", "Minutes (00-59)"),
+        ("ss", "Seconds (00-59)"),
+        ("fff", "Milliseconds"),
+        ("tt", "AM/PM"),
+        ("zzz", "Timezone offset"),
+        ("K", "Timezone info")
+    };
+
+    protected override void OnInitialized()
+    {
+        UpdateFormats();
+    }
+
+    private void SetNow()
+    {
+        dateInput = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        UpdateFormats();
+    }
+
+    private void UpdateFormats()
+    {
+        errorMessage = string.Empty;
+        
+        try
+        {
+            if (!DateTime.TryParse(dateInput, out currentDateTime))
+            {
+                errorMessage = "Invalid date format. Use: yyyy-MM-dd HH:mm:ss";
+                return;
+            }
+
+            culture = string.IsNullOrEmpty(selectedCulture) 
+                ? CultureInfo.InvariantCulture 
+                : new CultureInfo(selectedCulture);
+
+            customResult = currentDateTime.ToString(customFormat, culture);
+
+            standardFormats = new List<FormatItem>
+            {
+                new FormatItem("d", "Short date", currentDateTime.ToString("d", culture)),
+                new FormatItem("D", "Long date", currentDateTime.ToString("D", culture)),
+                new FormatItem("t", "Short time", currentDateTime.ToString("t", culture)),
+                new FormatItem("T", "Long time", currentDateTime.ToString("T", culture)),
+                new FormatItem("f", "Full (short time)", currentDateTime.ToString("f", culture)),
+                new FormatItem("F", "Full (long time)", currentDateTime.ToString("F", culture)),
+                new FormatItem("g", "General (short)", currentDateTime.ToString("g", culture)),
+                new FormatItem("G", "General (long)", currentDateTime.ToString("G", culture)),
+                new FormatItem("M", "Month day", currentDateTime.ToString("M", culture)),
+                new FormatItem("Y", "Year month", currentDateTime.ToString("Y", culture)),
+                new FormatItem("o", "Round-trip", currentDateTime.ToString("o", culture)),
+                new FormatItem("r", "RFC1123", currentDateTime.ToString("r", culture)),
+                new FormatItem("s", "Sortable", currentDateTime.ToString("s", culture)),
+                new FormatItem("u", "Universal sortable", currentDateTime.ToString("u", culture)),
+            };
+
+            commonPatterns = new List<FormatItem>
+            {
+                new FormatItem("yyyy-MM-dd", "", currentDateTime.ToString("yyyy-MM-dd", culture)),
+                new FormatItem("dd/MM/yyyy", "", currentDateTime.ToString("dd/MM/yyyy", culture)),
+                new FormatItem("MM/dd/yyyy", "", currentDateTime.ToString("MM/dd/yyyy", culture)),
+                new FormatItem("yyyy-MM-dd HH:mm:ss", "", currentDateTime.ToString("yyyy-MM-dd HH:mm:ss", culture)),
+                new FormatItem("dd MMM yyyy", "", currentDateTime.ToString("dd MMM yyyy", culture)),
+                new FormatItem("MMMM dd, yyyy", "", currentDateTime.ToString("MMMM dd, yyyy", culture)),
+                new FormatItem("HH:mm:ss", "", currentDateTime.ToString("HH:mm:ss", culture)),
+                new FormatItem("hh:mm tt", "", currentDateTime.ToString("hh:mm tt", culture)),
+                new FormatItem("dddd, MMMM dd", "", currentDateTime.ToString("dddd, MMMM dd", culture)),
+            };
+
+            componentFormats = new List<FormatItem>
+            {
+                new FormatItem("yyyy", "Year", currentDateTime.ToString("yyyy", culture)),
+                new FormatItem("MM", "Month", currentDateTime.ToString("MM", culture)),
+                new FormatItem("MMMM", "Month name", currentDateTime.ToString("MMMM", culture)),
+                new FormatItem("dd", "Day", currentDateTime.ToString("dd", culture)),
+                new FormatItem("dddd", "Day name", currentDateTime.ToString("dddd", culture)),
+                new FormatItem("HH", "Hour (24h)", currentDateTime.ToString("HH", culture)),
+                new FormatItem("hh", "Hour (12h)", currentDateTime.ToString("hh", culture)),
+                new FormatItem("mm", "Minutes", currentDateTime.ToString("mm", culture)),
+                new FormatItem("ss", "Seconds", currentDateTime.ToString("ss", culture)),
+                new FormatItem("fff", "Milliseconds", currentDateTime.ToString("fff", culture)),
+                new FormatItem("tt", "AM/PM", currentDateTime.ToString("tt", culture)),
+            };
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private record FormatItem(string Spec, string Name, string Result);
+}

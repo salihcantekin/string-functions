@@ -2,94 +2,140 @@
 
 <PageTitle>Line Counter</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">Line Counter</FluentLabel>
-        <FluentLabel Typo="Typography.Body">Metin istatistiklerini görüntüleyin: satır, kelime, karakter sayısı ve daha fazlası.</FluentLabel>
-    </FluentCard>
+<ToolPageLayout Title="Line Counter" Description="View text statistics: lines, words, characters, and more.">
+    <ChildContent>
+        <div class="line-counter-layout">
+            <div class="input-section io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input</span>
+                </div>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="Enter text to analyze..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
-            <FluentTextArea @bind-Value="@inputText" 
-                           Placeholder="Analiz edilecek metni girin..."
-                           Rows="15"
-                           Style="width: 100%;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
+            <div class="stats-section">
+                <h3 class="stats-title">Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.Lines</span>
+                        <span class="stat-label">Lines</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.NonEmptyLines</span>
+                        <span class="stat-label">Non-empty Lines</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.Words</span>
+                        <span class="stat-label">Words</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.Characters</span>
+                        <span class="stat-label">Characters</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.CharactersNoSpaces</span>
+                        <span class="stat-label">Characters (no spaces)</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.Bytes</span>
+                        <span class="stat-label">Bytes (UTF-8)</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.Paragraphs</span>
+                        <span class="stat-label">Paragraphs</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.Sentences</span>
+                        <span class="stat-label">Sentences</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">@stats.AvgWordLength</span>
+                        <span class="stat-label">Avg. Word Length</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">İstatistikler</FluentLabel>
-            
-            <FluentGrid Spacing="3">
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.Lines</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Satır</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
+<style>
+    .line-counter-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
 
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.NonEmptyLines</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Boş Olmayan Satır</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
+    .input-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.Words</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Kelime</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.Characters</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Karakter (tüm)</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
+    .io-panel-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+    }
 
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.CharactersNoSpaces</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Karakter (boşluksuz)</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
+    .stats-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+    }
 
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.Bytes</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Byte (UTF-8)</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
+    .stats-title {
+        margin: 0 0 16px 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
 
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.Paragraphs</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Paragraf</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
 
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.Sentences</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Cümle</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 12px;
+        text-align: center;
+    }
 
-                <FluentGridItem xs="12" sm="6" md="4">
-                    <FluentCard Style="padding: 16px; background: var(--neutral-layer-2); text-align: center;">
-                        <FluentLabel Typo="Typography.H4" Style="color: var(--accent-fill-rest);">@stats.AvgWordLength</FluentLabel>
-                        <FluentLabel Typo="Typography.Body">Ort. Kelime Uzunluğu</FluentLabel>
-                    </FluentCard>
-                </FluentGridItem>
-            </FluentGrid>
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+    .stat-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-primary);
+    }
+
+    .stat-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+
+    @@media (max-width: 768px) {
+        .line-counter-layout {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
 
 @code {
     private string inputText = string.Empty;

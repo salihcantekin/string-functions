@@ -2,56 +2,79 @@
 
 <PageTitle>String Reverse</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">String Reverse</FluentLabel>
-        <FluentLabel Typo="Typography.Body">String'i veya satırları tersine çevirin.</FluentLabel>
-    </FluentCard>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentSelect TOption="string" @bind-Value="@reverseMode" Label="Tersine Çevirme Modu" Style="width: 100%;">
-                <FluentOption Value="full">Tüm metni tersine çevir</FluentOption>
-                <FluentOption Value="lines">Satırları tersine çevir (sırayı)</FluentOption>
-                <FluentOption Value="eachline">Her satırı kendi içinde tersine çevir</FluentOption>
-                <FluentOption Value="words">Kelimeleri tersine çevir (sırayı)</FluentOption>
-                <FluentOption Value="eachword">Her kelimeyi kendi içinde tersine çevir</FluentOption>
+<ToolPageLayout Title="String Reverse" Description="Reverse strings, lines, or words in your text.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Mode:</span>
+            <FluentSelect TOption="string" @bind-Value="@reverseMode" Style="min-width: 200px;" @bind-Value:after="Process">
+                <FluentOption Value="full">Reverse entire text</FluentOption>
+                <FluentOption Value="lines">Reverse line order</FluentOption>
+                <FluentOption Value="eachline">Reverse each line</FluentOption>
+                <FluentOption Value="words">Reverse word order</FluentOption>
+                <FluentOption Value="eachword">Reverse each word</FluentOption>
             </FluentSelect>
-        </FluentStack>
-    </FluentCard>
+        </div>
+    </OptionsContent>
+    <ChildContent>
+        <div class="io-grid">
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input</span>
+                </div>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="Enter text to reverse..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
-            <FluentTextArea @bind-Value="@inputText" 
-                           Placeholder="Tersine çevrilecek metni girin..."
-                           Rows="10"
-                           Style="width: 100%;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Output</span>
+                    <CopyButton Text="@outputText" />
+                </div>
+                <FluentTextArea Value="@outputText" 
+                               ReadOnly="true"
+                               Resize="TextAreaResize.Vertical" />
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
-                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
-                    Kopyala
-                </FluentButton>
-            </FluentStack>
-            <FluentTextArea Value="@outputText" 
-                           ReadOnly="true"
-                           Rows="10"
-                           Style="width: 100%;" />
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+<style>
+    .io-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .io-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .io-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+</style>
 
 @code {
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
     private string inputText = string.Empty;
     private string outputText = string.Empty;
     private string reverseMode = "full";
@@ -61,7 +84,6 @@
         inputText = e.Value?.ToString() ?? string.Empty;
         Process();
     }
-
 
     private void Process()
     {
@@ -104,10 +126,5 @@
     {
         var words = inputText.Split(new[] { ' ' }, StringSplitOptions.None);
         return string.Join(" ", words.Select(w => new string(w.Reverse().ToArray())));
-    }
-
-    private async Task CopyToClipboard()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
     }
 }

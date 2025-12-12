@@ -2,103 +2,190 @@
 
 <PageTitle>String Compare</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">String Compare</FluentLabel>
-        <FluentLabel Typo="Typography.Body">İki string'i karşılaştırın ve farklılıkları görün.</FluentLabel>
-    </FluentCard>
+<ToolPageLayout Title="String Compare" Description="Compare two strings and see the differences.">
+    <OptionsContent>
+        <FluentCheckbox @bind-Value="@ignoreCase" Label="Ignore case" @bind-Value:after="ProcessComparison" />
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@ignoreWhitespace" Label="Ignore whitespace" @bind-Value:after="ProcessComparison" />
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@trimLines" Label="Trim lines" @bind-Value:after="ProcessComparison" />
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@showLineByLine" Label="Line-by-line comparison" @bind-Value:after="ProcessComparison" />
+    </OptionsContent>
+    <ChildContent>
+        <div class="compare-grid">
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">String 1</span>
+                    <span class="io-panel-stats">@text1.Length chars | @text1.Split('\n').Length lines</span>
+                </div>
+                <FluentTextArea @bind-Value="@text1" 
+                               Placeholder="Enter first string..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnTextChanged" />
+            </div>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentCheckbox @bind-Value="@ignoreCase" Label="Büyük/küçük harf duyarsız" />
-            
-            <FluentCheckbox @bind-Value="@ignoreWhitespace" Label="Boşlukları yoksay" />
-            
-            <FluentCheckbox @bind-Value="@trimLines" Label="Satır başı/sonu boşlukları temizle" />
-            
-            <FluentCheckbox @bind-Value="@showLineByLine" Label="Satır satır karşılaştırma" />
-        </FluentStack>
-    </FluentCard>
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">String 2</span>
+                    <span class="io-panel-stats">@text2.Length chars | @text2.Split('\n').Length lines</span>
+                </div>
+                <FluentTextArea @bind-Value="@text2" 
+                               Placeholder="Enter second string..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnTextChanged" />
+            </div>
+        </div>
 
-    <FluentGrid Spacing="3">
-        <FluentGridItem xs="12" md="6">
-            <FluentCard Style="padding: 20px;">
-                <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-                    <FluentLabel Typo="Typography.H5">String 1</FluentLabel>
-                    <FluentTextArea @bind-Value="@text1" 
-                                   Placeholder="İlk string'i girin..."
-                                   Rows="15"
-                                   Style="width: 100%;"
-                                   @oninput="OnTextChanged" />
-                    <FluentLabel Typo="Typography.Body">Karakter: @text1.Length | Satır: @text1.Split('\n').Length</FluentLabel>
-                </FluentStack>
-            </FluentCard>
-        </FluentGridItem>
-
-        <FluentGridItem xs="12" md="6">
-            <FluentCard Style="padding: 20px;">
-                <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-                    <FluentLabel Typo="Typography.H5">String 2</FluentLabel>
-                    <FluentTextArea @bind-Value="@text2" 
-                                   Placeholder="İkinci string'i girin..."
-                                   Rows="15"
-                                   Style="width: 100%;"
-                                   @oninput="OnTextChanged" />
-                    <FluentLabel Typo="Typography.Body">Karakter: @text2.Length | Satır: @text2.Split('\n').Length</FluentLabel>
-                </FluentStack>
-            </FluentCard>
-        </FluentGridItem>
-    </FluentGrid>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Sonuç</FluentLabel>
-            
+        <div class="result-section">
             @if (areEqual)
             {
-                <FluentMessageBar Title="Eşit" Intent="MessageIntent.Success">
-                    İki string birbiriyle eşleşiyor.
+                <FluentMessageBar Title="Match" Intent="MessageIntent.Success">
+                    The two strings are identical.
                 </FluentMessageBar>
             }
-            else
+            else if (!string.IsNullOrEmpty(text1) || !string.IsNullOrEmpty(text2))
             {
-                <FluentMessageBar Title="Farklı" Intent="MessageIntent.Warning">
-                    İki string farklı.
+                <FluentMessageBar Title="Different" Intent="MessageIntent.Warning">
+                    The strings are different.
                 </FluentMessageBar>
                 
-                @if (showLineByLine)
+                @if (showLineByLine && lineDifferences.Any())
                 {
-                    <FluentLabel Typo="Typography.Body" Style="font-weight: 600; margin-top: 12px;">Satır Satır Karşılaştırma:</FluentLabel>
-                    <div style="font-family: monospace; background: var(--neutral-layer-1); padding: 12px; border-radius: 4px; max-height: 400px; overflow-y: auto;">
-                        @foreach (var diff in lineDifferences)
-                        {
-                            <div style="padding: 4px; @(diff.IsDifferent ? "background: var(--fill-color-warning);" : "")">
-                                <span style="color: var(--neutral-foreground-hint); min-width: 40px; display: inline-block;">@diff.LineNumber:</span>
-                                @if (diff.IsDifferent)
-                                {
-                                    <div style="margin-left: 50px;">
-                                        <div style="color: #ff6b6b;">- @diff.Line1</div>
-                                        <div style="color: #51cf66;">+ @diff.Line2</div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <span>  @diff.Line1</span>
-                                }
-                            </div>
-                        }
+                    <div class="diff-view">
+                        <h4>Line-by-line Comparison:</h4>
+                        <div class="diff-content">
+                            @foreach (var diff in lineDifferences)
+                            {
+                                <div class="diff-line @(diff.IsDifferent ? "different" : "")">
+                                    <span class="diff-line-num">@diff.LineNumber</span>
+                                    @if (diff.IsDifferent)
+                                    {
+                                        <div class="diff-changes">
+                                            <div class="diff-removed">- @diff.Line1</div>
+                                            <div class="diff-added">+ @diff.Line2</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="diff-same">@diff.Line1</span>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 }
                 
-                <FluentLabel Typo="Typography.Body" Style="margin-top: 12px;">
-                    @statistics
-                </FluentLabel>
+                <p class="stats-text">@statistics</p>
             }
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .io-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .io-panel-stats {
+        font-size: 0.8rem;
+        color: var(--text-tertiary);
+    }
+
+    .result-section {
+        margin-top: 16px;
+    }
+
+    .diff-view {
+        margin-top: 16px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 16px;
+    }
+
+    .diff-view h4 {
+        margin: 0 0 12px 0;
+        color: var(--text-primary);
+    }
+
+    .diff-content {
+        font-family: monospace;
+        font-size: 0.85rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .diff-line {
+        display: flex;
+        gap: 12px;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+    .diff-line.different {
+        background: var(--warning-bg);
+    }
+
+    .diff-line-num {
+        color: var(--text-tertiary);
+        min-width: 30px;
+    }
+
+    .diff-changes {
+        flex: 1;
+    }
+
+    .diff-removed {
+        color: var(--error);
+    }
+
+    .diff-added {
+        color: var(--success);
+    }
+
+    .diff-same {
+        color: var(--text-primary);
+    }
+
+    .stats-text {
+        margin-top: 12px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    @@media (max-width: 768px) {
+        .compare-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .diff-content {
+            max-height: 200px;
+        }
+    }
+</style>
 
 @code {
     private string text1 = string.Empty;
@@ -115,7 +202,6 @@
     {
         ProcessComparison();
     }
-
 
     private void ProcessComparison()
     {
@@ -185,7 +271,7 @@
         var lineDiff = Math.Abs(text1.Split('\n').Length - text2.Split('\n').Length);
         var differentLines = lineDifferences.Count(d => d.IsDifferent);
 
-        statistics = $"Karakter farkı: {lengthDiff} | Satır sayısı farkı: {lineDiff} | Farklı satır: {differentLines}";
+        statistics = $"Character difference: {lengthDiff} | Line count difference: {lineDiff} | Different lines: {differentLines}";
     }
 
     private class LineDifference

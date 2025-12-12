@@ -1,0 +1,168 @@
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+
+<div class="json-input-area @(HasError ? "has-error" : "") @(IsValid ? "is-valid" : "")">
+    <div class="json-input-header">
+        <span class="json-input-title">@Title</span>
+        <div class="json-input-actions">
+            @if (ShowFormatButton && !string.IsNullOrWhiteSpace(Value))
+            {
+                <button class="json-action-btn" @onclick="FormatJson" title="Format JSON">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Code())" Color="Color.Custom" CustomColor="var(--text-secondary)" />
+                </button>
+            }
+            @if (ShowCopyButton && !string.IsNullOrWhiteSpace(Value))
+            {
+                <CopyButton Text="@Value" />
+            }
+        </div>
+    </div>
+    
+    <FluentTextArea @bind-Value="@internalValue"
+                   Placeholder="@Placeholder"
+                   ReadOnly="@ReadOnly"
+                   Resize="TextAreaResize.Vertical"
+                   @oninput="OnInput"
+                   @onblur="OnBlur" />
+    
+    @if (!string.IsNullOrEmpty(ValidationMessage))
+    {
+        <div class="json-validation-message @(HasError ? "error" : "success")">
+            @ValidationMessage
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "JSON Input";
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Placeholder { get; set; } = "{\"name\": \"John\", \"age\": 30}";
+
+    [Parameter]
+    public bool ReadOnly { get; set; } = false;
+
+    [Parameter]
+    public bool ShowFormatButton { get; set; } = true;
+
+    [Parameter]
+    public bool ShowCopyButton { get; set; } = true;
+
+    [Parameter]
+    public bool AutoFormat { get; set; } = false;
+
+    [Parameter]
+    public bool ValidateOnChange { get; set; } = true;
+
+    [Parameter]
+    public int MinHeight { get; set; } = 400;
+
+    [Parameter]
+    public EventCallback<bool> OnValidationChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> OnError { get; set; }
+
+    private string internalValue = string.Empty;
+    private string? ValidationMessage;
+    private bool HasError;
+    private bool IsValid;
+
+    protected override void OnParametersSet()
+    {
+        if (internalValue != Value)
+        {
+            internalValue = Value;
+            if (ValidateOnChange && !string.IsNullOrWhiteSpace(internalValue))
+            {
+                ValidateJson();
+            }
+        }
+    }
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        internalValue = e.Value?.ToString() ?? string.Empty;
+        await ValueChanged.InvokeAsync(internalValue);
+        
+        if (ValidateOnChange)
+        {
+            ValidateJson();
+        }
+    }
+
+    private async Task OnBlur()
+    {
+        if (AutoFormat && !string.IsNullOrWhiteSpace(internalValue) && IsValid)
+        {
+            await FormatJson();
+        }
+    }
+
+    private void ValidateJson()
+    {
+        HasError = false;
+        IsValid = false;
+        ValidationMessage = null;
+
+        if (string.IsNullOrWhiteSpace(internalValue))
+        {
+            return;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(internalValue);
+            IsValid = true;
+            OnValidationChanged.InvokeAsync(true);
+            OnError.InvokeAsync(null);
+        }
+        catch (JsonException ex)
+        {
+            HasError = true;
+            ValidationMessage = $"Line {ex.LineNumber}, Position {ex.BytePositionInLine}: {ex.Message}";
+            OnValidationChanged.InvokeAsync(false);
+            OnError.InvokeAsync(ValidationMessage);
+        }
+    }
+
+    private async Task FormatJson()
+    {
+        if (string.IsNullOrWhiteSpace(internalValue))
+            return;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(internalValue);
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            
+            internalValue = JsonSerializer.Serialize(doc.RootElement, options);
+            await ValueChanged.InvokeAsync(internalValue);
+            
+            IsValid = true;
+            HasError = false;
+            ValidationMessage = null;
+        }
+        catch (JsonException ex)
+        {
+            HasError = true;
+            ValidationMessage = $"Cannot format: {ex.Message}";
+        }
+    }
+
+    private string GetTextAreaStyle()
+    {
+        return $"width: 100%; flex: 1; min-height: {MinHeight}px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.85rem;";
+    }
+}

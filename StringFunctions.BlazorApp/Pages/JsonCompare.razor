@@ -3,105 +3,71 @@
 
 <PageTitle>JSON Compare</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">JSON Compare</FluentLabel>
-        <FluentLabel Typo="Typography.Body">İki JSON'ı karşılaştırın ve farklılıkları görün.</FluentLabel>
-    </FluentCard>
+<ToolPageLayout Title="JSON Compare" Description="Compare two JSON documents and see the differences.">
+    <OptionsContent>
+        <FluentCheckbox @bind-Value="@ignoreOrder" Label="Ignore array order" @bind-Value:after="CompareJson" />
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@ignoreWhitespace" Label="Ignore whitespace" @bind-Value:after="CompareJson" />
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@strictTypes" Label="Strict types" @bind-Value:after="CompareJson" />
+    </OptionsContent>
+    <ChildContent>
+        <div class="compare-grid">
+            <JsonInputArea Title="JSON 1"
+                          @bind-Value="@json1"
+                          Placeholder='{"name": "John", "age": 30}'
+                          ShowFormatButton="true"
+                          ShowCopyButton="false"
+                          AutoFormat="true"
+                          OnError="e => error1 = e" />
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentCheckbox @bind-Value="@ignoreOrder" Label="Array elemanlarının sırasını yoksay" />
-            
-            <FluentCheckbox @bind-Value="@ignoreWhitespace" Label="Whitespace farklılıklarını yoksay" />
-            
-            <FluentCheckbox @bind-Value="@strictTypes" Label="Katı tip kontrolü (3 ve "3" farklıdır)" />
-        </FluentStack>
-    </FluentCard>
+            <JsonInputArea Title="JSON 2"
+                          @bind-Value="@json2"
+                          Placeholder='{"name": "Jane", "age": 25}'
+                          ShowFormatButton="true"
+                          ShowCopyButton="false"
+                          AutoFormat="true"
+                          OnError="e => error2 = e" />
+        </div>
 
-    <FluentGrid Spacing="3">
-        <FluentGridItem xs="12" md="6">
-            <FluentCard Style="padding: 20px;">
-                <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-                    <FluentLabel Typo="Typography.H5">JSON 1</FluentLabel>
-                    <FluentTextArea @bind-Value="@json1" 
-                                   Placeholder='{"name": "John", "age": 30}'
-                                   Rows="15"
-                                   Style="width: 100%; font-family: monospace;"
-                                   @oninput="OnJsonChanged" />
-                    @if (!string.IsNullOrEmpty(error1))
-                    {
-                        <FluentLabel Style="color: var(--error);">@error1</FluentLabel>
-                    }
-                </FluentStack>
-            </FluentCard>
-        </FluentGridItem>
-
-        <FluentGridItem xs="12" md="6">
-            <FluentCard Style="padding: 20px;">
-                <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-                    <FluentLabel Typo="Typography.H5">JSON 2</FluentLabel>
-                    <FluentTextArea @bind-Value="@json2" 
-                                   Placeholder='{"name": "Jane", "age": 25}'
-                                   Rows="15"
-                                   Style="width: 100%; font-family: monospace;"
-                                   @oninput="OnJsonChanged" />
-                    @if (!string.IsNullOrEmpty(error2))
-                    {
-                        <FluentLabel Style="color: var(--error);">@error2</FluentLabel>
-                    }
-                </FluentStack>
-            </FluentCard>
-        </FluentGridItem>
-    </FluentGrid>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Karşılaştırma Sonucu</FluentLabel>
-            
+        <div class="result-section">
             @if (isValid && areEqual)
             {
-                <FluentMessageBar Title="Eşit" Intent="MessageIntent.Success">
-                    İki JSON birbiriyle eşleşiyor.
+                <FluentMessageBar Title="Match" Intent="MessageIntent.Success">
+                    The two JSON documents are identical.
                 </FluentMessageBar>
             }
             else if (isValid && !areEqual)
             {
-                <FluentMessageBar Title="Farklı" Intent="MessageIntent.Warning">
-                    JSON'lar farklı. Aşağıda farklılıkları görebilirsiniz.
+                <FluentMessageBar Title="Different" Intent="MessageIntent.Warning">
+                    Found @differences.Count difference(s).
                 </FluentMessageBar>
                 
                 @if (differences.Any())
                 {
-                    <FluentLabel Typo="Typography.Body" Style="font-weight: 600; margin-top: 12px;">Farklılıklar:</FluentLabel>
-                    <div style="background: var(--neutral-layer-1); padding: 12px; border-radius: 4px; font-family: monospace; max-height: 400px; overflow-y: auto;">
+                    <div class="diff-list">
                         @foreach (var diff in differences)
                         {
-                            <div style="padding: 8px; margin: 4px 0; background: var(--fill-color-warning); border-radius: 4px;">
-                                <div style="font-weight: 600; color: var(--accent-fill-rest);">@diff.Path</div>
-                                <div style="margin-top: 4px;">
-                                    <span style="color: #ff6b6b;">- JSON 1: @diff.Value1</span>
-                                </div>
-                                <div>
-                                    <span style="color: #51cf66;">+ JSON 2: @diff.Value2</span>
+                            <div class="diff-item">
+                                <span class="diff-path">@diff.Path</span>
+                                <div class="diff-values">
+                                    <span class="diff-old">- @diff.Value1</span>
+                                    <span class="diff-new">+ @diff.Value2</span>
                                 </div>
                             </div>
                         }
                     </div>
-                    <FluentLabel Typo="Typography.Body">Toplam @differences.Count farklılık bulundu.</FluentLabel>
                 }
             }
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
 
 @code {
     private string json1 = string.Empty;
     private string json2 = string.Empty;
-    private string error1 = string.Empty;
-    private string error2 = string.Empty;
+    private string? error1;
+    private string? error2;
     private bool ignoreOrder = false;
     private bool ignoreWhitespace = true;
     private bool strictTypes = true;
@@ -109,16 +75,10 @@
     private bool areEqual = false;
     private List<JsonDifference> differences = new();
 
-    private void OnJsonChanged(ChangeEventArgs e)
-    {
-        CompareJson();
-    }
-
-
     private void CompareJson()
     {
-        error1 = string.Empty;
-        error2 = string.Empty;
+        error1 = null;
+        error2 = null;
         isValid = false;
         areEqual = false;
         differences.Clear();
@@ -135,13 +95,13 @@
             CompareElements(doc1.RootElement, doc2.RootElement, "$");
             areEqual = !differences.Any();
         }
-        catch (JsonException ex) when (ex.Message.Contains("json1"))
+        catch (JsonException ex) when (json1.Contains(ex.Message) || differences.Count == 0)
         {
-            error1 = $"JSON hatası: {ex.Message}";
+            error1 = $"JSON error: {ex.Message}";
         }
         catch (JsonException ex)
         {
-            error2 = $"JSON hatası: {ex.Message}";
+            error2 = $"JSON error: {ex.Message}";
         }
         catch (Exception ex)
         {

@@ -3,67 +3,81 @@
 
 <PageTitle>JSON to Java</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">JSON to Java</FluentLabel>
-        <FluentLabel Typo="Typography.Body">JSON'dan Java class tanımları oluşturun (POJO).</FluentLabel>
-    </FluentCard>
+<ToolPageLayout Title="JSON to Java" Description="Generate Java class definitions (POJO) from JSON.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Class:</span>
+            <FluentTextField @bind-Value="@rootClassName" Placeholder="RootObject" Style="width: 110px;" @bind-Value:after="GenerateJava" />
+        </div>
+        <div class="option-group">
+            <span class="option-label">Package:</span>
+            <FluentTextField @bind-Value="@packageName" Placeholder="com.example" Style="width: 130px;" @bind-Value:after="GenerateJava" />
+        </div>
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@useRecords" Label="Records" @bind-Value:after="GenerateJava" />
+        <FluentCheckbox @bind-Value="@useLombok" Label="Lombok" @bind-Value:after="GenerateJava" />
+        <FluentCheckbox @bind-Value="@useJackson" Label="Jackson" @bind-Value:after="GenerateJava" />
+        <FluentCheckbox @bind-Value="@generateGettersSetters" Label="Getters/Setters" @bind-Value:after="GenerateJava" />
+    </OptionsContent>
+    <ChildContent>
+        <div class="json-tool-grid">
+            <JsonInputArea Title="JSON Input"
+                          @bind-Value="@inputJson"
+                          Placeholder='{"name": "John", "age": 30, "isActive": true}'
+                          ShowFormatButton="true"
+                          ShowCopyButton="false"
+                          AutoFormat="true"
+                          OnError="OnJsonError" />
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentTextField @bind-Value="@rootClassName" Label="Root class adı" Placeholder="RootObject" Style="width: 100%;" />
-            
-            <FluentTextField @bind-Value="@packageName" Label="Package adı" Placeholder="com.example.model" Style="width: 100%;" />
-            
-            <FluentCheckbox @bind-Value="@useRecords" Label="Record kullan (Java 14+)" />
-            
-            <FluentCheckbox @bind-Value="@useLombok" Label="Lombok annotations ekle" />
-            
-            <FluentCheckbox @bind-Value="@useJackson" Label="Jackson annotations ekle" />
-            
-            <FluentCheckbox @bind-Value="@generateGettersSetters" Label="Getter/Setter metodları oluştur" />
-        </FluentStack>
-    </FluentCard>
+            <div class="output-panel">
+                <div class="output-header">
+                    <span class="output-title">Java Code</span>
+                    <CopyButton Text="@outputCode" />
+                </div>
+                <FluentTextArea Value="@outputCode" 
+                               ReadOnly="true"
+                               Resize="TextAreaResize.Vertical" />
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">JSON Giriş</FluentLabel>
-            <FluentTextArea @bind-Value="@inputJson" 
-                           Placeholder='{"name": "John", "age": 30, "isActive": true}'
-                           Rows="12"
-                           Style="width: 100%; font-family: monospace;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
-
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <FluentMessageBar Title="JSON Hatası" Intent="MessageIntent.Error">
-            @errorMessage
-        </FluentMessageBar>
+<style>
+    .json-tool-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
     }
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
-                <FluentLabel Typo="Typography.H5">Java Code</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputCode)">
-                    Kopyala
-                </FluentButton>
-            </FluentStack>
-            <FluentTextArea Value="@outputCode" 
-                           ReadOnly="true"
-                           Rows="20"
-                           Style="width: 100%; font-family: monospace;" />
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+    .output-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .output-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .json-tool-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+</style>
 
 @code {
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
     private string inputJson = string.Empty;
     private string outputCode = string.Empty;
     private string rootClassName = "RootObject";
@@ -72,19 +86,23 @@
     private bool useLombok = true;
     private bool useJackson = true;
     private bool generateGettersSetters = false;
-    private string errorMessage = string.Empty;
+    private string? jsonError;
 
-    private void OnInputChanged(ChangeEventArgs e)
+    private void OnJsonError(string? error)
     {
-        inputJson = e.Value?.ToString() ?? string.Empty;
-        GenerateJava();
+        jsonError = error;
+        if (string.IsNullOrEmpty(error))
+        {
+            GenerateJava();
+        }
+        else
+        {
+            outputCode = string.Empty;
+        }
     }
-
 
     private void GenerateJava()
     {
-        errorMessage = string.Empty;
-        
         if (string.IsNullOrWhiteSpace(inputJson))
         {
             outputCode = string.Empty;
@@ -117,14 +135,8 @@
             
             outputCode = code.ToString();
         }
-        catch (JsonException ex)
+        catch
         {
-            errorMessage = $"JSON Error: {ex.Message}";
-            outputCode = string.Empty;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = ex.Message;
             outputCode = string.Empty;
         }
     }
@@ -251,10 +263,5 @@
         if (string.IsNullOrEmpty(text)) return text;
         var words = text.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
         return string.Concat(words.Select(w => char.ToUpper(w[0]) + w.Substring(1).ToLower()));
-    }
-
-    private async Task CopyToClipboard()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputCode);
     }
 }

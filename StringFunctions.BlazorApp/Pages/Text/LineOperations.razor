@@ -1,0 +1,315 @@
+@page "/line-operations"
+@using System.Text.RegularExpressions
+
+<PageTitle>Line Operations</PageTitle>
+
+<ToolPageLayout Title="Line Operations" Description="Powerful line manipulation tools inspired by Notepad++.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Operation:</span>
+            <FluentSelect TOption="string" @bind-Value="@operation" Style="min-width: 220px;" @bind-Value:after="Process">
+                <FluentOption Value="remove-empty">Remove Empty Lines</FluentOption>
+                <FluentOption Value="remove-blank">Remove Blank Lines (whitespace only)</FluentOption>
+                <FluentOption Value="remove-duplicates">Remove Duplicate Lines</FluentOption>
+                <FluentOption Value="sort-asc">Sort Lines (A-Z)</FluentOption>
+                <FluentOption Value="sort-desc">Sort Lines (Z-A)</FluentOption>
+                <FluentOption Value="sort-length">Sort by Line Length</FluentOption>
+                <FluentOption Value="shuffle">Shuffle Lines</FluentOption>
+                <FluentOption Value="reverse-order">Reverse Line Order</FluentOption>
+                <FluentOption Value="number-lines">Add Line Numbers</FluentOption>
+                <FluentOption Value="remove-numbers">Remove Line Numbers</FluentOption>
+                <FluentOption Value="trim-lines">Trim Each Line</FluentOption>
+                <FluentOption Value="prefix">Add Prefix to Lines</FluentOption>
+                <FluentOption Value="suffix">Add Suffix to Lines</FluentOption>
+                <FluentOption Value="wrap">Wrap Lines</FluentOption>
+                <FluentOption Value="join">Join Lines</FluentOption>
+                <FluentOption Value="split">Split to Lines</FluentOption>
+                <FluentOption Value="filter-contains">Filter: Contains</FluentOption>
+                <FluentOption Value="filter-not-contains">Filter: Not Contains</FluentOption>
+                <FluentOption Value="filter-regex">Filter: Regex Match</FluentOption>
+            </FluentSelect>
+        </div>
+        @if (operation == "prefix" || operation == "suffix")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Text:</span>
+                <FluentTextField @bind-Value="@extraText" Placeholder="Enter text..." Style="width: 150px;" @bind-Value:after="Process" />
+            </div>
+        }
+        @if (operation == "wrap")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Before:</span>
+                <FluentTextField @bind-Value="@wrapBefore" Placeholder="<li>" Style="width: 80px;" @bind-Value:after="Process" />
+            </div>
+            <div class="option-group">
+                <span class="option-label">After:</span>
+                <FluentTextField @bind-Value="@wrapAfter" Placeholder="</li>" Style="width: 80px;" @bind-Value:after="Process" />
+            </div>
+        }
+        @if (operation == "join")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Separator:</span>
+                <DelimiterInput @bind-Value="@joinSeparator" @bind-Value:after="Process" />
+            </div>
+        }
+        @if (operation == "split")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Delimiter:</span>
+                <DelimiterInput @bind-Value="@splitDelimiter" @bind-Value:after="Process" />
+            </div>
+        }
+        @if (operation == "number-lines")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Format:</span>
+                <FluentTextField @bind-Value="@numberFormat" Placeholder="{0}. " Style="width: 80px;" @bind-Value:after="Process" />
+            </div>
+            <div class="option-group">
+                <span class="option-label">Start:</span>
+                <FluentNumberField @bind-Value="@startNumber" Min="0" Style="width: 70px;" @bind-Value:after="Process" />
+            </div>
+        }
+        @if (operation.StartsWith("filter"))
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Pattern:</span>
+                <FluentTextField @bind-Value="@filterPattern" Placeholder="search text" Style="width: 150px;" @bind-Value:after="Process" />
+            </div>
+            @if (operation != "filter-regex")
+            {
+                <FluentCheckbox @bind-Value="@filterIgnoreCase" Label="Ignore case" @bind-Value:after="Process" />
+            }
+        }
+        @if (operation == "remove-duplicates" || operation.StartsWith("sort"))
+        {
+            <div class="option-divider"></div>
+            <FluentCheckbox @bind-Value="@caseSensitive" Label="Case sensitive" @bind-Value:after="Process" />
+        }
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <FluentMessageBar Title="Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @errorMessage
+            </FluentMessageBar>
+        }
+
+        <div class="stats-bar">
+            <span>Input: @inputLineCount lines</span>
+            <span>Output: @outputLineCount lines</span>
+            @if (linesChanged != 0)
+            {
+                <span class="@(linesChanged > 0 ? "added" : "removed")">
+                    @(linesChanged > 0 ? $"+{linesChanged}" : linesChanged.ToString()) lines
+                </span>
+            }
+        </div>
+
+        <div class="io-grid">
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input</span>
+                </div>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="Enter text with multiple lines..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
+
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Output</span>
+                    <CopyButton Text="@outputText" />
+                </div>
+                <FluentTextArea Value="@outputText" 
+                               ReadOnly="true"
+                               Resize="TextAreaResize.Vertical" />
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .stats-bar {
+        display: flex;
+        gap: 16px;
+        padding: 8px 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-bar .added {
+        color: var(--success);
+    }
+
+    .stats-bar .removed {
+        color: var(--error);
+    }
+
+    .io-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .io-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .io-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-bar {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+    }
+</style>
+
+@code {
+    private string inputText = string.Empty;
+    private string outputText = string.Empty;
+    private string operation = "remove-empty";
+    private string extraText = string.Empty;
+    private string wrapBefore = "<li>";
+    private string wrapAfter = "</li>";
+    private string joinSeparator = ", ";
+    private string splitDelimiter = ",";
+    private string numberFormat = "{0}. ";
+    private int startNumber = 1;
+    private string filterPattern = string.Empty;
+    private bool filterIgnoreCase = true;
+    private bool caseSensitive = false;
+    private string errorMessage = string.Empty;
+    
+    private int inputLineCount => string.IsNullOrEmpty(inputText) ? 0 : inputText.Split('\n').Length;
+    private int outputLineCount => string.IsNullOrEmpty(outputText) ? 0 : outputText.Split('\n').Length;
+    private int linesChanged => outputLineCount - inputLineCount;
+
+    private static readonly Random _random = new();
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        Process();
+    }
+
+    private string ParseDelimiter(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        
+        // Handle escape sequences
+        return input
+            .Replace("\\n", "\n")
+            .Replace("\\r", "\r")
+            .Replace("\\t", "\t")
+            .Replace("\\\\", "\\");
+    }
+
+    private void Process()
+    {
+        errorMessage = string.Empty;
+        
+        if (string.IsNullOrEmpty(inputText))
+        {
+            outputText = string.Empty;
+            return;
+        }
+
+        try
+        {
+            var lines = inputText.Split('\n').Select(l => l.TrimEnd('\r')).ToList();
+            var actualJoinSeparator = ParseDelimiter(joinSeparator);
+            var actualSplitDelimiter = ParseDelimiter(splitDelimiter);
+            
+            var result = operation switch
+            {
+                "remove-empty" => lines.Where(l => !string.IsNullOrEmpty(l)),
+                "remove-blank" => lines.Where(l => !string.IsNullOrWhiteSpace(l)),
+                "remove-duplicates" => RemoveDuplicates(lines),
+                "sort-asc" => SortLines(lines, ascending: true),
+                "sort-desc" => SortLines(lines, ascending: false),
+                "sort-length" => lines.OrderBy(l => l.Length),
+                "shuffle" => lines.OrderBy(_ => _random.Next()),
+                "reverse-order" => lines.Reverse<string>(),
+                "number-lines" => lines.Select((l, i) => string.Format(numberFormat, i + startNumber) + l),
+                "remove-numbers" => lines.Select(l => Regex.Replace(l, @"^\s*\d+[\.\)\-:\s]+", "")),
+                "trim-lines" => lines.Select(l => l.Trim()),
+                "prefix" => lines.Select(l => extraText + l),
+                "suffix" => lines.Select(l => l + extraText),
+                "wrap" => lines.Select(l => wrapBefore + l + wrapAfter),
+                "join" => new[] { string.Join(actualJoinSeparator, lines) },
+                "split" => inputText.Split(new[] { actualSplitDelimiter }, StringSplitOptions.None),
+                "filter-contains" => FilterContains(lines, contains: true),
+                "filter-not-contains" => FilterContains(lines, contains: false),
+                "filter-regex" => FilterRegex(lines),
+                _ => lines
+            };
+
+            outputText = string.Join("\n", result);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            outputText = inputText;
+        }
+    }
+
+    private IEnumerable<string> RemoveDuplicates(List<string> lines)
+    {
+        var seen = new HashSet<string>(caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
+        foreach (var line in lines)
+        {
+            if (seen.Add(line))
+                yield return line;
+        }
+    }
+
+    private IEnumerable<string> SortLines(List<string> lines, bool ascending)
+    {
+        var comparer = caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+        return ascending ? lines.OrderBy(l => l, comparer) : lines.OrderByDescending(l => l, comparer);
+    }
+
+    private IEnumerable<string> FilterContains(List<string> lines, bool contains)
+    {
+        var comparison = filterIgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return lines.Where(l => l.Contains(filterPattern, comparison) == contains);
+    }
+
+    private IEnumerable<string> FilterRegex(List<string> lines)
+    {
+        var regex = new Regex(filterPattern);
+        return lines.Where(l => regex.IsMatch(l));
+    }
+}

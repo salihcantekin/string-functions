@@ -1,18 +1,46 @@
 @using Microsoft.AspNetCore.Components.Routing
 
+<FluentDesignTheme StorageName="theme" />
+
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
-        <PageTitle>Bulunamadı</PageTitle>
+        <PageTitle>Not Found</PageTitle>
         <LayoutView Layout="@typeof(MainLayout)">
-            <FluentStack Orientation="Orientation.Vertical" Style="gap: 20px; padding: 40px; text-align: center;">
-                <FluentLabel Typo="Typography.H3">Sayfa Bulunamadı</FluentLabel>
-                <FluentLabel Typo="Typography.Body">Aradığınız sayfa bulunamadı.</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" Href="/">Ana Sayfaya Dön</FluentButton>
-            </FluentStack>
+            <div class="not-found-page">
+                <h1>404</h1>
+                <h2>Page Not Found</h2>
+                <p>The page you are looking for doesn't exist or has been moved.</p>
+                <FluentButton Appearance="Appearance.Accent" Href="/">Go to Home</FluentButton>
+            </div>
         </LayoutView>
     </NotFound>
 </Router>
+
+<style>
+    .not-found-page {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .not-found-page h1 {
+        font-size: 6rem;
+        font-weight: 700;
+        color: var(--accent-primary);
+        margin: 0;
+    }
+
+    .not-found-page h2 {
+        font-size: 1.5rem;
+        color: var(--text-primary);
+        margin: 16px 0;
+    }
+
+    .not-found-page p {
+        color: var(--text-secondary);
+        margin-bottom: 24px;
+    }
+</style>

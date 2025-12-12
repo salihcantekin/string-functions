@@ -3,103 +3,182 @@
 
 <PageTitle>Regex Search</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">Regex Search</FluentLabel>
-        <FluentLabel Typo="Typography.Body">Regular Expression kullanarak metin içinde arama yapın ve eşleşmeleri bulun.</FluentLabel>
-    </FluentCard>
+<ToolPageLayout Title="Regex Search" Description="Search text using regular expressions and find matches.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Pattern:</span>
+            <FluentTextField @bind-Value="@pattern" Placeholder="\d+" Style="min-width: 200px;" @bind-Value:after="ProcessSearch" />
+        </div>
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@ignoreCase" Label="Ignore case" @bind-Value:after="ProcessSearch" />
+        <FluentCheckbox @bind-Value="@multiline" Label="Multiline" @bind-Value:after="ProcessSearch" />
+        <FluentCheckbox @bind-Value="@singleline" Label="Singleline" @bind-Value:after="ProcessSearch" />
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@showOnlyMatches" Label="Show matches only" @bind-Value:after="ProcessSearch" />
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(regexError))
+        {
+            <FluentMessageBar Title="Regex Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @regexError
+            </FluentMessageBar>
+        }
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentTextField @bind-Value="@pattern" Label="Regex Pattern" Placeholder="\d+" Style="width: 100%;" />
-            
-            @if (!string.IsNullOrEmpty(regexError))
-            {
-                <FluentMessageBar Title="Regex Hatası" Intent="MessageIntent.Error">
-                    @regexError
-                </FluentMessageBar>
-            }
-            
-            <FluentCheckbox @bind-Value="@ignoreCase" Label="Büyük/küçük harf duyarsız (IgnoreCase)" />
-            
-            <FluentCheckbox @bind-Value="@multiline" Label="Multiline (^ ve $ satır başı/sonu)" />
-            
-            <FluentCheckbox @bind-Value="@singleline" Label="Singleline (. yeni satırı da eşleştirir)" />
-            
-            <FluentCheckbox @bind-Value="@highlightMatches" Label="Eşleşmeleri vurgula" />
-            
-            <FluentCheckbox @bind-Value="@showOnlyMatches" Label="Sadece eşleşmeleri göster" />
-        </FluentStack>
-    </FluentCard>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
-            <FluentTextArea @bind-Value="@inputText" 
-                           Placeholder="Arama yapılacak metni girin..."
-                           Rows="10"
-                           Style="width: 100%;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
-                <FluentLabel Typo="Typography.H5">Sonuçlar</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
-                    Kopyala
-                </FluentButton>
-            </FluentStack>
-            
-            @if (highlightMatches && !showOnlyMatches && !string.IsNullOrEmpty(inputText) && matches.Any())
-            {
-                <div style="background: var(--neutral-layer-1); padding: 12px; border-radius: 4px; white-space: pre-wrap; font-family: monospace;">
-                    @((MarkupString)highlightedText)
+        <div class="search-layout">
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input</span>
                 </div>
-            }
-            else
-            {
-                <FluentTextArea Value="@outputText" 
-                               ReadOnly="true"
-                               Rows="10"
-                               Style="width: 100%;" />
-            }
-            
-            @if (matches.Any())
-            {
-                <FluentLabel Typo="Typography.Body">Toplam eşleşme: @matches.Count</FluentLabel>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="Enter text to search..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
+
+            <div class="results-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Results (@matches.Count matches)</span>
+                    <CopyButton Text="@outputText" />
+                </div>
                 
-                @if (matches.Count > 0 && matches.Count <= 50)
+                @if (showOnlyMatches)
                 {
-                    <FluentDivider />
-                    <FluentLabel Typo="Typography.Body" Style="font-weight: 600;">Eşleşmeler:</FluentLabel>
-                    @foreach (var (match, index) in matches.Select((m, i) => (m, i)))
-                    {
-                        <FluentStack Orientation="Orientation.Vertical" Style="gap: 4px; padding: 8px; background: var(--neutral-layer-1); border-radius: 4px;">
-                            <FluentLabel Typo="Typography.Body">Eşleşme #@(index + 1) - Index: @match.Index, Uzunluk: @match.Length</FluentLabel>
-                            <FluentLabel Style="font-family: monospace; color: var(--accent-fill-rest);">"@match.Value"</FluentLabel>
-                            @if (match.Groups.Count > 1)
-                            {
-                                <FluentLabel Typo="Typography.Body">Gruplar:</FluentLabel>
-                                @for (int i = 1; i < match.Groups.Count; i++)
-                                {
-                                    <FluentLabel Style="margin-left: 16px; font-family: monospace;">Group @i: "@match.Groups[i].Value"</FluentLabel>
-                                }
-                            }
-                        </FluentStack>
-                    }
+                    <FluentTextArea Value="@outputText" 
+                                   ReadOnly="true"
+                                   Resize="TextAreaResize.Vertical" />
                 }
-            }
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+                else if (matches.Any())
+                {
+                    <div class="matches-list">
+                        @foreach (var (match, index) in matches.Take(50).Select((m, i) => (m, i)))
+                        {
+                            <div class="match-item">
+                                <span class="match-index">#@(index + 1)</span>
+                                <span class="match-info">Index: @match.Index, Length: @match.Length</span>
+                                <code class="match-value">"@match.Value"</code>
+                                @if (match.Groups.Count > 1)
+                                {
+                                    <div class="match-groups">
+                                        @for (int i = 1; i < match.Groups.Count; i++)
+                                        {
+                                            <span class="group-item">Group @i: "@match.Groups[i].Value"</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        @if (matches.Count > 50)
+                        {
+                            <p class="more-matches">... and @(matches.Count - 50) more matches</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="no-matches">No matches found</div>
+                }
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .search-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .io-panel, .results-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .matches-list {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 12px;
+        flex: 1;
+        overflow-y: auto;
+        max-height: 400px;
+    }
+
+    .match-item {
+        padding: 8px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.85rem;
+    }
+
+    .match-item:last-child {
+        border-bottom: none;
+    }
+
+    .match-index {
+        font-weight: 600;
+        color: var(--accent-primary);
+        margin-right: 8px;
+    }
+
+    .match-info {
+        color: var(--text-secondary);
+        margin-right: 12px;
+    }
+
+    .match-value {
+        background: var(--accent-light);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--accent-primary);
+    }
+
+    .match-groups {
+        margin-top: 4px;
+        margin-left: 20px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .group-item {
+        display: block;
+    }
+
+    .no-matches {
+        padding: 24px;
+        text-align: center;
+        color: var(--text-tertiary);
+        background: var(--bg-secondary);
+        border-radius: 6px;
+    }
+
+    .more-matches {
+        text-align: center;
+        color: var(--text-secondary);
+        font-style: italic;
+        margin-top: 8px;
+    }
+
+    @@media (max-width: 768px) {
+        .search-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 
 @code {
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
     private string inputText = string.Empty;
     private string outputText = string.Empty;
     private string pattern = @"\d+";
@@ -107,10 +186,8 @@
     private bool ignoreCase = false;
     private bool multiline = false;
     private bool singleline = false;
-    private bool highlightMatches = true;
     private bool showOnlyMatches = false;
     private List<Match> matches = new();
-    private string highlightedText = string.Empty;
 
     private void OnInputChanged(ChangeEventArgs e)
     {
@@ -118,16 +195,14 @@
         ProcessSearch();
     }
 
-
     private void ProcessSearch()
     {
         regexError = string.Empty;
         matches.Clear();
-        highlightedText = string.Empty;
         
         if (string.IsNullOrEmpty(inputText) || string.IsNullOrEmpty(pattern))
         {
-            outputText = inputText;
+            outputText = string.Empty;
             return;
         }
 
@@ -141,42 +216,12 @@
             var regex = new Regex(pattern, options);
             matches = regex.Matches(inputText).ToList();
 
-            if (showOnlyMatches)
-            {
-                outputText = string.Join("\n", matches.Select(m => m.Value));
-            }
-            else if (highlightMatches && matches.Any())
-            {
-                var result = inputText;
-                var offset = 0;
-                foreach (var match in matches)
-                {
-                    var highlightStart = $"<span style='background-color: var(--accent-fill-rest); color: var(--neutral-foreground-on-accent); padding: 2px 4px; border-radius: 2px;'>";
-                    var highlightEnd = "</span>";
-                    var insertPos = match.Index + offset;
-                    result = result.Insert(insertPos, highlightStart);
-                    offset += highlightStart.Length;
-                    insertPos = match.Index + match.Length + offset;
-                    result = result.Insert(insertPos, highlightEnd);
-                    offset += highlightEnd.Length;
-                }
-                highlightedText = result.Replace("\n", "<br/>");
-                outputText = inputText;
-            }
-            else
-            {
-                outputText = inputText;
-            }
+            outputText = string.Join("\n", matches.Select(m => m.Value));
         }
         catch (Exception ex)
         {
             regexError = ex.Message;
-            outputText = inputText;
+            outputText = string.Empty;
         }
-    }
-
-    private async Task CopyToClipboard()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
     }
 }

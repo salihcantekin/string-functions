@@ -1,0 +1,117 @@
+@namespace StringFunctions.BlazorApp.Shared
+
+<div class="collapsible-panel @(IsExpanded ? "expanded" : "collapsed")">
+    <div class="collapsible-header" @onclick="Toggle">
+        <span class="collapsible-title">@Title</span>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <span class="collapsible-subtitle">@Subtitle</span>
+        }
+        <span class="collapsible-chevron">
+            @if (IsExpanded)
+            {
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronUp())" Color="Color.Custom" CustomColor="var(--text-secondary)" />
+            }
+            else
+            {
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="Color.Custom" CustomColor="var(--text-secondary)" />
+            }
+        </span>
+    </div>
+    @if (IsExpanded)
+    {
+        <div class="collapsible-content">
+            @ChildContent
+        </div>
+    }
+</div>
+
+<style>
+    .collapsible-panel {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .collapsible-panel.expanded {
+        box-shadow: var(--shadow-sm);
+    }
+
+    .collapsible-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.15s ease;
+    }
+
+    .collapsible-header:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .collapsible-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .collapsible-subtitle {
+        font-size: 0.8rem;
+        color: var(--text-tertiary);
+    }
+
+    .collapsible-chevron {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+    }
+
+    .collapsible-content {
+        padding: 0 16px 16px 16px;
+        animation: slideDown 0.2s ease;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Compact variant */
+    .collapsible-panel.compact .collapsible-header {
+        padding: 10px 12px;
+    }
+
+    .collapsible-panel.compact .collapsible-title {
+        font-size: 0.9rem;
+    }
+
+    .collapsible-panel.compact .collapsible-content {
+        padding: 0 12px 12px 12px;
+    }
+</style>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool IsExpanded { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsExpandedChanged { get; set; }
+
+    private async Task Toggle()
+    {
+        IsExpanded = !IsExpanded;
+        await IsExpandedChanged.InvokeAsync(IsExpanded);
+    }
+}

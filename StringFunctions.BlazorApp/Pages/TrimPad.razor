@@ -2,69 +2,101 @@
 
 <PageTitle>Trim/Pad</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">Trim/Pad</FluentLabel>
-        <FluentLabel Typo="Typography.Body">String başı/sonu boşluk işlemleri ve padding ekleyin.</FluentLabel>
-    </FluentCard>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentSelect TOption="string" @bind-Value="@operationMode" Label="İşlem" Style="width: 100%;">
-                <FluentOption Value="trim">Trim (Başı ve sonu temizle)</FluentOption>
-                <FluentOption Value="trimstart">Trim Start (Sadece başı temizle)</FluentOption>
-                <FluentOption Value="trimend">Trim End (Sadece sonu temizle)</FluentOption>
-                <FluentOption Value="padleft">Pad Left (Sola padding ekle)</FluentOption>
-                <FluentOption Value="padright">Pad Right (Sağa padding ekle)</FluentOption>
+<ToolPageLayout Title="Trim/Pad" Description="Trim whitespace or add padding to your text.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Operation:</span>
+            <FluentSelect TOption="string" @bind-Value="@operationMode" Style="min-width: 180px;" @bind-Value:after="Process">
+                <FluentOption Value="trim">Trim (both ends)</FluentOption>
+                <FluentOption Value="trimstart">Trim Start</FluentOption>
+                <FluentOption Value="trimend">Trim End</FluentOption>
+                <FluentOption Value="padleft">Pad Left</FluentOption>
+                <FluentOption Value="padright">Pad Right</FluentOption>
             </FluentSelect>
-            
-            @if (operationMode.StartsWith("pad"))
-            {
-                <FluentNumberField @bind-Value="@totalWidth" Label="Toplam genişlik" Min="1" Style="width: 100%;" />
-                <FluentTextField @bind-Value="@paddingChar" Label="Padding karakteri" Placeholder=" " Style="width: 100%;" MaxLength="1" />
-            }
-            
-            @if (operationMode.StartsWith("trim"))
-            {
-                <FluentTextField @bind-Value="@trimChars" Label="Temizlenecek karakterler (boş = boşluk)" Placeholder=" " Style="width: 100%;" />
-            }
-            
-            <FluentCheckbox @bind-Value="@applyToEachLine" Label="Her satıra ayrı ayrı uygula" />
-        </FluentStack>
-    </FluentCard>
+        </div>
+        @if (operationMode.StartsWith("pad"))
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Width:</span>
+                <FluentNumberField @bind-Value="@totalWidth" Min="1" Style="width: 80px;" @bind-Value:after="Process" />
+            </div>
+            <div class="option-group">
+                <span class="option-label">Char:</span>
+                <FluentTextField @bind-Value="@paddingChar" MaxLength="1" Style="width: 60px;" @bind-Value:after="Process" />
+            </div>
+        }
+        @if (operationMode.StartsWith("trim"))
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Chars to trim:</span>
+                <FluentTextField @bind-Value="@trimChars" Placeholder="(whitespace)" Style="width: 100px;" @bind-Value:after="Process" />
+            </div>
+        }
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@applyToEachLine" Label="Apply to each line" @bind-Value:after="Process" />
+    </OptionsContent>
+    <ChildContent>
+        <div class="io-grid">
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input</span>
+                </div>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="Enter text..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
-            <FluentTextArea @bind-Value="@inputText" 
-                           Placeholder="İşlenecek metni girin..."
-                           Rows="10"
-                           Style="width: 100%;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Output</span>
+                    <CopyButton Text="@outputText" />
+                </div>
+                <FluentTextArea Value="@outputText" 
+                               ReadOnly="true"
+                               Resize="TextAreaResize.Vertical" />
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
-                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
-                    Kopyala
-                </FluentButton>
-            </FluentStack>
-            <FluentTextArea Value="@outputText" 
-                           ReadOnly="true"
-                           Rows="10"
-                           Style="width: 100%;" />
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+<style>
+    .io-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .io-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .io-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+</style>
 
 @code {
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
     private string inputText = string.Empty;
     private string outputText = string.Empty;
     private string operationMode = "trim";
@@ -78,7 +110,6 @@
         inputText = e.Value?.ToString() ?? string.Empty;
         Process();
     }
-
 
     private void Process()
     {
@@ -113,10 +144,5 @@
             "padright" => line.PadRight(totalWidth, padChar),
             _ => line
         };
-    }
-
-    private async Task CopyToClipboard()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
     }
 }

@@ -3,21 +3,15 @@
 
 <PageTitle>Case Converter</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">Case Converter</FluentLabel>
-        <FluentLabel Typo="Typography.Body">String'i farklı büyük/küçük harf formatlarına dönüştürün.</FluentLabel>
-    </FluentCard>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentSelect TOption="string" @bind-Value="@caseMode" Label="Dönüşüm Tipi" Style="width: 100%;">
-                <FluentOption Value="upper">BÜYÜK HARF (UPPERCASE)</FluentOption>
-                <FluentOption Value="lower">küçük harf (lowercase)</FluentOption>
-                <FluentOption Value="title">Kelime Başları Büyük (Title Case)</FluentOption>
-                <FluentOption Value="sentence">Cümle başı büyük (Sentence case)</FluentOption>
+<ToolPageLayout Title="Case Converter" Description="Convert text to different case formats.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Convert to:</span>
+            <FluentSelect TOption="string" @bind-Value="@caseMode" Style="min-width: 200px;" @bind-Value:after="ProcessCase">
+                <FluentOption Value="upper">UPPERCASE</FluentOption>
+                <FluentOption Value="lower">lowercase</FluentOption>
+                <FluentOption Value="title">Title Case</FluentOption>
+                <FluentOption Value="sentence">Sentence case</FluentOption>
                 <FluentOption Value="camel">camelCase</FluentOption>
                 <FluentOption Value="pascal">PascalCase</FluentOption>
                 <FluentOption Value="snake">snake_case</FluentOption>
@@ -25,39 +19,68 @@
                 <FluentOption Value="constant">CONSTANT_CASE</FluentOption>
                 <FluentOption Value="toggle">tOGGLE cASE</FluentOption>
             </FluentSelect>
-        </FluentStack>
-    </FluentCard>
+        </div>
+    </OptionsContent>
+    <ChildContent>
+        <div class="io-grid">
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input</span>
+                </div>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="Enter text..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
-            <FluentTextArea @bind-Value="@inputText" 
-                           Placeholder="Metni girin..."
-                           Rows="10"
-                           Style="width: 100%;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Output</span>
+                    <CopyButton Text="@outputText" />
+                </div>
+                <FluentTextArea Value="@outputText" 
+                               ReadOnly="true"
+                               Resize="TextAreaResize.Vertical" />
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
-                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
-                    Kopyala
-                </FluentButton>
-            </FluentStack>
-            <FluentTextArea Value="@outputText" 
-                           ReadOnly="true"
-                           Rows="10"
-                           Style="width: 100%;" />
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+<style>
+    .io-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .io-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .io-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+</style>
 
 @code {
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
     private string inputText = string.Empty;
     private string outputText = string.Empty;
     private string caseMode = "upper";
@@ -67,7 +90,6 @@
         inputText = e.Value?.ToString() ?? string.Empty;
         ProcessCase();
     }
-
 
     private void ProcessCase()
     {
@@ -160,10 +182,5 @@
             words.Add(currentWord.ToString());
 
         return words.Where(w => !string.IsNullOrWhiteSpace(w)).ToList();
-    }
-
-    private async Task CopyToClipboard()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
     }
 }

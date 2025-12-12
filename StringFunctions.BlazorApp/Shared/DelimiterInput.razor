@@ -1,0 +1,80 @@
+@namespace StringFunctions.BlazorApp.Shared
+
+<div class="delimiter-input">
+    <FluentSelect TOption="string" 
+                  Value="@selectedPreset" 
+                  ValueChanged="OnPresetChanged"
+                  Style="min-width: 100px;">
+        <FluentOption Value="custom">Custom</FluentOption>
+        <FluentOption Value=",">,  (comma)</FluentOption>
+        <FluentOption Value=";">; (semicolon)</FluentOption>
+        <FluentOption Value="|">| (pipe)</FluentOption>
+        <FluentOption Value="\t">\t (tab)</FluentOption>
+        <FluentOption Value="\n">\n (new line)</FluentOption>
+        <FluentOption Value="\r\n">\r\n (CRLF)</FluentOption>
+        <FluentOption Value=" ">Space</FluentOption>
+    </FluentSelect>
+    @if (selectedPreset == "custom")
+    {
+        <FluentTextField @bind-Value="@Value" 
+                        Placeholder="Enter delimiter..." 
+                        Style="width: 100px;"
+                        @bind-Value:after="OnCustomValueChanged" />
+    }
+    <span class="delimiter-hint" title="Use \\n for newline, \\t for tab, \\\\ for backslash">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Info())" Color="Color.Custom" CustomColor="var(--text-tertiary)" />
+    </span>
+</div>
+
+<style>
+    .delimiter-input {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .delimiter-hint {
+        cursor: help;
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+@code {
+    [Parameter] public string Value { get; set; } = ",";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    private string selectedPreset = ",";
+
+    protected override void OnParametersSet()
+    {
+        // Determine if current value matches a preset
+        selectedPreset = Value switch
+        {
+            "," => ",",
+            ";" => ";",
+            "|" => "|",
+            "\\t" or "\t" => "\\t",
+            "\\n" or "\n" => "\\n",
+            "\\r\\n" or "\r\n" => "\\r\\n",
+            " " => " ",
+            _ => "custom"
+        };
+    }
+
+    private async Task OnPresetChanged(string preset)
+    {
+        selectedPreset = preset;
+        
+        if (preset != "custom")
+        {
+            Value = preset;
+            await ValueChanged.InvokeAsync(Value);
+        }
+    }
+
+    private async Task OnCustomValueChanged()
+    {
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

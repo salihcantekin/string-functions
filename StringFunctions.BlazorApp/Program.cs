@@ -1,4 +1,5 @@
 using Microsoft.FluentUI.AspNetCore.Components;
+using StringFunctions.BlazorApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseStaticWebAssets();
@@ -9,6 +10,8 @@ builder.Services.AddServerSideBlazor(options =>
     options.DetailedErrors = true;
 });
 builder.Services.AddFluentUIComponents();
+builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<UserPreferencesService>();
 
 var app = builder.Build();
 

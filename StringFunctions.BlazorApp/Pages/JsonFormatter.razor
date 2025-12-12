@@ -3,79 +3,98 @@
 
 <PageTitle>JSON Formatter</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">JSON Formatter</FluentLabel>
-        <FluentLabel Typo="Typography.Body">JSON formatı doğrulayın, düzenleyin ve güzelleştirin veya sıkıştırın.</FluentLabel>
-    </FluentCard>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentSelect TOption="string" @bind-Value="@formatMode" Label="Format Modu" Style="width: 100%;">
-                <FluentOption Value="prettify">Güzelleştir (Prettify)</FluentOption>
-                <FluentOption Value="minify">Sıkıştır (Minify)</FluentOption>
+<ToolPageLayout Title="JSON Formatter" Description="Validate, format, and beautify or minify JSON.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Mode:</span>
+            <FluentSelect TOption="string" @bind-Value="@formatMode" Style="min-width: 140px;" @bind-Value:after="ProcessJson">
+                <FluentOption Value="prettify">Prettify</FluentOption>
+                <FluentOption Value="minify">Minify</FluentOption>
             </FluentSelect>
-            
-            @if (formatMode == "prettify")
-            {
-                <FluentNumberField @bind-Value="@indentSize" Label="Girinti boyutu (spaces)" Min="1" Max="8" Style="width: 100%;" />
-                
-                <FluentCheckbox @bind-Value="@sortKeys" Label="Object key'lerini sırala" />
-            }
-            
-            <FluentCheckbox @bind-Value="@escapeNonAscii" Label="ASCII olmayan karakterleri escape et" />
-        </FluentStack>
-    </FluentCard>
+        </div>
+        @if (formatMode == "prettify")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Indent:</span>
+                <FluentNumberField @bind-Value="@indentSize" Min="1" Max="8" Style="width: 70px;" @bind-Value:after="ProcessJson" />
+            </div>
+            <FluentCheckbox @bind-Value="@sortKeys" Label="Sort keys" @bind-Value:after="ProcessJson" />
+        }
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@escapeNonAscii" Label="Escape non-ASCII" @bind-Value:after="ProcessJson" />
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <FluentMessageBar Title="JSON Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @errorMessage
+            </FluentMessageBar>
+        }
+        else if (isValid)
+        {
+            <FluentMessageBar Title="Valid JSON" Intent="MessageIntent.Success" Style="margin-bottom: 8px;">
+                @statistics
+            </FluentMessageBar>
+        }
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Giriş JSON</FluentLabel>
-            <FluentTextArea @bind-Value="@inputJson" 
-                           Placeholder='{"name": "John", "age": 30}'
-                           Rows="15"
-                           Style="width: 100%; font-family: monospace;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
+        <div class="json-tool-grid">
+            <JsonInputArea Title="Input JSON"
+                          @bind-Value="@inputJson"
+                          Placeholder='{"name": "John", "age": 30}'
+                          ShowFormatButton="false"
+                          ShowCopyButton="false"
+                          ValidateOnChange="false" />
 
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <FluentMessageBar Title="JSON Hatası" Intent="MessageIntent.Error">
-            @errorMessage
-        </FluentMessageBar>
+            <div class="output-panel">
+                <div class="output-header">
+                    <span class="output-title">Output JSON</span>
+                    <CopyButton Text="@outputJson" />
+                </div>
+                <FluentTextArea Value="@outputJson" 
+                               ReadOnly="true"
+                               Resize="TextAreaResize.Vertical" />
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .json-tool-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
     }
-    else if (isValid)
-    {
-        <FluentMessageBar Title="Geçerli JSON" Intent="MessageIntent.Success">
-            JSON formatı geçerli.
-        </FluentMessageBar>
+
+    .output-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
-                <FluentLabel Typo="Typography.H5">Çıktı JSON</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputJson)">
-                    Kopyala
-                </FluentButton>
-            </FluentStack>
-            <FluentTextArea Value="@outputJson" 
-                           ReadOnly="true"
-                           Rows="15"
-                           Style="width: 100%; font-family: monospace;" />
-            @if (!string.IsNullOrEmpty(statistics))
-            {
-                <FluentLabel Typo="Typography.Body">@statistics</FluentLabel>
-            }
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+    .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .output-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .json-tool-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
+</style>
 
 @code {
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
     private string inputJson = string.Empty;
     private string outputJson = string.Empty;
     private string errorMessage = string.Empty;
@@ -85,13 +104,6 @@
     private bool sortKeys = false;
     private bool escapeNonAscii = false;
     private bool isValid = false;
-
-    private void OnInputChanged(ChangeEventArgs e)
-    {
-        inputJson = e.Value?.ToString() ?? string.Empty;
-        ProcessJson();
-    }
-
 
     private void ProcessJson()
     {
@@ -119,7 +131,6 @@
 
             if (formatMode == "prettify")
             {
-                // Create custom indentation
                 var json = JsonSerializer.Serialize(doc.RootElement, options);
                 
                 if (indentSize != 2)
@@ -155,13 +166,12 @@
             var originalSize = System.Text.Encoding.UTF8.GetByteCount(inputJson);
             var formattedSize = System.Text.Encoding.UTF8.GetByteCount(outputJson);
             var sizeDiff = formattedSize - originalSize;
-            var sizeDiffPercent = originalSize > 0 ? (sizeDiff * 100.0 / originalSize) : 0;
             
-            statistics = $"Orijinal: {originalSize} bytes | Sonuç: {formattedSize} bytes | Fark: {sizeDiff:+#;-#;0} bytes ({sizeDiffPercent:+0.0;-0.0;0}%)";
+            statistics = $"Original: {originalSize} bytes | Result: {formattedSize} bytes | Diff: {sizeDiff:+#;-#;0} bytes";
         }
         catch (JsonException ex)
         {
-            errorMessage = $"Satır {ex.LineNumber}, Pozisyon {ex.BytePositionInLine}: {ex.Message}";
+            errorMessage = $"Line {ex.LineNumber}, Position {ex.BytePositionInLine}: {ex.Message}";
             outputJson = string.Empty;
         }
         catch (Exception ex)
@@ -227,10 +237,5 @@
             default:
                 return null;
         }
-    }
-
-    private async Task CopyToClipboard()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputJson);
     }
 }

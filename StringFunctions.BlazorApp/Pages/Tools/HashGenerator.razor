@@ -1,0 +1,336 @@
+@page "/hash-generator"
+@using System.Security.Cryptography
+@using System.Text
+
+<PageTitle>Hash Generator</PageTitle>
+
+<ToolPageLayout Title="Hash Generator" Description="Generate cryptographic hashes (MD5, SHA1, SHA256, SHA512) from text.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Encoding:</span>
+            <FluentSelect TOption="string" @bind-Value="@selectedEncoding" Style="min-width: 120px;" @bind-Value:after="GenerateHashes">
+                <FluentOption Value="utf8">UTF-8</FluentOption>
+                <FluentOption Value="ascii">ASCII</FluentOption>
+                <FluentOption Value="unicode">Unicode</FluentOption>
+            </FluentSelect>
+        </div>
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@uppercase" Label="Uppercase" @bind-Value:after="GenerateHashes" />
+    </OptionsContent>
+    <ChildContent>
+        <div class="hash-layout">
+            <div class="input-section">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input Text</span>
+                </div>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="Enter text to hash..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
+
+            <div class="hashes-section">
+                <h3>Hash Results</h3>
+                <div class="hash-list">
+                    @foreach (var hash in hashResults)
+                    {
+                        <div class="hash-item">
+                            <div class="hash-header">
+                                <span class="hash-name">@hash.Name</span>
+                                <span class="hash-bits">@hash.Bits bits</span>
+                                <CopyButton Text="@hash.Value" />
+                            </div>
+                            <code class="hash-value">@hash.Value</code>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="verify-section">
+                <h3>Verify Hash</h3>
+                <div class="verify-input">
+                    <FluentTextField @bind-Value="@verifyHash" 
+                                    Placeholder="Paste hash to verify..." 
+                                    Style="flex: 1;" 
+                                    @bind-Value:after="VerifyHash" />
+                </div>
+                @if (!string.IsNullOrEmpty(verifyHash))
+                {
+                    @if (verifyResult.HasValue)
+                    {
+                        <FluentMessageBar Intent="@(verifyResult.Value ? MessageIntent.Success : MessageIntent.Error)" 
+                                         Style="margin-top: 8px;">
+                            @if (verifyResult.Value)
+                            {
+                                <span>? Hash matches (@matchedAlgorithm)</span>
+                            }
+                            else
+                            {
+                                <span>? Hash does not match any algorithm</span>
+                            }
+                        </FluentMessageBar>
+                    }
+                }
+            </div>
+
+            <CollapsiblePanel Title="Algorithm Comparison" @bind-IsExpanded="infoExpanded">
+                <div class="info-table">
+                    <div class="info-header">
+                        <span>Algorithm</span>
+                        <span>Output Size</span>
+                        <span>Security</span>
+                        <span>Use Case</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="algo-name">MD5</span>
+                        <span>128 bits (32 hex)</span>
+                        <span class="status-weak">?? Weak</span>
+                        <span>Checksums, legacy systems</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="algo-name">SHA-1</span>
+                        <span>160 bits (40 hex)</span>
+                        <span class="status-weak">?? Weak</span>
+                        <span>Git commits, legacy</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="algo-name">SHA-256</span>
+                        <span>256 bits (64 hex)</span>
+                        <span class="status-strong">? Strong</span>
+                        <span>Digital signatures, blockchain</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="algo-name">SHA-384</span>
+                        <span>384 bits (96 hex)</span>
+                        <span class="status-strong">? Strong</span>
+                        <span>TLS, certificates</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="algo-name">SHA-512</span>
+                        <span>512 bits (128 hex)</span>
+                        <span class="status-strong">? Strong</span>
+                        <span>High security applications</span>
+                    </div>
+                </div>
+            </CollapsiblePanel>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .hash-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .input-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .hashes-section, .verify-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .hashes-section h3, .verify-section h3 {
+        margin: 0 0 12px 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .hash-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .hash-item {
+        background: var(--bg-tertiary);
+        border-radius: 6px;
+        padding: 12px;
+    }
+
+    .hash-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .hash-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .hash-bits {
+        font-size: 0.8rem;
+        color: var(--text-tertiary);
+        flex: 1;
+    }
+
+    .hash-value {
+        display: block;
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: var(--accent-primary);
+        word-break: break-all;
+        background: var(--bg-primary);
+        padding: 8px;
+        border-radius: 4px;
+    }
+
+    .verify-input {
+        display: flex;
+        gap: 8px;
+    }
+
+    .info-table {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-top: 8px;
+    }
+
+    .info-header {
+        display: grid;
+        grid-template-columns: 100px 180px 100px 1fr;
+        gap: 12px;
+        padding: 8px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: 100px 180px 100px 1fr;
+        gap: 12px;
+        padding: 8px;
+        font-size: 0.85rem;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .algo-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .status-weak {
+        color: var(--warning);
+    }
+
+    .status-strong {
+        color: var(--success);
+    }
+
+    @@media (max-width: 768px) {
+        .info-header {
+            display: none;
+        }
+
+        .info-row {
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+    }
+</style>
+
+@code {
+    private string inputText = string.Empty;
+    private string selectedEncoding = "utf8";
+    private bool uppercase = false;
+    private List<HashResult> hashResults = new();
+    private string verifyHash = string.Empty;
+    private bool? verifyResult;
+    private string matchedAlgorithm = string.Empty;
+    private bool infoExpanded = false;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        GenerateHashes();
+    }
+
+    private void GenerateHashes()
+    {
+        hashResults.Clear();
+
+        if (string.IsNullOrEmpty(inputText))
+            return;
+
+        var encoding = selectedEncoding switch
+        {
+            "ascii" => Encoding.ASCII,
+            "unicode" => Encoding.Unicode,
+            _ => Encoding.UTF8
+        };
+
+        var bytes = encoding.GetBytes(inputText);
+
+        hashResults.Add(new HashResult("MD5", 128, ComputeHash(MD5.Create(), bytes)));
+        hashResults.Add(new HashResult("SHA-1", 160, ComputeHash(SHA1.Create(), bytes)));
+        hashResults.Add(new HashResult("SHA-256", 256, ComputeHash(SHA256.Create(), bytes)));
+        hashResults.Add(new HashResult("SHA-384", 384, ComputeHash(SHA384.Create(), bytes)));
+        hashResults.Add(new HashResult("SHA-512", 512, ComputeHash(SHA512.Create(), bytes)));
+
+        VerifyHash();
+    }
+
+    private string ComputeHash(HashAlgorithm algorithm, byte[] bytes)
+    {
+        using (algorithm)
+        {
+            var hash = algorithm.ComputeHash(bytes);
+            var result = BitConverter.ToString(hash).Replace("-", "");
+            return uppercase ? result : result.ToLowerInvariant();
+        }
+    }
+
+    private void VerifyHash()
+    {
+        if (string.IsNullOrWhiteSpace(verifyHash) || !hashResults.Any())
+        {
+            verifyResult = null;
+            return;
+        }
+
+        var normalizedInput = verifyHash.Trim().ToLowerInvariant();
+        
+        foreach (var hash in hashResults)
+        {
+            if (hash.Value.Equals(normalizedInput, StringComparison.OrdinalIgnoreCase))
+            {
+                verifyResult = true;
+                matchedAlgorithm = hash.Name;
+                return;
+            }
+        }
+
+        verifyResult = false;
+        matchedAlgorithm = string.Empty;
+    }
+
+    private record HashResult(string Name, int Bits, string Value);
+}

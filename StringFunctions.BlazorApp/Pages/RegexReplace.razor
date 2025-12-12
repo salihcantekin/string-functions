@@ -3,75 +3,98 @@
 
 <PageTitle>Regex Replace</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-    <FluentCard Style="padding: 20px;">
-        <FluentLabel Typo="Typography.H3">Regex Replace</FluentLabel>
-        <FluentLabel Typo="Typography.Body">Regular Expression kullanarak metin içinde bul ve değiştir işlemi yapın. Gruplama ve backreference destekler.</FluentLabel>
-    </FluentCard>
-
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 16px;">
-            <FluentLabel Typo="Typography.H5">Ayarlar</FluentLabel>
-            
-            <FluentTextField @bind-Value="@pattern" Label="Regex Pattern" Placeholder="(\d+)" Style="width: 100%;" />
-            
-            <FluentTextField @bind-Value="@replacement" Label="Replacement (Değiştirilecek değer)" Placeholder="Number: $1" Style="width: 100%;" />
-            
-            <FluentMessageBar Intent="MessageIntent.Info">
-                $1, $2... ile gruplara erişebilirsiniz. $& tüm eşleşmeyi temsil eder.
+<ToolPageLayout Title="Regex Replace" Description="Find and replace text using regular expressions with group support.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Pattern:</span>
+            <FluentTextField @bind-Value="@pattern" Placeholder="(\d+)" Style="min-width: 150px;" 
+                             @bind-Value:after="ProcessReplace" />
+        </div>
+        <div class="option-group">
+            <span class="option-label">Replace:</span>
+            <FluentTextField @bind-Value="@replacement" Placeholder="Number: $1" Style="min-width: 150px;" 
+                             @bind-Value:after="ProcessReplace" />
+        </div>
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@ignoreCase" Label="Ignore case" @bind-Value:after="ProcessReplace" />
+        <FluentCheckbox @bind-Value="@multiline" Label="Multiline" @bind-Value:after="ProcessReplace" />
+        <div class="option-divider"></div>
+        <div class="option-group">
+            <span class="option-label">Max:</span>
+            <FluentNumberField @bind-Value="@maxReplacements" Min="0" Style="width: 70px;" 
+                               @bind-Value:after="ProcessReplace" />
+        </div>
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(regexError))
+        {
+            <FluentMessageBar Title="Regex Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @regexError
             </FluentMessageBar>
-            
-            @if (!string.IsNullOrEmpty(regexError))
-            {
-                <FluentMessageBar Title="Regex Hatası" Intent="MessageIntent.Error">
-                    @regexError
-                </FluentMessageBar>
-            }
-            
-            <FluentCheckbox @bind-Value="@ignoreCase" Label="Büyük/küçük harf duyarsız (IgnoreCase)" />
-            
-            <FluentCheckbox @bind-Value="@multiline" Label="Multiline (^ ve $ satır başı/sonu)" />
-            
-            <FluentCheckbox @bind-Value="@singleline" Label="Singleline (. yeni satırı da eşleştirir)" />
-            
-            <FluentNumberField @bind-Value="@maxReplacements" Label="Maksimum değiştirme sayısı (0 = hepsini değiştir)" Min="0" Style="width: 100%;" />
-        </FluentStack>
-    </FluentCard>
+        }
+        
+        <FluentMessageBar Intent="MessageIntent.Info" Style="margin-bottom: 8px;">
+            Use $1, $2... to reference capture groups. $& represents the entire match. Set max to 0 to replace all.
+        </FluentMessageBar>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentLabel Typo="Typography.H5">Giriş</FluentLabel>
-            <FluentTextArea @bind-Value="@inputText" 
-                           Placeholder="İşlenecek metni girin..."
-                           Rows="10"
-                           Style="width: 100%;"
-                           @oninput="OnInputChanged" />
-        </FluentStack>
-    </FluentCard>
+        <div class="io-grid">
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Input</span>
+                </div>
+                <FluentTextArea @bind-Value="@inputText" 
+                               Placeholder="Enter text..."
+                               Resize="TextAreaResize.Vertical"
+                               @oninput="OnInputChanged" />
+            </div>
 
-    <FluentCard Style="padding: 20px;">
-        <FluentStack Orientation="Orientation.Vertical" Style="gap: 12px;">
-            <FluentStack Orientation="Orientation.Horizontal" Style="justify-content: space-between; align-items: center;">
-                <FluentLabel Typo="Typography.H5">Çıktı</FluentLabel>
-                <FluentButton Appearance="Appearance.Accent" OnClick="CopyToClipboard" Disabled="@string.IsNullOrEmpty(outputText)">
-                    Kopyala
-                </FluentButton>
-            </FluentStack>
-            <FluentTextArea Value="@outputText" 
-                           ReadOnly="true"
-                           Rows="10"
-                           Style="width: 100%;" />
-            @if (replacementCount > 0)
-            {
-                <FluentLabel Typo="Typography.Body">Toplam değiştirme: @replacementCount</FluentLabel>
-            }
-        </FluentStack>
-    </FluentCard>
-</FluentStack>
+            <div class="io-panel">
+                <div class="io-panel-header">
+                    <span class="io-panel-title">Output @(replacementCount > 0 ? $"({replacementCount} replacements)" : "")</span>
+                    <CopyButton Text="@outputText" />
+                </div>
+                <FluentTextArea Value="@outputText" 
+                               ReadOnly="true"
+                               Resize="TextAreaResize.Vertical" />
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .io-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        flex: 1;
+    }
+
+    .io-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .io-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+    }
+
+    .io-panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .io-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 
 @code {
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    
     private string inputText = string.Empty;
     private string outputText = string.Empty;
     private string pattern = @"(\d+)";
@@ -79,7 +102,6 @@
     private string regexError = string.Empty;
     private bool ignoreCase = false;
     private bool multiline = false;
-    private bool singleline = false;
     private int maxReplacements = 0;
     private int replacementCount = 0;
 
@@ -88,7 +110,6 @@
         inputText = e.Value?.ToString() ?? string.Empty;
         ProcessReplace();
     }
-
 
     private void ProcessReplace()
     {
@@ -112,7 +133,6 @@
             var options = RegexOptions.None;
             if (ignoreCase) options |= RegexOptions.IgnoreCase;
             if (multiline) options |= RegexOptions.Multiline;
-            if (singleline) options |= RegexOptions.Singleline;
 
             var regex = new Regex(pattern, options);
             
@@ -142,10 +162,5 @@
             regexError = ex.Message;
             outputText = inputText;
         }
-    }
-
-    private async Task CopyToClipboard()
-    {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", outputText);
     }
 }

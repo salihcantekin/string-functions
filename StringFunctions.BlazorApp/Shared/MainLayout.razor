@@ -1,82 +1,705 @@
 @inherits LayoutComponentBase
+@using StringFunctions.BlazorApp.Services
+@inject ThemeService ThemeService
+@inject NavigationManager NavigationManager
+@inject UserPreferencesService UserPreferences
+@implements IDisposable
 
-<FluentDesignTheme />
-
-<FluentLayout>
-    <FluentHeader Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 24px;">
-        <FluentStack Orientation="Orientation.Horizontal" Style="align-items: center; gap: 16px;">
-            <FluentLabel Typo="Typography.H4" Style="color: white; margin: 0;">⚡ String Functions</FluentLabel>
-        </FluentStack>
-    </FluentHeader>
-
-    <FluentStack Orientation="Orientation.Horizontal" Style="height: calc(100vh - 64px); overflow: hidden;">
-        <div style="width: 280px; background: #f5f5f5; border-right: 1px solid #e0e0e0; overflow-y: auto; flex-shrink: 0;">
-            <FluentNavMenu>
-                <FluentNavLink Href="/" Match="NavLinkMatch.All">
-                    🏠 Home
-                </FluentNavLink>
-                
-                <FluentNavGroup Label="📝 Text Operations" Expanded="false">
-                    <FluentNavLink Href="/reverse">
-                        ↔️ String Reverse
-                    </FluentNavLink>
-                    <FluentNavLink Href="/case-converter">
-                        🔤 Case Converter
-                    </FluentNavLink>
-                    <FluentNavLink Href="/trim-pad">
-                        ✂️ Trim/Pad
-                    </FluentNavLink>
-                    <FluentNavLink Href="/line-counter">
-                        🔢 Line Counter
-                    </FluentNavLink>
-                    <FluentNavLink Href="/compare">
-                        📄 Compare
-                    </FluentNavLink>
-                </FluentNavGroup>
-
-                <FluentNavGroup Label="🔐 Encode/Decode" Expanded="false">
-                    <FluentNavLink Href="/base64">
-                        📊 Base64
-                    </FluentNavLink>
-                    <FluentNavLink Href="/url-encode">
-                        🔗 URL Encode
-                    </FluentNavLink>
-                </FluentNavGroup>
-
-                <FluentNavGroup Label="💻 JSON Tools" Expanded="false">
-                    <FluentNavLink Href="/json-formatter">
-                        📋 JSON Formatter
-                    </FluentNavLink>
-                    <FluentNavLink Href="/json-compare">
-                        🔍 JSON Compare
-                    </FluentNavLink>
-                    <FluentNavLink Href="/json-to-csharp">
-                        🔷 JSON to C#
-                    </FluentNavLink>
-                    <FluentNavLink Href="/json-to-java">
-                        ☕ JSON to Java
-                    </FluentNavLink>
-                    <FluentNavLink Href="/json-to-typescript">
-                        📘 JSON to TypeScript
-                    </FluentNavLink>
-                </FluentNavGroup>
-
-                <FluentNavGroup Label="🔎 Regex Tools" Expanded="false">
-                    <FluentNavLink Href="/regex-search">
-                        🔍 Regex Search
-                    </FluentNavLink>
-                    <FluentNavLink Href="/regex-replace">
-                        🔄 Regex Replace
-                    </FluentNavLink>
-                    <FluentNavLink Href="/extract">
-                        📤 Extract
-                    </FluentNavLink>
-                </FluentNavGroup>
-            </FluentNavMenu>
+<div class="layout-container @(ThemeService.IsDarkMode ? "dark-theme" : "light-theme") @(sidebarCollapsed ? "sidebar-collapsed" : "") @(mobileMenuOpen ? "mobile-menu-open" : "")">
+    <header class="top-header">
+        <div class="header-left">
+            <button class="menu-toggle" @onclick="ToggleMobileMenu" title="Toggle menu">
+                <FluentIcon Value="@(new Icons.Regular.Size20.Navigation())" Color="Color.Custom" CustomColor="#ffffff" />
+            </button>
+            <span class="header-title">⚡ String Functions</span>
         </div>
+        <div class="header-actions">
+            <FluentSelect TOption="string" 
+                         Value="@ThemeService.CurrentTheme.ToString()" 
+                         ValueChanged="OnThemeChanged"
+                         Style="min-width: 120px; --neutral-fill-input-rest: rgba(255,255,255,0.1); --neutral-foreground-rest: white;">
+                <FluentOption Value="Light">☀️ Light</FluentOption>
+                <FluentOption Value="Dark">🌙 Dark</FluentOption>
+                <FluentOption Value="System">💻 System</FluentOption>
+            </FluentSelect>
+        </div>
+    </header>
 
-        <FluentBodyContent Style="padding: 24px; overflow-y: auto; flex: 1;">
+    <!-- Mobile overlay -->
+    <div class="sidebar-overlay" @onclick="CloseMobileMenu"></div>
+
+    <div class="main-content">
+        <nav class="sidebar">
+            <!-- Sidebar toggle at top of sidebar -->
+            <div class="sidebar-header desktop-only">
+                <button class="sidebar-toggle-btn" @onclick="ToggleSidebar" title="@(sidebarCollapsed ? "Expand" : "Collapse")">
+                    @if (sidebarCollapsed)
+                    {
+                        <FluentIcon Value="@(new Icons.Regular.Size20.PanelLeftExpand())" Color="Color.Custom" CustomColor="@IconColor" />
+                    }
+                    else
+                    {
+                        <FluentIcon Value="@(new Icons.Regular.Size20.PanelLeftContract())" Color="Color.Custom" CustomColor="@IconColor" />
+                        <span class="toggle-text">Collapse</span>
+                    }
+                </button>
+            </div>
+
+            <!-- Search box -->
+            <div class="sidebar-search @(sidebarCollapsed ? "collapsed" : "")">
+                @if (sidebarCollapsed)
+                {
+                    <button class="search-icon-btn" @onclick="() => { sidebarCollapsed = false; }" title="Search">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.Search())" Color="Color.Custom" CustomColor="@IconColor" />
+                    </button>
+                }
+                else
+                {
+                    <FluentTextField @bind-Value="@searchQuery" 
+                                    Placeholder="Search tools..." 
+                                    @oninput="OnSearchChanged"
+                                    Style="width: 100%;">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Slot="start" Color="Color.Custom" CustomColor="@IconColor" />
+                    </FluentTextField>
+                }
+            </div>
+
+            <!-- Search Results -->
+            @if (!string.IsNullOrEmpty(searchQuery) && filteredNavItems.Any())
+            {
+                <div class="search-results">
+                    @foreach (var item in filteredNavItems)
+                    {
+                        <a href="@item.Href" class="nav-link search-result-item @(IsActive(item.Href) ? "active" : "")" @onclick="() => { searchQuery = string.Empty; CloseMobileMenu(); }">
+                            <FluentIcon Value="@item.Icon" Color="Color.Custom" CustomColor="@GetIconColor(IsActive(item.Href))" />
+                            <span class="nav-text">@item.Name</span>
+                            <span class="search-category">@item.Category</span>
+                        </a>
+                    }
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(searchQuery))
+            {
+                <div class="no-results">No tools found</div>
+            }
+            else
+            {
+                <!-- Normal Navigation -->
+                <div class="nav-section">
+                    <a href="/" class="nav-link @(IsActive("/") ? "active" : "")" @onclick="CloseMobileMenu">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.Home())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/"))" />
+                        <span class="nav-text">Home</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-group-header" @onclick="() => ToggleGroup(1)">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.TextDescription())" Color="Color.Custom" CustomColor="@IconColor" />
+                        <span class="nav-text">Text Operations</span>
+                        @if (expandedGroups.Contains(1))
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronUp())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                    </div>
+                    @if (expandedGroups.Contains(1))
+                    {
+                        <div class="nav-group-items">
+                            <a href="/reverse" class="nav-link @(IsActive("/reverse") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowSwap())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/reverse"))" /><span class="nav-text">String Reverse</span></a>
+                            <a href="/case-converter" class="nav-link @(IsActive("/case-converter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextCaseTitle())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/case-converter"))" /><span class="nav-text">Case Converter</span></a>
+                            <a href="/trim-pad" class="nav-link @(IsActive("/trim-pad") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Cut())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/trim-pad"))" /><span class="nav-text">Trim/Pad</span></a>
+                            <a href="/line-counter" class="nav-link @(IsActive("/line-counter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.NumberSymbol())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/line-counter"))" /><span class="nav-text">Line Counter</span></a>
+                            <a href="/line-operations" class="nav-link @(IsActive("/line-operations") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextBulletListSquare())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/line-operations"))" /><span class="nav-text">Line Operations</span></a>
+                            <a href="/compare" class="nav-link @(IsActive("/compare") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentMultiple())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/compare"))" /><span class="nav-text">Compare</span></a>
+                        </div>
+                    }
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-group-header" @onclick="() => ToggleGroup(2)">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.LockClosed())" Color="Color.Custom" CustomColor="@IconColor" />
+                        <span class="nav-text">Encode/Decode</span>
+                        @if (expandedGroups.Contains(2))
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronUp())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                    </div>
+                    @if (expandedGroups.Contains(2))
+                    {
+                        <div class="nav-group-items">
+                            <a href="/base64" class="nav-link @(IsActive("/base64") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Code())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/base64"))" /><span class="nav-text">Base64</span></a>
+                            <a href="/url-encode" class="nav-link @(IsActive("/url-encode") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Link())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/url-encode"))" /><span class="nav-text">URL Encode</span></a>
+                            <a href="/hash-generator" class="nav-link @(IsActive("/hash-generator") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ShieldKeyhole())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/hash-generator"))" /><span class="nav-text">Hash Generator</span></a>
+                        </div>
+                    }
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-group-header" @onclick="() => ToggleGroup(3)">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.BracesVariable())" Color="Color.Custom" CustomColor="@IconColor" />
+                        <span class="nav-text">JSON Tools</span>
+                        @if (expandedGroups.Contains(3))
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronUp())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                    </div>
+                    @if (expandedGroups.Contains(3))
+                    {
+                        <div class="nav-group-items">
+                            <a href="/json-formatter" class="nav-link @(IsActive("/json-formatter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentText())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-formatter"))" /><span class="nav-text">JSON Formatter</span></a>
+                            <a href="/json-compare" class="nav-link @(IsActive("/json-compare") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentSearch())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-compare"))" /><span class="nav-text">JSON Compare</span></a>
+                            <a href="/json-to-csharp" class="nav-link @(IsActive("/json-to-csharp") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-csharp"))" /><span class="nav-text">JSON to C#</span></a>
+                            <a href="/json-to-java" class="nav-link @(IsActive("/json-to-java") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-java"))" /><span class="nav-text">JSON to Java</span></a>
+                            <a href="/json-to-typescript" class="nav-link @(IsActive("/json-to-typescript") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-typescript"))" /><span class="nav-text">JSON to TypeScript</span></a>
+                        </div>
+                    }
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-group-header" @onclick="() => ToggleGroup(4)">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.Search())" Color="Color.Custom" CustomColor="@IconColor" />
+                        <span class="nav-text">Regex Tools</span>
+                        @if (expandedGroups.Contains(4))
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronUp())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                    </div>
+                    @if (expandedGroups.Contains(4))
+                    {
+                        <div class="nav-group-items">
+                            <a href="/regex-search" class="nav-link @(IsActive("/regex-search") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Search())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/regex-search"))" /><span class="nav-text">Regex Search</span></a>
+                            <a href="/regex-replace" class="nav-link @(IsActive("/regex-replace") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowRepeatAll())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/regex-replace"))" /><span class="nav-text">Regex Replace</span></a>
+                            <a href="/extract" class="nav-link @(IsActive("/extract") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportUp())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/extract"))" /><span class="nav-text">Extract</span></a>
+                        </div>
+                    }
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-group-header" @onclick="() => ToggleGroup(5)">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.Wrench())" Color="Color.Custom" CustomColor="@IconColor" />
+                        <span class="nav-text">Developer Tools</span>
+                        @if (expandedGroups.Contains(5))
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronUp())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="Color.Custom" CustomColor="@IconColor" class="chevron-icon" />
+                        }
+                    </div>
+                    @if (expandedGroups.Contains(5))
+                    {
+                        <div class="nav-group-items">
+                            <a href="/datetime-formatter" class="nav-link @(IsActive("/datetime-formatter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.CalendarClock())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/datetime-formatter"))" /><span class="nav-text">DateTime Formatter</span></a>
+                            <a href="/string-formatter" class="nav-link @(IsActive("/string-formatter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextQuote())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/string-formatter"))" /><span class="nav-text">String Formatter</span></a>
+                            <a href="/guid-generator" class="nav-link @(IsActive("/guid-generator") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Key())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/guid-generator"))" /><span class="nav-text">GUID Generator</span></a>
+                            <a href="/password-generator" class="nav-link @(IsActive("/password-generator") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Password())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/password-generator"))" /><span class="nav-text">Password Generator</span></a>
+                        </div>
+                    }
+                </div>
+            }
+        </nav>
+
+        <main class="page-content">
             @Body
-        </FluentBodyContent>
-    </FluentStack>
-</FluentLayout>
+        </main>
+    </div>
+</div>
+
+<style>
+    .layout-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    .top-header {
+        background: var(--bg-header);
+        color: var(--text-inverse);
+        padding: 12px 16px;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1001;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .menu-toggle {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .menu-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .main-content {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .sidebar {
+        width: 260px;
+        background: var(--bg-secondary);
+        border-right: 1px solid var(--border-color);
+        overflow-y: auto;
+        flex-shrink: 0;
+        padding: 0;
+        transition: width 0.2s ease, transform 0.2s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-header {
+        padding: 8px;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    .sidebar-search {
+        padding: 8px;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    .sidebar-search.collapsed {
+        padding: 8px 4px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .search-icon-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .search-icon-btn:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .search-results {
+        border-bottom: 1px solid var(--border-color);
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .search-result-item {
+        position: relative;
+    }
+
+    .search-category {
+        position: absolute;
+        right: 8px;
+        font-size: 0.7rem;
+        color: var(--text-tertiary);
+        background: var(--bg-tertiary);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .no-results {
+        padding: 16px;
+        text-align: center;
+        color: var(--text-tertiary);
+        font-size: 0.85rem;
+    }
+
+    .sidebar-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 8px 12px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        transition: background 0.15s ease;
+    }
+
+    .sidebar-toggle-btn:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .toggle-text {
+        color: var(--text-secondary);
+    }
+
+    .sidebar-collapsed .sidebar {
+        width: 56px;
+    }
+
+    .sidebar-collapsed .sidebar-header {
+        padding: 8px 4px;
+    }
+
+    .sidebar-collapsed .sidebar-toggle-btn {
+        justify-content: center;
+        padding: 8px;
+    }
+
+    .sidebar-collapsed .toggle-text {
+        display: none;
+    }
+
+    .sidebar-collapsed .nav-text,
+    .sidebar-collapsed .chevron-icon,
+    .sidebar-collapsed .search-category {
+        display: none;
+    }
+
+    .sidebar-collapsed .nav-link,
+    .sidebar-collapsed .nav-group-header {
+        justify-content: center;
+        padding: 12px 8px;
+    }
+
+    .sidebar-collapsed .nav-group-items {
+        padding-left: 0;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .nav-section {
+        margin-bottom: 2px;
+    }
+
+    .nav-section:first-of-type {
+        margin-top: 8px;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: background-color 0.15s ease;
+        white-space: nowrap;
+    }
+
+    .nav-link:hover {
+        background-color: var(--bg-tertiary);
+    }
+
+    .nav-link.active {
+        background-color: var(--accent-light);
+        color: var(--accent-primary);
+        font-weight: 500;
+    }
+
+    .nav-group-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        cursor: pointer;
+        user-select: none;
+        color: var(--text-primary);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .nav-group-header:hover {
+        background-color: var(--bg-tertiary);
+    }
+
+    .nav-group-header .nav-text {
+        flex: 1;
+    }
+
+    .nav-group-items {
+        padding-left: 16px;
+    }
+
+    .nav-group-items .nav-link {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .page-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        background: var(--bg-primary);
+    }
+
+    /* Tablet breakpoint */
+    @@media (max-width: 1024px) {
+        .page-content {
+            padding: 16px;
+        }
+    }
+
+    /* Mobile breakpoint */
+    @@media (max-width: 768px) {
+        .menu-toggle {
+            display: flex;
+        }
+
+        .desktop-only {
+            display: none !important;
+        }
+
+        .header-title {
+            font-size: 1rem;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            width: 280px;
+            z-index: 1000;
+            transform: translateX(-100%);
+        }
+
+        .mobile-menu-open .sidebar {
+            transform: translateX(0);
+        }
+
+        .mobile-menu-open .sidebar-overlay {
+            display: block;
+        }
+
+        .sidebar-collapsed .sidebar {
+            width: 280px;
+        }
+
+        .sidebar-collapsed .nav-text,
+        .sidebar-collapsed .chevron-icon {
+            display: inline;
+        }
+
+        .sidebar-collapsed .nav-link,
+        .sidebar-collapsed .nav-group-header {
+            justify-content: flex-start;
+            padding: 10px 16px;
+        }
+
+        .page-content {
+            padding: 12px;
+        }
+    }
+</style>
+
+@code {
+    private HashSet<int> expandedGroups = new();
+    private bool sidebarCollapsed = false;
+    private bool mobileMenuOpen = false;
+    private string searchQuery = string.Empty;
+    private string IconColor => ThemeService.IsDarkMode ? "#b3b3b3" : "#323130";
+
+    // All navigation items for search
+    private readonly List<NavItem> allNavItems = new()
+    {
+        new("String Reverse", "/reverse", "Text", new Icons.Regular.Size20.ArrowSwap()),
+        new("Case Converter", "/case-converter", "Text", new Icons.Regular.Size20.TextCaseTitle()),
+        new("Trim/Pad", "/trim-pad", "Text", new Icons.Regular.Size20.Cut()),
+        new("Line Counter", "/line-counter", "Text", new Icons.Regular.Size20.NumberSymbol()),
+        new("Line Operations", "/line-operations", "Text", new Icons.Regular.Size20.TextBulletListSquare()),
+        new("Compare", "/compare", "Text", new Icons.Regular.Size20.DocumentMultiple()),
+        new("Base64", "/base64", "Encode", new Icons.Regular.Size20.Code()),
+        new("URL Encode", "/url-encode", "Encode", new Icons.Regular.Size20.Link()),
+        new("Hash Generator", "/hash-generator", "Encode", new Icons.Regular.Size20.ShieldKeyhole()),
+        new("JSON Formatter", "/json-formatter", "JSON", new Icons.Regular.Size20.DocumentText()),
+        new("JSON Compare", "/json-compare", "JSON", new Icons.Regular.Size20.DocumentSearch()),
+        new("JSON to C#", "/json-to-csharp", "JSON", new Icons.Regular.Size20.Document()),
+        new("JSON to Java", "/json-to-java", "JSON", new Icons.Regular.Size20.Document()),
+        new("JSON to TypeScript", "/json-to-typescript", "JSON", new Icons.Regular.Size20.Document()),
+        new("Regex Search", "/regex-search", "Regex", new Icons.Regular.Size20.Search()),
+        new("Regex Replace", "/regex-replace", "Regex", new Icons.Regular.Size20.ArrowRepeatAll()),
+        new("Extract", "/extract", "Regex", new Icons.Regular.Size20.ArrowExportUp()),
+        new("DateTime Formatter", "/datetime-formatter", "Dev Tools", new Icons.Regular.Size20.CalendarClock()),
+        new("String Formatter", "/string-formatter", "Dev Tools", new Icons.Regular.Size20.TextQuote()),
+        new("GUID Generator", "/guid-generator", "Dev Tools", new Icons.Regular.Size20.Key()),
+        new("Password Generator", "/password-generator", "Dev Tools", new Icons.Regular.Size20.Password()),
+    };
+
+    private IEnumerable<NavItem> filteredNavItems => string.IsNullOrWhiteSpace(searchQuery)
+        ? Enumerable.Empty<NavItem>()
+        : allNavItems.Where(n => n.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                                  n.Category.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeAsync();
+            ThemeService.OnThemeChanged += OnThemeStateChanged;
+            NavigationManager.LocationChanged += OnLocationChanged;
+            
+            ExpandCurrentPageGroup();
+            
+            StateHasChanged();
+        }
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private void ToggleSidebar()
+    {
+        sidebarCollapsed = !sidebarCollapsed;
+    }
+
+    private void ToggleMobileMenu()
+    {
+        mobileMenuOpen = !mobileMenuOpen;
+    }
+
+    private void CloseMobileMenu()
+    {
+        mobileMenuOpen = false;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(e.Location);
+        if (!string.IsNullOrEmpty(relativePath))
+        {
+            await UserPreferences.SetLastVisitedPageAsync("/" + relativePath);
+        }
+        
+        ExpandCurrentPageGroup();
+        mobileMenuOpen = false;
+        searchQuery = string.Empty;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ExpandCurrentPageGroup()
+    {
+        var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        
+        // Text Operations
+        if (path.StartsWith("reverse") || path.StartsWith("case-converter") || 
+            path.StartsWith("trim-pad") || path.StartsWith("line") || path.StartsWith("compare"))
+        {
+            expandedGroups.Add(1);
+        }
+        // Encode/Decode
+        else if (path.StartsWith("base64") || path.StartsWith("url-encode") || path.StartsWith("hash"))
+        {
+            expandedGroups.Add(2);
+        }
+        // JSON Tools
+        else if (path.StartsWith("json"))
+        {
+            expandedGroups.Add(3);
+        }
+        // Regex Tools
+        else if (path.StartsWith("regex") || path.StartsWith("extract"))
+        {
+            expandedGroups.Add(4);
+        }
+        // Developer Tools
+        else if (path.StartsWith("datetime") || path.StartsWith("string-formatter") || 
+                 path.StartsWith("guid") || path.StartsWith("password"))
+        {
+            expandedGroups.Add(5);
+        }
+    }
+
+    private async Task OnThemeChanged(string value)
+    {
+        if (Enum.TryParse<AppTheme>(value, out var theme))
+        {
+            await ThemeService.SetThemeAsync(theme);
+        }
+    }
+
+    private void OnThemeStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleGroup(int groupId)
+    {
+        if (expandedGroups.Contains(groupId))
+            expandedGroups.Remove(groupId);
+        else
+            expandedGroups.Add(groupId);
+    }
+
+    private bool IsActive(string href)
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        return href == "/" ? string.IsNullOrEmpty(relativePath) : relativePath.StartsWith(href.TrimStart('/'));
+    }
+
+    private string GetIconColor(bool isActive) => isActive ? "#0078d4" : IconColor;
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeStateChanged;
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private record NavItem(string Name, string Href, string Category, Icon Icon);
+}

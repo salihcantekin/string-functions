@@ -1,0 +1,407 @@
+@page "/string-formatter"
+
+<PageTitle>String Formatter</PageTitle>
+
+<ToolPageLayout Title="String Formatter" Description="Test and explore C# string formatting, interpolation, and composite formatting.">
+    <ChildContent>
+        <div class="formatter-layout">
+            <!-- Numeric Formatting Section -->
+            <CollapsiblePanel Title="Numeric Formatting" @bind-IsExpanded="numericExpanded">
+                <div class="panel-content">
+                    <div class="input-row">
+                        <div class="option-group">
+                            <span class="option-label">Number:</span>
+                            <FluentNumberField @bind-Value="@testNumber" Style="width: 150px;" @bind-Value:after="UpdateAllFormats" />
+                        </div>
+                    </div>
+                    <div class="formats-table">
+                        <div class="format-header">
+                            <span>Format</span>
+                            <span>Description</span>
+                            <span>Result</span>
+                            <span></span>
+                        </div>
+                        @foreach (var fmt in numericFormats)
+                        {
+                            <div class="format-row">
+                                <code class="format-spec">@fmt.Format</code>
+                                <span class="format-desc">@fmt.Description</span>
+                                <code class="format-result">@fmt.Result</code>
+                                <CopyButton Text="@fmt.Result" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </CollapsiblePanel>
+
+            <!-- String Padding Section -->
+            <CollapsiblePanel Title="String Padding & Alignment" @bind-IsExpanded="paddingExpanded">
+                <div class="panel-content">
+                    <div class="input-row">
+                        <div class="option-group">
+                            <span class="option-label">Text:</span>
+                            <FluentTextField @bind-Value="@testString" Style="width: 150px;" @bind-Value:after="UpdateAllFormats" />
+                        </div>
+                        <div class="option-group">
+                            <span class="option-label">Width:</span>
+                            <FluentNumberField @bind-Value="@paddingWidth" Min="1" Max="50" Style="width: 80px;" @bind-Value:after="UpdateAllFormats" />
+                        </div>
+                    </div>
+                    <div class="formats-table">
+                        @foreach (var fmt in stringFormats)
+                        {
+                            <div class="format-row">
+                                <code class="format-spec">@fmt.Format</code>
+                                <span class="format-desc">@fmt.Description</span>
+                                <code class="format-result">"@fmt.Result"</code>
+                                <CopyButton Text="@fmt.Result" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </CollapsiblePanel>
+
+            <!-- Composite Formatting Section -->
+            <CollapsiblePanel Title="Composite Formatting (String.Format)" @bind-IsExpanded="compositeExpanded">
+                <div class="panel-content">
+                    <div class="composite-input">
+                        <FluentTextField @bind-Value="@compositeFormat" 
+                                        Placeholder="Name: {0}, Age: {1}, Score: {2:F2}" 
+                                        Style="flex: 1;" 
+                                        @bind-Value:after="UpdateComposite" />
+                    </div>
+                    <div class="composite-args">
+                        <div class="option-group">
+                            <span class="option-label">{0}:</span>
+                            <FluentTextField @bind-Value="@arg0" Style="width: 100px;" @bind-Value:after="UpdateComposite" />
+                        </div>
+                        <div class="option-group">
+                            <span class="option-label">{1}:</span>
+                            <FluentTextField @bind-Value="@arg1" Style="width: 100px;" @bind-Value:after="UpdateComposite" />
+                        </div>
+                        <div class="option-group">
+                            <span class="option-label">{2}:</span>
+                            <FluentTextField @bind-Value="@arg2" Style="width: 100px;" @bind-Value:after="UpdateComposite" />
+                        </div>
+                    </div>
+                    <div class="composite-result">
+                        <span class="result-label">Result:</span>
+                        <code>@compositeResult</code>
+                        <CopyButton Text="@compositeResult" />
+                    </div>
+                </div>
+            </CollapsiblePanel>
+
+            <!-- Escape Sequences Section -->
+            <CollapsiblePanel Title="Escape Sequences" @bind-IsExpanded="escapeExpanded">
+                <div class="panel-content">
+                    <div class="escape-grid">
+                        @foreach (var esc in escapeSequences)
+                        {
+                            <div class="escape-item">
+                                <code class="escape-code">@esc.Code</code>
+                                <span class="escape-name">@esc.Name</span>
+                                <code class="escape-example">@esc.Example</code>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </CollapsiblePanel>
+
+            <!-- String Methods Section -->
+            <CollapsiblePanel Title="Common String Methods" @bind-IsExpanded="methodsExpanded">
+                <div class="panel-content">
+                    <div class="input-row">
+                        <div class="option-group">
+                            <span class="option-label">Test String:</span>
+                            <FluentTextField @bind-Value="@methodTestString" Style="width: 250px;" @bind-Value:after="UpdateMethods" />
+                        </div>
+                    </div>
+                    <div class="methods-table">
+                        @foreach (var method in stringMethods)
+                        {
+                            <div class="format-row methods-row">
+                                <code class="format-spec">@method.Method</code>
+                                <code class="format-result">@method.Result</code>
+                                <CopyButton Text="@method.Result" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </CollapsiblePanel>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .formatter-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .panel-content {
+        padding-top: 12px;
+    }
+
+    .input-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .formats-table {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .format-header {
+        display: grid;
+        grid-template-columns: 140px 1fr 200px 40px;
+        gap: 8px;
+        padding: 8px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .format-row {
+        display: grid;
+        grid-template-columns: 140px 1fr 200px 40px;
+        gap: 8px;
+        padding: 8px;
+        align-items: center;
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .format-row:last-child {
+        border-bottom: none;
+    }
+
+    .format-row.methods-row {
+        grid-template-columns: 1fr 1fr 40px;
+    }
+
+    .format-spec {
+        background: var(--bg-tertiary);
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: var(--accent-primary);
+        font-size: 0.8rem;
+    }
+
+    .format-desc {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+    }
+
+    .format-result {
+        font-family: monospace;
+        color: var(--text-primary);
+    }
+
+    .composite-input {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .composite-args {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 12px;
+    }
+
+    .composite-result {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--bg-tertiary);
+        padding: 12px 16px;
+        border-radius: 6px;
+    }
+
+    .result-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .composite-result code {
+        color: var(--accent-primary);
+        flex: 1;
+    }
+
+    .escape-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+    }
+
+    .escape-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+    }
+
+    .escape-code {
+        background: var(--bg-primary);
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: var(--accent-primary);
+    }
+
+    .escape-name {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        flex: 1;
+    }
+
+    .escape-example {
+        color: var(--text-tertiary);
+        font-size: 0.75rem;
+    }
+
+    .methods-table {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    @@media (max-width: 768px) {
+        .format-header,
+        .format-row {
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+
+        .format-header {
+            display: none;
+        }
+
+        .escape-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private double testNumber = 1234.5678;
+    private string testString = "Hello";
+    private int paddingWidth = 15;
+    private string compositeFormat = "Name: {0}, Age: {1}, Score: {2:F2}";
+    private string arg0 = "John";
+    private string arg1 = "30";
+    private string arg2 = "95.5";
+    private string compositeResult = string.Empty;
+    private string methodTestString = "  Hello World  ";
+
+    // Panel states - first one expanded by default
+    private bool numericExpanded = true;
+    private bool paddingExpanded = false;
+    private bool compositeExpanded = false;
+    private bool escapeExpanded = false;
+    private bool methodsExpanded = false;
+
+    private List<FormatItem> numericFormats = new();
+    private List<FormatItem> stringFormats = new();
+    private List<MethodItem> stringMethods = new();
+
+    private readonly List<(string Code, string Name, string Example)> escapeSequences = new()
+    {
+        (@"\\", "Backslash", @"C:\\path"),
+        (@"\n", "New line", "Line1\\nLine2"),
+        (@"\r", "Carriage return", ""),
+        (@"\t", "Tab", "Col1\\tCol2"),
+        (@"\""", "Double quote", @"""text"""),
+        (@"\'", "Single quote", @"'text'"),
+        (@"\0", "Null", ""),
+        (@"\xNN", "Hex char", @"\x41 = A"),
+        (@"\uNNNN", "Unicode", @"\u0041 = A"),
+        (@"@""", "Verbatim", @"@""path\to\file"""),
+        (@"$""", "Interpolated", @"$""Value: {x}"""),
+    };
+
+    protected override void OnInitialized()
+    {
+        UpdateAllFormats();
+        UpdateComposite();
+        UpdateMethods();
+    }
+
+    private void UpdateAllFormats()
+    {
+        numericFormats = new List<FormatItem>
+        {
+            new("N", "Number", testNumber.ToString("N")),
+            new("N0", "Number (no decimals)", testNumber.ToString("N0")),
+            new("N4", "Number (4 decimals)", testNumber.ToString("N4")),
+            new("F2", "Fixed-point", testNumber.ToString("F2")),
+            new("C", "Currency", testNumber.ToString("C")),
+            new("C0", "Currency (no decimals)", testNumber.ToString("C0")),
+            new("P", "Percent", (testNumber / 100).ToString("P")),
+            new("P0", "Percent (no decimals)", (testNumber / 100).ToString("P0")),
+            new("E", "Scientific", testNumber.ToString("E")),
+            new("E2", "Scientific (2 digits)", testNumber.ToString("E2")),
+            new("X", "Hexadecimal", ((int)testNumber).ToString("X")),
+            new("X8", "Hex (8 digits)", ((int)testNumber).ToString("X8")),
+            new("D8", "Decimal (padded)", ((int)testNumber).ToString("D8")),
+            new("#,##0.00", "Custom pattern", testNumber.ToString("#,##0.00")),
+            new("0.###", "Custom (optional)", testNumber.ToString("0.###")),
+            new("(###) ###-####", "Phone mask", ((long)1234567890).ToString("(###) ###-####")),
+        };
+
+        stringFormats = new List<FormatItem>
+        {
+            new($"{{0,{paddingWidth}}}", "Right-align", string.Format($"{{0,{paddingWidth}}}", testString)),
+            new($"{{0,-{paddingWidth}}}", "Left-align", string.Format($"{{0,-{paddingWidth}}}", testString)),
+            new($"PadLeft({paddingWidth})", "PadLeft", testString.PadLeft(paddingWidth)),
+            new($"PadRight({paddingWidth})", "PadRight", testString.PadRight(paddingWidth)),
+            new($"PadLeft({paddingWidth}, '-')", "PadLeft with char", testString.PadLeft(paddingWidth, '-')),
+            new($"PadRight({paddingWidth}, '-')", "PadRight with char", testString.PadRight(paddingWidth, '-')),
+        };
+    }
+
+    private void UpdateComposite()
+    {
+        try
+        {
+            object[] args = { arg0, arg1, arg2 };
+            compositeResult = string.Format(compositeFormat, args);
+        }
+        catch (Exception ex)
+        {
+            compositeResult = $"Error: {ex.Message}";
+        }
+    }
+
+    private void UpdateMethods()
+    {
+        stringMethods = new List<MethodItem>
+        {
+            new(".ToUpper()", methodTestString.ToUpper()),
+            new(".ToLower()", methodTestString.ToLower()),
+            new(".Trim()", methodTestString.Trim()),
+            new(".TrimStart()", methodTestString.TrimStart()),
+            new(".TrimEnd()", methodTestString.TrimEnd()),
+            new(".Length", methodTestString.Length.ToString()),
+            new(".Replace(\" \", \"_\")", methodTestString.Replace(" ", "_")),
+            new(".Substring(0, 5)", methodTestString.Length >= 5 ? methodTestString.Substring(0, 5) : methodTestString),
+            new(".Contains(\"World\")", methodTestString.Contains("World").ToString()),
+            new(".StartsWith(\"  H\")", methodTestString.StartsWith("  H").ToString()),
+            new(".EndsWith(\"  \")", methodTestString.EndsWith("  ").ToString()),
+            new(".IndexOf(\"o\")", methodTestString.IndexOf("o").ToString()),
+            new(".Split(' ').Length", methodTestString.Split(' ').Length.ToString()),
+        };
+    }
+
+    private record FormatItem(string Format, string Description, string Result);
+    private record MethodItem(string Method, string Result);
+}

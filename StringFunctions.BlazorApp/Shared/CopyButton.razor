@@ -1,0 +1,65 @@
+@inject IJSRuntime JSRuntime
+
+<button class="copy-button @(Copied ? "copied" : "")" 
+        @onclick="CopyToClipboard" 
+        disabled="@(string.IsNullOrEmpty(Text))"
+        title="Copy to clipboard">
+    @if (Copied)
+    {
+        <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Custom" CustomColor="#4caf50" />
+    }
+    else
+    {
+        <FluentIcon Value="@(new Icons.Regular.Size16.Copy())" Color="Color.Custom" CustomColor="var(--text-secondary)" />
+    }
+</button>
+
+<style>
+    .copy-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--bg-secondary);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .copy-button:hover:not(:disabled) {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-primary);
+    }
+
+    .copy-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .copy-button.copied {
+        background: var(--success-bg);
+        border-color: var(--success);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string? Text { get; set; }
+
+    private bool Copied { get; set; }
+
+    private async Task CopyToClipboard()
+    {
+        if (string.IsNullOrEmpty(Text)) return;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Text);
+        Copied = true;
+        StateHasChanged();
+
+        await Task.Delay(1500);
+        Copied = false;
+        StateHasChanged();
+    }
+}

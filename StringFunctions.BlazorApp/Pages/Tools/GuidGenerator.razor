@@ -1,0 +1,300 @@
+@page "/guid-generator"
+
+<PageTitle>GUID Generator</PageTitle>
+
+<ToolPageLayout Title="GUID Generator" Description="Generate and format GUIDs/UUIDs in various formats.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Count:</span>
+            <FluentNumberField @bind-Value="@count" Min="1" Max="100" Style="width: 80px;" />
+        </div>
+        <div class="option-divider"></div>
+        <div class="option-group">
+            <span class="option-label">Format:</span>
+            <FluentSelect TOption="string" @bind-Value="@selectedFormat" Style="min-width: 200px;">
+                <FluentOption Value="D">Standard (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)</FluentOption>
+                <FluentOption Value="N">No hyphens (xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)</FluentOption>
+                <FluentOption Value="B">Braces ({xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx})</FluentOption>
+                <FluentOption Value="P">Parentheses ((xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx))</FluentOption>
+                <FluentOption Value="X">Hex ({0x...,0x...,0x...,{0x...}})</FluentOption>
+            </FluentSelect>
+        </div>
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@uppercase" Label="Uppercase" />
+        <div class="option-divider"></div>
+        <FluentButton Appearance="Appearance.Accent" OnClick="GenerateGuids">Generate</FluentButton>
+    </OptionsContent>
+    <ChildContent>
+        <div class="guid-layout">
+            <div class="output-section">
+                <div class="output-header">
+                    <span class="output-title">Generated GUIDs (@guids.Count)</span>
+                    <CopyButton Text="@string.Join(Environment.NewLine, guids)" />
+                </div>
+                <div class="guids-list">
+                    @foreach (var guid in guids)
+                    {
+                        <div class="guid-item">
+                            <code>@guid</code>
+                            <CopyButton Text="@guid" />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="parse-section">
+                <h3>Parse GUID</h3>
+                <FluentTextField @bind-Value="@parseInput" 
+                                Placeholder="Enter a GUID to parse..." 
+                                Style="width: 100%;" 
+                                @bind-Value:after="ParseGuid" />
+                @if (parsedGuid.HasValue)
+                {
+                    <div class="parsed-formats">
+                        <div class="parsed-item">
+                            <span class="format-label">D (Standard):</span>
+                            <code>@parsedGuid.Value.ToString("D")</code>
+                            <CopyButton Text="@parsedGuid.Value.ToString("D")" />
+                        </div>
+                        <div class="parsed-item">
+                            <span class="format-label">N (No hyphens):</span>
+                            <code>@parsedGuid.Value.ToString("N")</code>
+                            <CopyButton Text="@parsedGuid.Value.ToString("N")" />
+                        </div>
+                        <div class="parsed-item">
+                            <span class="format-label">B (Braces):</span>
+                            <code>@parsedGuid.Value.ToString("B")</code>
+                            <CopyButton Text="@parsedGuid.Value.ToString("B")" />
+                        </div>
+                        <div class="parsed-item">
+                            <span class="format-label">P (Parentheses):</span>
+                            <code>@parsedGuid.Value.ToString("P")</code>
+                            <CopyButton Text="@parsedGuid.Value.ToString("P")" />
+                        </div>
+                        <div class="parsed-item">
+                            <span class="format-label">Uppercase:</span>
+                            <code>@parsedGuid.Value.ToString("D").ToUpperInvariant()</code>
+                            <CopyButton Text="@parsedGuid.Value.ToString("D").ToUpperInvariant()" />
+                        </div>
+                        <div class="parsed-item">
+                            <span class="format-label">C# Guid.Parse:</span>
+                            <code>Guid.Parse("@parsedGuid.Value.ToString("D")")</code>
+                            <CopyButton Text="@($"Guid.Parse(\"{parsedGuid.Value.ToString("D")}\")")" />
+                        </div>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(parseInput))
+                {
+                    <FluentMessageBar Intent="MessageIntent.Error" Style="margin-top: 8px;">
+                        Invalid GUID format
+                    </FluentMessageBar>
+                }
+            </div>
+
+            <div class="info-section">
+                <h3>GUID Format Reference</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <code>D</code>
+                        <span>32 digits with hyphens</span>
+                        <code class="example">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code>
+                    </div>
+                    <div class="info-item">
+                        <code>N</code>
+                        <span>32 digits, no separators</span>
+                        <code class="example">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>
+                    </div>
+                    <div class="info-item">
+                        <code>B</code>
+                        <span>Enclosed in braces</span>
+                        <code class="example">{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}</code>
+                    </div>
+                    <div class="info-item">
+                        <code>P</code>
+                        <span>Enclosed in parentheses</span>
+                        <code class="example">(xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)</code>
+                    </div>
+                    <div class="info-item">
+                        <code>X</code>
+                        <span>Hexadecimal format</span>
+                        <code class="example">{0x...,0x...,{0x...}}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .guid-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .output-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .output-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .guids-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .guid-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    .guid-item code {
+        color: var(--accent-primary);
+    }
+
+    .parse-section, .info-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .parse-section h3, .info-section h3 {
+        margin: 0 0 12px 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .parsed-formats {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .parsed-item {
+        display: grid;
+        grid-template-columns: 140px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 8px;
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+    }
+
+    .format-label {
+        font-weight: 500;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .parsed-item code {
+        font-family: monospace;
+        color: var(--accent-primary);
+        font-size: 0.85rem;
+    }
+
+    .info-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .info-item {
+        display: grid;
+        grid-template-columns: 40px 200px 1fr;
+        gap: 12px;
+        align-items: center;
+        padding: 8px;
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    .info-item code:first-child {
+        background: var(--bg-primary);
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: var(--accent-primary);
+        text-align: center;
+    }
+
+    .info-item span {
+        color: var(--text-secondary);
+    }
+
+    .info-item .example {
+        color: var(--text-tertiary);
+        font-size: 0.8rem;
+    }
+
+    @@media (max-width: 768px) {
+        .parsed-item, .info-item {
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+    }
+</style>
+
+@code {
+    private int count = 5;
+    private string selectedFormat = "D";
+    private bool uppercase = false;
+    private List<string> guids = new();
+    private string parseInput = string.Empty;
+    private Guid? parsedGuid;
+
+    protected override void OnInitialized()
+    {
+        GenerateGuids();
+    }
+
+    private void GenerateGuids()
+    {
+        guids.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            var guid = Guid.NewGuid().ToString(selectedFormat);
+            guids.Add(uppercase ? guid.ToUpperInvariant() : guid.ToLowerInvariant());
+        }
+    }
+
+    private void ParseGuid()
+    {
+        if (string.IsNullOrWhiteSpace(parseInput))
+        {
+            parsedGuid = null;
+            return;
+        }
+
+        if (Guid.TryParse(parseInput, out var result))
+        {
+            parsedGuid = result;
+        }
+        else
+        {
+            parsedGuid = null;
+        }
+    }
+}
