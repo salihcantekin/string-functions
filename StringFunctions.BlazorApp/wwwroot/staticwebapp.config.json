@@ -69,6 +69,6 @@
     ".blat": "application/octet-stream"
   },
   "platform": {
-    "apiRuntime": "dotnet-isolated:8.0"
+    "apiRuntime": "dotnet:8.0"
   }
 }

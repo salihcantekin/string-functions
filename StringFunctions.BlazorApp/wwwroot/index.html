@@ -16,10 +16,8 @@
     
     <!-- PWA Support -->
     <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <meta name="theme-color" content="#0078d4" />
-    
-    <!-- Favicon as inline SVG data URL -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" type="image/svg+xml" />
     
     <!-- SEO -->
     <meta name="description" content="Powerful string manipulation tools for developers - Base64, URL encoding, JSON formatting, regex, and more." />
@@ -112,53 +110,6 @@
     </div>
 
     <!-- Blazor WebAssembly -->
-    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
-    <script>
-        // Clear old service worker caches before starting Blazor
-        async function clearCachesAndStart() {
-            // Check if we need to clear caches (version mismatch issue)
-            if ('caches' in window) {
-                try {
-                    const cacheNames = await caches.keys();
-                    // Delete any framework caches that might have stale WASM files
-                    for (const cacheName of cacheNames) {
-                        if (cacheName.includes('blazor') || cacheName.includes('framework')) {
-                            console.log('Clearing potentially stale cache:', cacheName);
-                            await caches.delete(cacheName);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Cache clearing failed:', e);
-                }
-            }
-            
-            // Start Blazor
-            Blazor.start().catch(err => {
-                console.error('Blazor start error:', err);
-                // If WASI error, try to clear everything and reload
-                if (err.message && err.message.includes('wasi_snapshot_preview1')) {
-                    console.log('WASI compatibility issue detected, clearing all caches...');
-                    if ('caches' in window) {
-                        caches.keys().then(names => {
-                            Promise.all(names.map(name => caches.delete(name))).then(() => {
-                                if ('serviceWorker' in navigator) {
-                                    navigator.serviceWorker.getRegistrations().then(registrations => {
-                                        Promise.all(registrations.map(r => r.unregister())).then(() => {
-                                            alert('Application updated. The page will reload.');
-                                            location.reload(true);
-                                        });
-                                    });
-                                } else {
-                                    location.reload(true);
-                                }
-                            });
-                        });
-                    }
-                }
-            });
-        }
-        
-        clearCachesAndStart();
-    </script>
+    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 </html>
