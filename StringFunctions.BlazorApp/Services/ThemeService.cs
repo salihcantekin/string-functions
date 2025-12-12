@@ -9,10 +9,9 @@ public enum AppTheme
     System
 }
 
-public class ThemeService : IAsyncDisposable
+public class ThemeService
 {
     private readonly IJSRuntime _jsRuntime;
-    private IJSObjectReference? _module;
     private AppTheme _currentTheme = AppTheme.System;
     private bool _isDarkMode;
 
@@ -76,14 +75,6 @@ public class ThemeService : IAsyncDisposable
         catch
         {
             return false;
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_module is not null)
-        {
-            await _module.DisposeAsync();
         }
     }
 }
