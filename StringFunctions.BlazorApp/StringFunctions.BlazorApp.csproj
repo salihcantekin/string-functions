@@ -8,7 +8,10 @@
     <!-- Bandwidth Optimization Settings -->
     <BlazorEnableCompression>true</BlazorEnableCompression>
     <RunAOTCompilation>false</RunAOTCompilation>
-    <WasmStripILAfterAOT>false</WasmStripILAfterAOT>
+    
+    <!-- Disable WASI for Azure Static Web Apps compatibility -->
+    <WasmEnableSIMD>false</WasmEnableSIMD>
+    <WasmEnableExceptionHandling>false</WasmEnableExceptionHandling>
     
     <!-- Trimming for smaller bundle size (only for publish) -->
     <PublishTrimmed>true</PublishTrimmed>

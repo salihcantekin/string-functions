@@ -66,9 +66,8 @@
     ".dll": "application/octet-stream",
     ".wasm": "application/wasm",
     ".dat": "application/octet-stream",
-    ".blat": "application/octet-stream"
-  },
-  "platform": {
-    "apiRuntime": "dotnet:8.0"
+    ".blat": "application/octet-stream",
+    ".json": "application/json",
+    ".pdb": "application/octet-stream"
   }
 }
