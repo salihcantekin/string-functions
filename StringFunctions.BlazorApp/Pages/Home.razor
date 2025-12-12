@@ -102,6 +102,7 @@
                 <a href="/string-formatter" class="tool-link new-badge"><span class="tool-name">String Formatter</span><span class="tool-desc">Test C# string formatting</span></a>
                 <a href="/guid-generator" class="tool-link new-badge"><span class="tool-name">GUID Generator</span><span class="tool-desc">Generate and format GUIDs</span></a>
                 <a href="/password-generator" class="tool-link new-badge"><span class="tool-name">Password Generator</span><span class="tool-desc">Generate secure passwords</span></a>
+                <a href="/http-client" class="tool-link new-badge"><span class="tool-name">HTTP Client</span><span class="tool-desc">Build and send HTTP requests</span></a>
             </div>
         </div>
     </div>
@@ -353,6 +354,14 @@
     {
         if (firstRender)
         {
+            // Check if user intentionally navigated to Home (skip redirect)
+            if (UserPreferences.SkipAutoRedirect)
+            {
+                UserPreferences.SkipAutoRedirect = false;
+                return;
+            }
+            
+            // Auto-redirect to last visited page on initial site load
             var lastPage = await UserPreferences.GetLastVisitedPageAsync();
             if (!string.IsNullOrEmpty(lastPage) && lastPage != "/")
             {

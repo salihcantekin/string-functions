@@ -6,6 +6,9 @@ public class UserPreferencesService
 {
     private readonly IJSRuntime _jsRuntime;
     private const string LastVisitedPageKey = "last-visited-page";
+    
+    // Flag to skip auto-redirect when user intentionally navigates to Home
+    public bool SkipAutoRedirect { get; set; } = false;
 
     public UserPreferencesService(IJSRuntime jsRuntime)
     {
@@ -33,6 +36,18 @@ public class UserPreferencesService
                 return;
 
             await _jsRuntime.InvokeVoidAsync("localStorage.setItem", LastVisitedPageKey, path);
+        }
+        catch
+        {
+            // Ignore storage errors
+        }
+    }
+    
+    public async Task ClearLastVisitedPageAsync()
+    {
+        try
+        {
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", LastVisitedPageKey);
         }
         catch
         {

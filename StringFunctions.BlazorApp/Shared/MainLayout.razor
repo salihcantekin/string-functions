@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @using StringFunctions.BlazorApp.Services
+@using Microsoft.AspNetCore.Components.Routing
 @inject ThemeService ThemeService
 @inject NavigationManager NavigationManager
 @inject UserPreferencesService UserPreferences
@@ -11,7 +12,7 @@
             <button class="menu-toggle" @onclick="ToggleMobileMenu" title="Toggle menu">
                 <FluentIcon Value="@(new Icons.Regular.Size20.Navigation())" Color="Color.Custom" CustomColor="#ffffff" />
             </button>
-            <span class="header-title">⚡ String Functions</span>
+            <NavLink class="header-title" href="" Match="NavLinkMatch.All" @onclick="OnHomeClick">⚡ String Functions</NavLink>
         </div>
         <div class="header-actions">
             <FluentSelect TOption="string" 
@@ -49,7 +50,7 @@
             <div class="sidebar-search @(sidebarCollapsed ? "collapsed" : "")">
                 @if (sidebarCollapsed)
                 {
-                    <button class="search-icon-btn" @onclick="() => { sidebarCollapsed = false; }" title="Search">
+                    <button class="search-icon-btn" @onclick="ExpandSidebar" title="Search">
                         <FluentIcon Value="@(new Icons.Regular.Size20.Search())" Color="Color.Custom" CustomColor="@IconColor" />
                     </button>
                 }
@@ -70,11 +71,11 @@
                 <div class="search-results">
                     @foreach (var item in filteredNavItems)
                     {
-                        <a href="@item.Href" class="nav-link search-result-item @(IsActive(item.Href) ? "active" : "")" @onclick="() => { searchQuery = string.Empty; CloseMobileMenu(); }">
+                        <NavLink href="@item.Href" class="nav-link search-result-item" ActiveClass="active" Match="NavLinkMatch.All" @onclick="ClearSearchAndCloseMenu">
                             <FluentIcon Value="@item.Icon" Color="Color.Custom" CustomColor="@GetIconColor(IsActive(item.Href))" />
                             <span class="nav-text">@item.Name</span>
                             <span class="search-category">@item.Category</span>
-                        </a>
+                        </NavLink>
                     }
                 </div>
             }
@@ -86,10 +87,10 @@
             {
                 <!-- Normal Navigation -->
                 <div class="nav-section">
-                    <a href="/" class="nav-link @(IsActive("/") ? "active" : "")" @onclick="CloseMobileMenu">
+                    <NavLink href="/" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="OnHomeClick">
                         <FluentIcon Value="@(new Icons.Regular.Size20.Home())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/"))" />
                         <span class="nav-text">Home</span>
-                    </a>
+                    </NavLink>
                 </div>
 
                 <div class="nav-section">
@@ -108,12 +109,12 @@
                     @if (expandedGroups.Contains(1))
                     {
                         <div class="nav-group-items">
-                            <a href="/reverse" class="nav-link @(IsActive("/reverse") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowSwap())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/reverse"))" /><span class="nav-text">String Reverse</span></a>
-                            <a href="/case-converter" class="nav-link @(IsActive("/case-converter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextCaseTitle())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/case-converter"))" /><span class="nav-text">Case Converter</span></a>
-                            <a href="/trim-pad" class="nav-link @(IsActive("/trim-pad") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Cut())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/trim-pad"))" /><span class="nav-text">Trim/Pad</span></a>
-                            <a href="/line-counter" class="nav-link @(IsActive("/line-counter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.NumberSymbol())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/line-counter"))" /><span class="nav-text">Line Counter</span></a>
-                            <a href="/line-operations" class="nav-link @(IsActive("/line-operations") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextBulletListSquare())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/line-operations"))" /><span class="nav-text">Line Operations</span></a>
-                            <a href="/compare" class="nav-link @(IsActive("/compare") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentMultiple())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/compare"))" /><span class="nav-text">Compare</span></a>
+                            <NavLink href="reverse" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowSwap())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/reverse"))" /><span class="nav-text">String Reverse</span></NavLink>
+                            <NavLink href="case-converter" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextCaseTitle())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/case-converter"))" /><span class="nav-text">Case Converter</span></NavLink>
+                            <NavLink href="trim-pad" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Cut())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/trim-pad"))" /><span class="nav-text">Trim/Pad</span></NavLink>
+                            <NavLink href="line-counter" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.NumberSymbol())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/line-counter"))" /><span class="nav-text">Line Counter</span></NavLink>
+                            <NavLink href="line-operations" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextBulletListSquare())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/line-operations"))" /><span class="nav-text">Line Operations</span></NavLink>
+                            <NavLink href="compare" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentMultiple())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/compare"))" /><span class="nav-text">Compare</span></NavLink>
                         </div>
                     }
                 </div>
@@ -134,9 +135,9 @@
                     @if (expandedGroups.Contains(2))
                     {
                         <div class="nav-group-items">
-                            <a href="/base64" class="nav-link @(IsActive("/base64") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Code())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/base64"))" /><span class="nav-text">Base64</span></a>
-                            <a href="/url-encode" class="nav-link @(IsActive("/url-encode") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Link())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/url-encode"))" /><span class="nav-text">URL Encode</span></a>
-                            <a href="/hash-generator" class="nav-link @(IsActive("/hash-generator") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ShieldKeyhole())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/hash-generator"))" /><span class="nav-text">Hash Generator</span></a>
+                            <NavLink href="base64" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Code())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/base64"))" /><span class="nav-text">Base64</span></NavLink>
+                            <NavLink href="url-encode" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Link())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/url-encode"))" /><span class="nav-text">URL Encode</span></NavLink>
+                            <NavLink href="hash-generator" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ShieldKeyhole())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/hash-generator"))" /><span class="nav-text">Hash Generator</span></NavLink>
                         </div>
                     }
                 </div>
@@ -157,11 +158,11 @@
                     @if (expandedGroups.Contains(3))
                     {
                         <div class="nav-group-items">
-                            <a href="/json-formatter" class="nav-link @(IsActive("/json-formatter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentText())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-formatter"))" /><span class="nav-text">JSON Formatter</span></a>
-                            <a href="/json-compare" class="nav-link @(IsActive("/json-compare") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentSearch())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-compare"))" /><span class="nav-text">JSON Compare</span></a>
-                            <a href="/json-to-csharp" class="nav-link @(IsActive("/json-to-csharp") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-csharp"))" /><span class="nav-text">JSON to C#</span></a>
-                            <a href="/json-to-java" class="nav-link @(IsActive("/json-to-java") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-java"))" /><span class="nav-text">JSON to Java</span></a>
-                            <a href="/json-to-typescript" class="nav-link @(IsActive("/json-to-typescript") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-typescript"))" /><span class="nav-text">JSON to TypeScript</span></a>
+                            <NavLink href="json-formatter" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentText())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-formatter"))" /><span class="nav-text">JSON Formatter</span></NavLink>
+                            <NavLink href="json-compare" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.DocumentSearch())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-compare"))" /><span class="nav-text">JSON Compare</span></NavLink>
+                            <NavLink href="json-to-csharp" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-csharp"))" /><span class="nav-text">JSON to C#</span></NavLink>
+                            <NavLink href="json-to-java" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-java"))" /><span class="nav-text">JSON to Java</span></NavLink>
+                            <NavLink href="json-to-typescript" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Document())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/json-to-typescript"))" /><span class="nav-text">JSON to TypeScript</span></NavLink>
                         </div>
                     }
                 </div>
@@ -182,9 +183,9 @@
                     @if (expandedGroups.Contains(4))
                     {
                         <div class="nav-group-items">
-                            <a href="/regex-search" class="nav-link @(IsActive("/regex-search") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Search())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/regex-search"))" /><span class="nav-text">Regex Search</span></a>
-                            <a href="/regex-replace" class="nav-link @(IsActive("/regex-replace") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowRepeatAll())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/regex-replace"))" /><span class="nav-text">Regex Replace</span></a>
-                            <a href="/extract" class="nav-link @(IsActive("/extract") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportUp())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/extract"))" /><span class="nav-text">Extract</span></a>
+                            <NavLink href="regex-search" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Search())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/regex-search"))" /><span class="nav-text">Regex Search</span></NavLink>
+                            <NavLink href="regex-replace" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowRepeatAll())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/regex-replace"))" /><span class="nav-text">Regex Replace</span></NavLink>
+                            <NavLink href="extract" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportUp())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/extract"))" /><span class="nav-text">Extract</span></NavLink>
                         </div>
                     }
                 </div>
@@ -205,11 +206,11 @@
                     @if (expandedGroups.Contains(5))
                     {
                         <div class="nav-group-items">
-                            <a href="/datetime-formatter" class="nav-link @(IsActive("/datetime-formatter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.CalendarClock())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/datetime-formatter"))" /><span class="nav-text">DateTime Formatter</span></a>
-                            <a href="/string-formatter" class="nav-link @(IsActive("/string-formatter") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextQuote())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/string-formatter"))" /><span class="nav-text">String Formatter</span></a>
-                            <a href="/guid-generator" class="nav-link @(IsActive("/guid-generator") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Key())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/guid-generator"))" /><span class="nav-text">GUID Generator</span></a>
-                            <a href="/password-generator" class="nav-link @(IsActive("/password-generator") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Password())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/password-generator"))" /><span class="nav-text">Password Generator</span></a>
-                            <a href="/http-client" class="nav-link @(IsActive("/http-client") ? "active" : "")" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.GlobeSearch())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/http-client"))" /><span class="nav-text">HTTP Client</span></a>
+                            <NavLink href="datetime-formatter" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.CalendarClock())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/datetime-formatter"))" /><span class="nav-text">DateTime Formatter</span></NavLink>
+                            <NavLink href="string-formatter" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.TextQuote())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/string-formatter"))" /><span class="nav-text">String Formatter</span></NavLink>
+                            <NavLink href="guid-generator" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Key())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/guid-generator"))" /><span class="nav-text">GUID Generator</span></NavLink>
+                            <NavLink href="password-generator" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.Password())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/password-generator"))" /><span class="nav-text">Password Generator</span></NavLink>
+                            <NavLink href="http-client" class="nav-link" ActiveClass="active" Match="NavLinkMatch.All" @onclick="CloseMobileMenu"><FluentIcon Value="@(new Icons.Regular.Size20.GlobeSearch())" Color="Color.Custom" CustomColor="@GetIconColor(IsActive("/http-client"))" /><span class="nav-text">HTTP Client</span></NavLink>
                         </div>
                     }
                 </div>
@@ -252,6 +253,13 @@
     .header-title {
         font-size: 1.25rem;
         font-weight: 600;
+        color: inherit;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .header-title:hover {
+        opacity: 0.9;
     }
 
     .header-actions {
@@ -440,6 +448,7 @@
         text-decoration: none;
         transition: background-color 0.15s ease;
         white-space: nowrap;
+        cursor: pointer;
     }
 
     .nav-link:hover {
@@ -611,6 +620,11 @@
         sidebarCollapsed = !sidebarCollapsed;
     }
 
+    private void ExpandSidebar()
+    {
+        sidebarCollapsed = false;
+    }
+
     private void ToggleMobileMenu()
     {
         mobileMenuOpen = !mobileMenuOpen;
@@ -618,6 +632,12 @@
 
     private void CloseMobileMenu()
     {
+        mobileMenuOpen = false;
+    }
+
+    private void ClearSearchAndCloseMenu()
+    {
+        searchQuery = string.Empty;
         mobileMenuOpen = false;
     }
 
@@ -662,7 +682,7 @@
         }
         // Developer Tools
         else if (path.StartsWith("datetime") || path.StartsWith("string-formatter") || 
-                 path.StartsWith("guid") || path.StartsWith("password"))
+                 path.StartsWith("guid") || path.StartsWith("password") || path.StartsWith("http-client"))
         {
             expandedGroups.Add(5);
         }
@@ -701,6 +721,13 @@
     {
         ThemeService.OnThemeChanged -= OnThemeStateChanged;
         NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    // Called when user intentionally clicks Home link
+    private void OnHomeClick()
+    {
+        UserPreferences.SkipAutoRedirect = true;
+        CloseMobileMenu();
     }
 
     private record NavItem(string Name, string Href, string Category, Icon Icon);
