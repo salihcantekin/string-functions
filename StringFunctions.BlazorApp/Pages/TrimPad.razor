@@ -25,7 +25,7 @@
             </div>
             <div class="option-group">
                 <span class="option-label">Char:</span>
-                <FluentTextField @bind-Value="@paddingChar" MaxLength="1" Style="width: 60px;" @bind-Value:after="Process" />
+                <FluentTextField @bind-Value="@paddingChar" Maxlength="1" Style="width: 60px;" @bind-Value:after="Process" />
             </div>
         }
         @if (operationMode.StartsWith("trim"))
@@ -148,3 +148,4 @@
         };
     }
 }
+
