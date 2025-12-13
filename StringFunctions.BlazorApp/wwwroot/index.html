@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>String Functions</title>
+    <title>String Functions - Developer Tools for Text & JSON Operations</title>
     <base href="/" />
     
     <!-- Preload critical resources -->
@@ -19,8 +19,47 @@
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
     <meta name="theme-color" content="#0078d4" />
     
-    <!-- SEO -->
-    <meta name="description" content="Powerful string manipulation tools for developers - Base64, URL encoding, JSON formatting, regex, and more." />
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-512.png" />
+    
+    <!-- Primary SEO Meta Tags (will be updated dynamically) -->
+    <meta name="description" content="Free online string manipulation tools for developers. Base64 encode/decode, JSON formatter, regex tools, case converter, URL encoding, hash generator, and more." />
+    <meta name="keywords" content="string tools, text tools, developer tools, base64, json formatter, regex, url encode, hash generator, online tools" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="author" content="String Functions" />
+    <link rel="canonical" href="https://stringfunctions.net/" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://stringfunctions.net/" />
+    <meta property="og:title" content="String Functions - Developer Tools" />
+    <meta property="og:description" content="Free online string manipulation tools for developers" />
+    <meta property="og:image" content="https://stringfunctions.net/icon-512.png" />
+    <meta property="og:site_name" content="String Functions" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://stringfunctions.net/" />
+    <meta property="twitter:title" content="String Functions - Developer Tools" />
+    <meta property="twitter:description" content="Free online string manipulation tools for developers" />
+    <meta property="twitter:image" content="https://stringfunctions.net/icon-512.png" />
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        // Replace G-XXXXXXXXXX with your actual Google Analytics Measurement ID
+        // gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    
+    <!-- Google Search Console Verification -->
+    <!-- Add this meta tag after verifying your site with Google Search Console -->
+    <!-- <meta name="google-site-verification" content="your-verification-code" /> -->
     
     <style>
         :root {
@@ -109,7 +148,57 @@
         <a class="dismiss" onclick="this.parentElement.style.display='none'">X</a>
     </div>
 
+    <!-- SEO Helper -->
+    <script src="js/seo.js"></script>
+
     <!-- Blazor WebAssembly -->
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        // Clear old service worker caches before starting Blazor
+        async function clearCachesAndStart() {
+            // Check if we need to clear caches (version mismatch issue)
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    // Delete any framework caches that might have stale WASM files
+                    for (const cacheName of cacheNames) {
+                        if (cacheName.includes('blazor') || cacheName.includes('framework')) {
+                            console.log('Clearing potentially stale cache:', cacheName);
+                            await caches.delete(cacheName);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Cache clearing failed:', e);
+                }
+            }
+            
+            // Start Blazor
+            Blazor.start().catch(err => {
+                console.error('Blazor start error:', err);
+                // If WASI error, try to clear everything and reload
+                if (err.message && err.message.includes('wasi_snapshot_preview1')) {
+                    console.log('WASI compatibility issue detected, clearing all caches...');
+                    if ('caches' in window) {
+                        caches.keys().then(names => {
+                            Promise.all(names.map(name => caches.delete(name))).then(() => {
+                                if ('serviceWorker' in navigator) {
+                                    navigator.serviceWorker.getRegistrations().then(registrations => {
+                                        Promise.all(registrations.map(r => r.unregister())).then(() => {
+                                            alert('Application updated. The page will reload.');
+                                            location.reload(true);
+                                        });
+                                    });
+                                } else {
+                                    location.reload(true);
+                                }
+                            });
+                        });
+                    }
+                }
+            });
+        }
+        
+        clearCachesAndStart();
+    </script>
 </body>
 </html>

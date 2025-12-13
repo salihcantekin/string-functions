@@ -1,13 +1,17 @@
 @page "/"
 @using StringFunctions.BlazorApp.Services
+@using StringFunctions.BlazorApp.Models
 @inject UserPreferencesService UserPreferences
 @inject NavigationManager NavigationManager
+@inject ToolsService ToolsService
+@inject FavoritesService FavoritesService
 
+<SeoHead Route="" />
 <PageTitle>String Functions - Home</PageTitle>
 
 <div class="home-page">
     <div class="hero-section">
-        <h1 class="hero-title">⚡ String Functions</h1>
+        <h1 class="hero-title">? String Functions</h1>
         <p class="hero-subtitle">Powerful tools collection for developers</p>
     </div>
 
@@ -19,92 +23,66 @@
         </p>
     </div>
 
+    @if (favoriteTools.Any())
+    {
+        <div class="favorites-section">
+            <div class="section-header">
+                <h2>? Your Favorites</h2>
+                <button class="clear-favorites-btn" @onclick="ClearFavorites">Clear All</button>
+            </div>
+            <div class="tools-grid compact">
+                @foreach (var tool in favoriteTools)
+                {
+                    <a href="@tool.Route" class="tool-link">
+                        <div class="tool-header">
+                            <span class="tool-name">@tool.Name</span>
+                            @if (tool.IsNew)
+                            {
+                                <span class="new-badge">NEW</span>
+                            }
+                        </div>
+                        <span class="tool-desc">@tool.Description</span>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
     <div class="features-grid">
-        <div class="feature-card">
-            <div class="feature-icon">📝</div>
-            <h3>Text Operations</h3>
-            <p>Case converter, reverse, line operations and more</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="feature-icon">🔐</div>
-            <h3>Encode/Decode</h3>
-            <p>Base64, URL encoding, hash generation</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="feature-icon">💻</div>
-            <h3>JSON Tools</h3>
-            <p>Formatter, compare, and code generators</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="feature-icon">🔍</div>
-            <h3>Regex Tools</h3>
-            <p>Search, replace and extract with patterns</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="feature-icon">🛠️</div>
-            <h3>Developer Tools</h3>
-            <p>DateTime/String formatters, GUID generator</p>
-        </div>
+        @foreach (var category in categories)
+        {
+            <div class="feature-card">
+                <div class="feature-icon">@category.Emoji</div>
+                <h3>@category.Name</h3>
+                <p>@GetCategoryDescription(category)</p>
+            </div>
+        }
     </div>
 
     <div class="tools-section">
         <h2>All Tools</h2>
 
-        <div class="category-block">
-            <h3 class="category-title">📝 Text Operations</h3>
-            <div class="tools-grid">
-                <a href="/reverse" class="tool-link"><span class="tool-name">String Reverse</span><span class="tool-desc">Reverse strings or lines</span></a>
-                <a href="/case-converter" class="tool-link"><span class="tool-name">Case Converter</span><span class="tool-desc">Convert text case (camelCase, snake_case...)</span></a>
-                <a href="/trim-pad" class="tool-link"><span class="tool-name">Trim/Pad</span><span class="tool-desc">Whitespace operations</span></a>
-                <a href="/line-counter" class="tool-link"><span class="tool-name">Line Counter</span><span class="tool-desc">Count lines, words, characters</span></a>
-                <a href="/line-operations" class="tool-link new-badge"><span class="tool-name">Line Operations</span><span class="tool-desc">Sort, filter, dedupe lines (Notepad++ style)</span></a>
-                <a href="/compare" class="tool-link"><span class="tool-name">Compare</span><span class="tool-desc">Compare texts side by side</span></a>
+        @foreach (var category in categories)
+        {
+            <div class="category-block">
+                <h3 class="category-title">@category.Emoji @category.Name</h3>
+                <div class="tools-grid">
+                    @foreach (var tool in category.Tools)
+                    {
+                        <a href="@tool.Route" class="tool-link @(tool.IsNew ? "new-badge" : "")">
+                            <div class="tool-header">
+                                <span class="tool-name">@tool.Name</span>
+                                @if (tool.IsNew)
+                                {
+                                    <span class="new-badge">NEW</span>
+                                }
+                            </div>
+                            <span class="tool-desc">@tool.Description</span>
+                        </a>
+                    }
+                </div>
             </div>
-        </div>
-
-        <div class="category-block">
-            <h3 class="category-title">🔐 Encode/Decode</h3>
-            <div class="tools-grid">
-                <a href="/base64" class="tool-link"><span class="tool-name">Base64</span><span class="tool-desc">Encode/Decode Base64</span></a>
-                <a href="/url-encode" class="tool-link"><span class="tool-name">URL Encode</span><span class="tool-desc">URL encoding/decoding</span></a>
-                <a href="/hash-generator" class="tool-link new-badge"><span class="tool-name">Hash Generator</span><span class="tool-desc">MD5, SHA1, SHA256, SHA512</span></a>
-            </div>
-        </div>
-
-        <div class="category-block">
-            <h3 class="category-title">💻 JSON Tools</h3>
-            <div class="tools-grid">
-                <a href="/json-formatter" class="tool-link"><span class="tool-name">JSON Formatter</span><span class="tool-desc">Format and validate JSON</span></a>
-                <a href="/json-compare" class="tool-link"><span class="tool-name">JSON Compare</span><span class="tool-desc">Compare two JSON documents</span></a>
-                <a href="/json-to-csharp" class="tool-link"><span class="tool-name">JSON to C#</span><span class="tool-desc">Generate C# classes from JSON</span></a>
-                <a href="/json-to-java" class="tool-link"><span class="tool-name">JSON to Java</span><span class="tool-desc">Generate Java POJOs from JSON</span></a>
-                <a href="/json-to-typescript" class="tool-link"><span class="tool-name">JSON to TypeScript</span><span class="tool-desc">Generate TypeScript interfaces</span></a>
-            </div>
-        </div>
-
-        <div class="category-block">
-            <h3 class="category-title">🔍 Regex Tools</h3>
-            <div class="tools-grid">
-                <a href="/regex-search" class="tool-link"><span class="tool-name">Regex Search</span><span class="tool-desc">Search with regular expressions</span></a>
-                <a href="/regex-replace" class="tool-link"><span class="tool-name">Regex Replace</span><span class="tool-desc">Find and replace with regex</span></a>
-                <a href="/extract" class="tool-link"><span class="tool-name">Extract</span><span class="tool-desc">Extract patterns from text</span></a>
-            </div>
-        </div>
-
-        <div class="category-block">
-            <h3 class="category-title">🛠️ Developer Tools</h3>
-            <div class="tools-grid">
-                <a href="/datetime-formatter" class="tool-link new-badge"><span class="tool-name">DateTime Formatter</span><span class="tool-desc">Test C# DateTime format strings</span></a>
-                <a href="/string-formatter" class="tool-link new-badge"><span class="tool-name">String Formatter</span><span class="tool-desc">Test C# string formatting</span></a>
-                <a href="/guid-generator" class="tool-link new-badge"><span class="tool-name">GUID Generator</span><span class="tool-desc">Generate and format GUIDs</span></a>
-                <a href="/password-generator" class="tool-link new-badge"><span class="tool-name">Password Generator</span><span class="tool-desc">Generate secure passwords</span></a>
-                <a href="/http-client" class="tool-link new-badge"><span class="tool-name">HTTP Client</span><span class="tool-desc">Build and send HTTP requests</span></a>
-            </div>
-        </div>
+        }
     </div>
 </div>
 
@@ -152,6 +130,43 @@
         margin: 0;
         color: var(--text-secondary);
         line-height: 1.6;
+    }
+
+    .favorites-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .clear-favorites-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.15s ease;
+    }
+
+    .clear-favorites-btn:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-primary);
+        color: var(--accent-primary);
     }
 
     .features-grid {
@@ -227,6 +242,10 @@
         gap: 8px;
     }
 
+    .tools-grid.compact {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
     .tool-link {
         display: flex;
         flex-direction: column;
@@ -245,22 +264,30 @@
         border-color: var(--accent-primary);
     }
 
-    .tool-link.new-badge::after {
-        content: 'NEW';
-        position: absolute;
-        top: 8px;
-        right: 8px;
+    .tool-link.new-badge .tool-header {
+        padding-right: 48px;
+    }
+
+    .tool-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .tool-name {
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .new-badge {
         font-size: 0.6rem;
         font-weight: 700;
         color: white;
         background: var(--accent-primary);
         padding: 2px 6px;
         border-radius: 4px;
-    }
-
-    .tool-name {
-        font-weight: 500;
-        font-size: 0.9rem;
+        white-space: nowrap;
     }
 
     .tool-desc {
@@ -269,7 +296,6 @@
         margin-top: 2px;
     }
 
-    /* Tablet breakpoint */
     @@media (max-width: 1024px) {
         .features-grid {
             grid-template-columns: repeat(3, 1fr);
@@ -278,9 +304,12 @@
         .tools-grid {
             grid-template-columns: repeat(2, 1fr);
         }
+
+        .tools-grid.compact {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
-    /* Mobile breakpoint */
     @@media (max-width: 768px) {
         .hero-section {
             padding: 24px 16px;
@@ -297,6 +326,11 @@
         }
 
         .welcome-section {
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .favorites-section {
             padding: 16px;
             margin-bottom: 16px;
         }
@@ -332,12 +366,15 @@
             grid-template-columns: 1fr;
         }
 
+        .tools-grid.compact {
+            grid-template-columns: 1fr;
+        }
+
         .tool-link {
             padding: 10px 12px;
         }
     }
 
-    /* Small mobile breakpoint */
     @@media (max-width: 480px) {
         .hero-title {
             font-size: 1.3rem;
@@ -350,23 +387,67 @@
 </style>
 
 @code {
+    private List<ToolCategory> categories = new();
+    private List<Tool> favoriteTools = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await ToolsService.GetCategoriesAsync();
+        await LoadFavorites();
+        FavoritesService.OnFavoritesChanged += OnFavoritesChanged;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            // Check if user intentionally navigated to Home (skip redirect)
             if (UserPreferences.SkipAutoRedirect)
             {
                 UserPreferences.SkipAutoRedirect = false;
                 return;
             }
             
-            // Auto-redirect to last visited page on initial site load
             var lastPage = await UserPreferences.GetLastVisitedPageAsync();
             if (!string.IsNullOrEmpty(lastPage) && lastPage != "/")
             {
                 NavigationManager.NavigateTo(lastPage);
             }
         }
+    }
+
+    private async Task LoadFavorites()
+    {
+        var favoriteIds = await FavoritesService.GetFavoritesAsync();
+        var allTools = await ToolsService.GetAllToolsAsync();
+        favoriteTools = allTools.Where(t => favoriteIds.Contains(t.Id)).ToList();
+    }
+
+    private async void OnFavoritesChanged()
+    {
+        await LoadFavorites();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ClearFavorites()
+    {
+        await FavoritesService.ClearAllAsync();
+    }
+
+    private string GetCategoryDescription(ToolCategory category)
+    {
+        return category.Id switch
+        {
+            "text" => "Case converter, reverse, line operations and more",
+            "encode" => "Base64, URL encoding, hash generation",
+            "json" => "Formatter, compare, and code generators",
+            "regex" => "Search, replace and extract with patterns",
+            "developer" => "DateTime/String formatters, GUID generator",
+            _ => ""
+        };
+    }
+
+    public void Dispose()
+    {
+        FavoritesService.OnFavoritesChanged -= OnFavoritesChanged;
     }
 }

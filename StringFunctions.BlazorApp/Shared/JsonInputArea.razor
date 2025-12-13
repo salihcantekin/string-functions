@@ -2,8 +2,8 @@
 @inject IJSRuntime JSRuntime
 
 <div class="json-input-area @(HasError ? "has-error" : "") @(IsValid ? "is-valid" : "")">
-    <div class="json-input-header">
-        <span class="json-input-title">@Title</span>
+    <div class="json-input-header io-panel-header">
+        <span class="json-input-title io-panel-title">@Title</span>
         <div class="json-input-actions">
             @if (ShowFormatButton && !string.IsNullOrWhiteSpace(Value))
             {
@@ -32,6 +32,57 @@
         </div>
     }
 </div>
+
+<style>
+    .json-input-area {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .json-input-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .json-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .json-action-btn:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--accent-primary);
+    }
+
+    .json-validation-message {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+        border-radius: 4px;
+        margin-top: -4px;
+    }
+
+    .json-validation-message.error {
+        background: var(--error-bg);
+        color: var(--error);
+        border: 1px solid var(--error);
+    }
+
+    .json-validation-message.success {
+        background: var(--success-bg);
+        color: var(--success);
+        border: 1px solid var(--success);
+    }
+</style>
 
 @code {
     [Parameter]

@@ -1,0 +1,342 @@
+@page "/number-converter"
+
+<SeoHead Route="number-converter" />
+
+<PageTitle>Number Converter</PageTitle>
+
+<ToolPageLayout Title="Number Converter" Description="Convert numbers between Binary, Decimal, Hexadecimal, and Octal formats.">
+    <ChildContent>
+        <div class="number-converter-layout">
+            <div class="converter-grid">
+                <!-- Decimal -->
+                <div class="number-input-section">
+                    <div class="number-header">
+                        <h3>Decimal (Base 10)</h3>
+                        <CopyButton Text="@decimalValue" />
+                    </div>
+                    <FluentTextField @bind-Value="@decimalValue" 
+                                    @bind-Value:after="OnDecimalChanged"
+                                    Placeholder="Enter decimal number"
+                                    Style="width: 100%; font-family: monospace; font-size: 1.1rem;" />
+                    <span class="number-hint">0-9 digits</span>
+                </div>
+
+                <!-- Binary -->
+                <div class="number-input-section">
+                    <div class="number-header">
+                        <h3>Binary (Base 2)</h3>
+                        <CopyButton Text="@binaryValue" />
+                    </div>
+                    <FluentTextField @bind-Value="@binaryValue" 
+                                    @bind-Value:after="OnBinaryChanged"
+                                    Placeholder="Enter binary number"
+                                    Style="width: 100%; font-family: monospace; font-size: 1.1rem;" />
+                    <span class="number-hint">0-1 digits only</span>
+                </div>
+
+                <!-- Hexadecimal -->
+                <div class="number-input-section">
+                    <div class="number-header">
+                        <h3>Hexadecimal (Base 16)</h3>
+                        <CopyButton Text="@hexValue" />
+                    </div>
+                    <FluentTextField @bind-Value="@hexValue" 
+                                    @bind-Value:after="OnHexChanged"
+                                    Placeholder="Enter hex number"
+                                    Style="width: 100%; font-family: monospace; font-size: 1.1rem;" />
+                    <span class="number-hint">0-9, A-F digits</span>
+                </div>
+
+                <!-- Octal -->
+                <div class="number-input-section">
+                    <div class="number-header">
+                        <h3>Octal (Base 8)</h3>
+                        <CopyButton Text="@octalValue" />
+                    </div>
+                    <FluentTextField @bind-Value="@octalValue" 
+                                    @bind-Value:after="OnOctalChanged"
+                                    Placeholder="Enter octal number"
+                                    Style="width: 100%; font-family: monospace; font-size: 1.1rem;" />
+                    <span class="number-hint">0-7 digits only</span>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <FluentMessageBar Title="Error" Intent="MessageIntent.Error">
+                    @errorMessage
+                </FluentMessageBar>
+            }
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <h3>Number System Information</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>Decimal (Base 10)</h4>
+                        <p>Standard number system using digits 0-9.</p>
+                        <p><strong>Example:</strong> 42 = 42</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Binary (Base 2)</h4>
+                        <p>Used in computing, uses only 0 and 1.</p>
+                        <p><strong>Example:</strong> 42 = 101010</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Hexadecimal (Base 16)</h4>
+                        <p>Compact representation, uses 0-9 and A-F.</p>
+                        <p><strong>Example:</strong> 42 = 2A</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Octal (Base 8)</h4>
+                        <p>Less common, uses digits 0-7.</p>
+                        <p><strong>Example:</strong> 42 = 52</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .number-converter-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .converter-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .number-input-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .number-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .number-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .number-hint {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+        font-style: italic;
+    }
+
+    .info-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .info-section h3 {
+        margin: 0 0 16px 0;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 8px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .info-card {
+        background: var(--bg-tertiary);
+        padding: 12px;
+        border-radius: 6px;
+    }
+
+    .info-card h4 {
+        margin: 0 0 8px 0;
+        font-size: 0.9rem;
+        color: var(--accent-primary);
+    }
+
+    .info-card p {
+        margin: 4px 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .info-card strong {
+        color: var(--text-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .converter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .number-input-section {
+            padding: 12px;
+        }
+
+        .info-section {
+            padding: 16px;
+        }
+    }
+</style>
+
+@code {
+    private string decimalValue = "";
+    private string binaryValue = "";
+    private string hexValue = "";
+    private string octalValue = "";
+    private string errorMessage = "";
+    private bool isUpdating = false;
+
+    private void OnDecimalChanged()
+    {
+        if (isUpdating) return;
+        
+        errorMessage = "";
+        if (string.IsNullOrWhiteSpace(decimalValue))
+        {
+            ClearAll(exceptDecimal: true);
+            return;
+        }
+
+        if (long.TryParse(decimalValue, out long value))
+        {
+            isUpdating = true;
+            try
+            {
+                binaryValue = Convert.ToString(value, 2);
+                hexValue = Convert.ToString(value, 16).ToUpper();
+                octalValue = Convert.ToString(value, 8);
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Conversion error: {ex.Message}";
+            }
+            finally
+            {
+                isUpdating = false;
+            }
+        }
+        else
+        {
+            errorMessage = "Invalid decimal number";
+        }
+    }
+
+    private void OnBinaryChanged()
+    {
+        if (isUpdating) return;
+        
+        errorMessage = "";
+        if (string.IsNullOrWhiteSpace(binaryValue))
+        {
+            ClearAll(exceptBinary: true);
+            return;
+        }
+
+        try
+        {
+            long value = Convert.ToInt64(binaryValue, 2);
+            isUpdating = true;
+            decimalValue = value.ToString();
+            hexValue = Convert.ToString(value, 16).ToUpper();
+            octalValue = Convert.ToString(value, 8);
+        }
+        catch
+        {
+            errorMessage = "Invalid binary number (only 0-1 allowed)";
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private void OnHexChanged()
+    {
+        if (isUpdating) return;
+        
+        errorMessage = "";
+        if (string.IsNullOrWhiteSpace(hexValue))
+        {
+            ClearAll(exceptHex: true);
+            return;
+        }
+
+        try
+        {
+            long value = Convert.ToInt64(hexValue, 16);
+            isUpdating = true;
+            decimalValue = value.ToString();
+            binaryValue = Convert.ToString(value, 2);
+            octalValue = Convert.ToString(value, 8);
+        }
+        catch
+        {
+            errorMessage = "Invalid hexadecimal number (only 0-9, A-F allowed)";
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private void OnOctalChanged()
+    {
+        if (isUpdating) return;
+        
+        errorMessage = "";
+        if (string.IsNullOrWhiteSpace(octalValue))
+        {
+            ClearAll(exceptOctal: true);
+            return;
+        }
+
+        try
+        {
+            long value = Convert.ToInt64(octalValue, 8);
+            isUpdating = true;
+            decimalValue = value.ToString();
+            binaryValue = Convert.ToString(value, 2);
+            hexValue = Convert.ToString(value, 16).ToUpper();
+        }
+        catch
+        {
+            errorMessage = "Invalid octal number (only 0-7 allowed)";
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private void ClearAll(bool exceptDecimal = false, bool exceptBinary = false, bool exceptHex = false, bool exceptOctal = false)
+    {
+        if (!exceptDecimal) decimalValue = "";
+        if (!exceptBinary) binaryValue = "";
+        if (!exceptHex) hexValue = "";
+        if (!exceptOctal) octalValue = "";
+    }
+}

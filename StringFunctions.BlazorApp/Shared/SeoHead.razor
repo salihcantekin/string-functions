@@ -1,0 +1,76 @@
+@using StringFunctions.BlazorApp.Services
+@using StringFunctions.BlazorApp.Models
+@inject SeoService SeoService
+@inject NavigationManager NavigationManager
+
+<HeadContent>
+    @if (_metadata != null)
+    {
+        <!-- Primary Meta Tags -->
+        <title>@_metadata.Title</title>
+        <meta name="title" content="@_metadata.Title" />
+        <meta name="description" content="@_metadata.Description" />
+        @if (!string.IsNullOrEmpty(_metadata.Keywords))
+        {
+            <meta name="keywords" content="@_metadata.Keywords" />
+        }
+        <link rel="canonical" href="@_metadata.Url" />
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="@_metadata.Type" />
+        <meta property="og:url" content="@_metadata.Url" />
+        <meta property="og:title" content="@_metadata.Title" />
+        <meta property="og:description" content="@_metadata.Description" />
+        <meta property="og:image" content="@GetFullImageUrl(_metadata.ImageUrl)" />
+        <meta property="og:site_name" content="String Functions" />
+        <meta property="og:locale" content="en_US" />
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="@_metadata.Url" />
+        <meta property="twitter:title" content="@_metadata.Title" />
+        <meta property="twitter:description" content="@_metadata.Description" />
+        <meta property="twitter:image" content="@GetFullImageUrl(_metadata.ImageUrl)" />
+        
+        <!-- Additional SEO -->
+        <meta name="robots" content="index, follow" />
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="7 days" />
+        <meta name="author" content="String Functions" />
+        
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+            @((MarkupString)SeoService.GenerateStructuredData(_metadata))
+        </script>
+    }
+</HeadContent>
+
+@code {
+    [Parameter]
+    public string? Route { get; set; }
+
+    private PageMetadata? _metadata;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateMetadata();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        UpdateMetadata();
+    }
+
+    private void UpdateMetadata()
+    {
+        var route = Route ?? NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        _metadata = SeoService.GetPageMetadata(route);
+    }
+
+    private string GetFullImageUrl(string imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl)) return "";
+        if (imageUrl.StartsWith("http")) return imageUrl;
+        return $"https://stringfunctions.net{imageUrl}";
+    }
+}

@@ -9,9 +9,8 @@ public enum AppTheme
     System
 }
 
-public class ThemeService
+public class ThemeService(IJSRuntime jsRuntime)
 {
-    private readonly IJSRuntime _jsRuntime;
     private AppTheme _currentTheme = AppTheme.System;
     private bool _isDarkMode;
 
@@ -20,16 +19,11 @@ public class ThemeService
     public AppTheme CurrentTheme => _currentTheme;
     public bool IsDarkMode => _isDarkMode;
 
-    public ThemeService(IJSRuntime jsRuntime)
-    {
-        _jsRuntime = jsRuntime;
-    }
-
     public async Task InitializeAsync()
     {
         try
         {
-            var savedTheme = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", "app-theme");
+            var savedTheme = await jsRuntime.InvokeAsync<string?>("localStorage.getItem", "app-theme");
             if (Enum.TryParse<AppTheme>(savedTheme, out var theme))
             {
                 _currentTheme = theme;
@@ -46,7 +40,7 @@ public class ThemeService
     public async Task SetThemeAsync(AppTheme theme)
     {
         _currentTheme = theme;
-        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "app-theme", theme.ToString());
+        await jsRuntime.InvokeVoidAsync("localStorage.setItem", "app-theme", theme.ToString());
         await ApplyThemeAsync();
         OnThemeChanged?.Invoke();
     }
@@ -62,14 +56,14 @@ public class ThemeService
         };
 
         var themeClass = _isDarkMode ? "dark-theme" : "light-theme";
-        await _jsRuntime.InvokeVoidAsync("eval", $"document.documentElement.className = '{themeClass}'");
+        await jsRuntime.InvokeVoidAsync("eval", $"document.documentElement.className = '{themeClass}'");
     }
 
     private async Task<bool> GetSystemPreferenceAsync()
     {
         try
         {
-            return await _jsRuntime.InvokeAsync<bool>("eval", 
+            return await jsRuntime.InvokeAsync<bool>("eval", 
                 "window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches");
         }
         catch

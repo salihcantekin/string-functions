@@ -33,8 +33,27 @@
     --input-bg: #ffffff;
     --input-border: #8a8886;
     --input-focus-border: #0078d4;
+    --input-text: #323130;
     
     --code-bg: #f4f4f4;
+    
+    /* FluentUI Light Theme Variables */
+    --neutral-fill-rest: #ffffff;
+    --neutral-fill-hover: #f3f2f1;
+    --neutral-fill-active: #edebe9;
+    --neutral-fill-input-rest: #ffffff;
+    --neutral-fill-input-hover: #f3f2f1;
+    --neutral-fill-input-active: #ffffff;
+    --neutral-stroke-rest: #8a8886;
+    --neutral-stroke-hover: #323130;
+    --neutral-foreground-rest: #323130;
+    --neutral-foreground-hover: #201f1e;
+    --neutral-layer-1: #ffffff;
+    --neutral-layer-2: #f8f9fa;
+    --accent-fill-rest: #0078d4;
+    --accent-fill-hover: #106ebe;
+    --accent-fill-active: #005a9e;
+    --accent-foreground-rest: #ffffff;
 }
 
 .dark-theme {
@@ -70,8 +89,27 @@
     --input-bg: #3d3d3d;
     --input-border: #555555;
     --input-focus-border: #4da6ff;
+    --input-text: #e1e1e1;
     
     --code-bg: #2d2d2d;
+    
+    /* FluentUI Dark Theme Variables */
+    --neutral-fill-rest: #2d2d2d;
+    --neutral-fill-hover: #3d3d3d;
+    --neutral-fill-active: #4d4d4d;
+    --neutral-fill-input-rest: #3d3d3d;
+    --neutral-fill-input-hover: #4d4d4d;
+    --neutral-fill-input-active: #3d3d3d;
+    --neutral-stroke-rest: #555555;
+    --neutral-stroke-hover: #b3b3b3;
+    --neutral-foreground-rest: #e1e1e1;
+    --neutral-foreground-hover: #ffffff;
+    --neutral-layer-1: #1f1f1f;
+    --neutral-layer-2: #2d2d2d;
+    --accent-fill-rest: #4da6ff;
+    --accent-fill-hover: #6bb8ff;
+    --accent-fill-active: #3d8ee6;
+    --accent-foreground-rest: #000000;
 }
 
 /* Base Styles */
@@ -194,14 +232,102 @@ fluent-button[appearance="accent"] {
     --accent-fill-hover: var(--accent-hover);
 }
 
-/* TextArea and TextField theme support */
-fluent-text-area,
-fluent-text-field,
-fluent-number-field,
-fluent-select {
+/* ==================================================
+   CENTRALIZED FLUENTUI COMPONENT THEME STYLES
+   All FluentUI components will inherit from these
+   ================================================== */
+
+/* Checkbox */
+fluent-checkbox {
     --neutral-fill-input-rest: var(--input-bg);
     --neutral-stroke-rest: var(--input-border);
     --neutral-foreground-rest: var(--text-primary);
+    --accent-fill-rest: var(--accent-primary);
+}
+
+fluent-checkbox::part(control) {
+    background: var(--input-bg);
+    border-color: var(--input-border);
+}
+
+fluent-checkbox::part(label) {
+    color: var(--text-primary);
+}
+
+/* Select / Dropdown */
+fluent-select,
+fluent-combobox {
+    --neutral-fill-input-rest: var(--input-bg);
+    --neutral-fill-input-hover: var(--input-bg);
+    --neutral-stroke-rest: var(--input-border);
+    --neutral-stroke-hover: var(--input-focus-border);
+    --neutral-foreground-rest: var(--text-primary);
+}
+
+fluent-select::part(control),
+fluent-combobox::part(control) {
+    background: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+fluent-select::part(listbox),
+fluent-combobox::part(listbox) {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+fluent-option {
+    --neutral-fill-rest: var(--bg-card);
+    --neutral-fill-hover: var(--bg-tertiary);
+    --neutral-foreground-rest: var(--text-primary);
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+fluent-option:hover {
+    background: var(--bg-tertiary);
+}
+
+/* Button - All appearances */
+fluent-button {
+    --neutral-fill-rest: var(--bg-secondary);
+    --neutral-fill-hover: var(--bg-tertiary);
+    --neutral-foreground-rest: var(--text-primary);
+    --neutral-stroke-rest: var(--border-color);
+}
+
+fluent-button::part(control) {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+fluent-button[appearance="accent"]::part(control) {
+    background: var(--accent-primary);
+    color: var(--text-inverse);
+}
+
+fluent-button[appearance="accent"]:hover::part(control) {
+    background: var(--accent-hover);
+}
+
+fluent-button[appearance="outline"]::part(control) {
+    background: transparent;
+    border-color: var(--border-color-strong);
+    color: var(--text-primary);
+}
+
+/* TextArea and TextField theme support */
+fluent-text-area,
+fluent-text-field,
+fluent-number-field {
+    --neutral-fill-input-rest: var(--input-bg);
+    --neutral-stroke-rest: var(--input-border);
+    --neutral-foreground-rest: var(--text-primary);
+    --neutral-fill-input-hover: var(--input-bg);
+    --neutral-stroke-hover: var(--input-focus-border);
 }
 
 fluent-text-area::part(control),
@@ -212,11 +338,23 @@ fluent-number-field::part(control) {
     border-color: var(--input-border);
 }
 
+fluent-text-area::part(control)::placeholder,
+fluent-text-field::part(control)::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* Label */
+fluent-label {
+    color: var(--text-primary);
+}
+
 /* Card theme support */
 fluent-card {
     --card-background-color: var(--bg-card);
+    --neutral-fill-rest: var(--bg-card);
     background: var(--bg-card);
     border: 1px solid var(--border-color);
+    color: var(--text-primary);
 }
 
 /* Message bar theme support */

@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://stringfunctions.net/sitemap.xml
+
+# Disallow unnecessary files
+Disallow: /_framework/
+Disallow: /css/
+Disallow: /js/
+
+# Allow specific important resources
+Allow: /css/app.css
+Allow: /_framework/blazor.webassembly.js

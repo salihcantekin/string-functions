@@ -13,5 +13,8 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddFluentUIComponents();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<UserPreferencesService>();
+builder.Services.AddScoped<SeoService>();
+builder.Services.AddScoped<ToolsService>();
+builder.Services.AddScoped<FavoritesService>();
 
 await builder.Build().RunAsync();

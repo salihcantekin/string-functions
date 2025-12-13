@@ -1,0 +1,279 @@
+{
+  "categories": [
+    {
+      "id": "text",
+      "name": "Text Operations",
+      "icon": "TextDescription",
+      "emoji": "📝",
+      "order": 1,
+      "tools": [
+        {
+          "id": "reverse",
+          "name": "String Reverse",
+          "route": "/reverse",
+          "icon": "ArrowSwap",
+          "description": "Reverse strings or lines",
+          "keywords": ["reverse", "backwards", "flip"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "case-converter",
+          "name": "Case Converter",
+          "route": "/case-converter",
+          "icon": "TextCaseTitle",
+          "description": "Convert text case (camelCase, snake_case...)",
+          "keywords": ["case", "camel", "pascal", "snake", "kebab"],
+          "featured": true,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "trim-pad",
+          "name": "Trim/Pad",
+          "route": "/trim-pad",
+          "icon": "Cut",
+          "description": "Whitespace operations",
+          "keywords": ["trim", "pad", "whitespace"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "line-counter",
+          "name": "Line Counter",
+          "route": "/line-counter",
+          "icon": "NumberSymbol",
+          "description": "Count lines, words, characters",
+          "keywords": ["count", "lines", "words", "characters"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "line-operations",
+          "name": "Line Operations",
+          "route": "/line-operations",
+          "icon": "TextBulletListSquare",
+          "description": "Sort, filter, dedupe lines (Notepad++ style)",
+          "keywords": ["sort", "filter", "dedupe", "unique"],
+          "featured": false,
+          "addedDate": "2025-01-15"
+        },
+        {
+          "id": "compare",
+          "name": "Compare",
+          "route": "/compare",
+          "icon": "DocumentMultiple",
+          "description": "Compare texts side by side",
+          "keywords": ["compare", "diff", "difference"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        }
+      ]
+    },
+    {
+      "id": "encode",
+      "name": "Encode/Decode",
+      "icon": "LockClosed",
+      "emoji": "🔐",
+      "order": 2,
+      "tools": [
+        {
+          "id": "base64",
+          "name": "Base64",
+          "route": "/base64",
+          "icon": "Code",
+          "description": "Encode/Decode Base64",
+          "keywords": ["base64", "encode", "decode"],
+          "featured": true,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "url-encode",
+          "name": "URL Encode",
+          "route": "/url-encode",
+          "icon": "Link",
+          "description": "URL encoding/decoding",
+          "keywords": ["url", "encode", "decode", "percent"],
+          "featured": true,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "hash-generator",
+          "name": "Hash Generator",
+          "route": "/hash-generator",
+          "icon": "ShieldKeyhole",
+          "description": "MD5, SHA1, SHA256, SHA512",
+          "keywords": ["hash", "md5", "sha", "checksum"],
+          "featured": false,
+          "addedDate": "2025-01-15"
+        }
+      ]
+    },
+    {
+      "id": "json",
+      "name": "JSON Tools",
+      "icon": "BracesVariable",
+      "emoji": "💻",
+      "order": 3,
+      "tools": [
+        {
+          "id": "json-formatter",
+          "name": "JSON Formatter",
+          "route": "/json-formatter",
+          "icon": "DocumentText",
+          "description": "Format and validate JSON",
+          "keywords": ["json", "format", "beautify", "validate"],
+          "featured": true,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "json-compare",
+          "name": "JSON Compare",
+          "route": "/json-compare",
+          "icon": "DocumentSearch",
+          "description": "Compare two JSON documents",
+          "keywords": ["json", "compare", "diff"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "json-to-csharp",
+          "name": "JSON to C#",
+          "route": "/json-to-csharp",
+          "icon": "Document",
+          "description": "Generate C# classes from JSON",
+          "keywords": ["json", "csharp", "c#", "class", "generate"],
+          "featured": true,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "json-to-java",
+          "name": "JSON to Java",
+          "route": "/json-to-java",
+          "icon": "Document",
+          "description": "Generate Java POJOs from JSON",
+          "keywords": ["json", "java", "pojo", "generate"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "json-to-typescript",
+          "name": "JSON to TypeScript",
+          "route": "/json-to-typescript",
+          "icon": "Document",
+          "description": "Generate TypeScript interfaces",
+          "keywords": ["json", "typescript", "interface", "generate"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        }
+      ]
+    },
+    {
+      "id": "regex",
+      "name": "Regex Tools",
+      "icon": "Search",
+      "emoji": "🔍",
+      "order": 4,
+      "tools": [
+        {
+          "id": "regex-search",
+          "name": "Regex Search",
+          "route": "/regex-search",
+          "icon": "Search",
+          "description": "Search with regular expressions",
+          "keywords": ["regex", "search", "pattern", "match"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "regex-replace",
+          "name": "Regex Replace",
+          "route": "/regex-replace",
+          "icon": "ArrowRepeatAll",
+          "description": "Find and replace with regex",
+          "keywords": ["regex", "replace", "pattern"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        },
+        {
+          "id": "extract",
+          "name": "Extract",
+          "route": "/extract",
+          "icon": "ArrowExportUp",
+          "description": "Extract patterns from text",
+          "keywords": ["extract", "regex", "pattern", "parse"],
+          "featured": false,
+          "addedDate": "2024-01-01"
+        }
+      ]
+    },
+    {
+      "id": "developer",
+      "name": "Developer Tools",
+      "icon": "Wrench",
+      "emoji": "🛠️",
+      "order": 5,
+      "tools": [
+        {
+          "id": "datetime-formatter",
+          "name": "DateTime Formatter",
+          "route": "/datetime-formatter",
+          "icon": "CalendarClock",
+          "description": "Test C# DateTime format strings",
+          "keywords": ["datetime", "format", "date", "time"],
+          "featured": false,
+          "addedDate": "2025-01-15"
+        },
+        {
+          "id": "string-formatter",
+          "name": "String Formatter",
+          "route": "/string-formatter",
+          "icon": "TextQuote",
+          "description": "Test C# string formatting",
+          "keywords": ["string", "format", "interpolation"],
+          "featured": false,
+          "addedDate": "2025-01-15"
+        },
+        {
+          "id": "guid-generator",
+          "name": "GUID Generator",
+          "route": "/guid-generator",
+          "icon": "Key",
+          "description": "Generate and format GUIDs",
+          "keywords": ["guid", "uuid", "generate"],
+          "featured": false,
+          "addedDate": "2025-01-15"
+        },
+        {
+          "id": "password-generator",
+          "name": "Password Generator",
+          "route": "/password-generator",
+          "icon": "Password",
+          "description": "Generate secure passwords",
+          "keywords": ["password", "generate", "random", "secure"],
+          "featured": false,
+          "addedDate": "2025-01-15"
+        },
+        {
+          "id": "http-client",
+          "name": "HTTP Client",
+          "route": "/http-client",
+          "icon": "GlobeSearch",
+          "description": "Build and send HTTP requests",
+          "keywords": ["http", "rest", "api", "request"],
+          "featured": false,
+          "addedDate": "2025-01-15"
+        },
+        {
+          "id": "number-converter",
+          "name": "Number Converter",
+          "route": "/number-converter",
+          "icon": "NumberCircle",
+          "description": "Convert between Binary, Decimal, Hex, Octal",
+          "keywords": ["number", "binary", "hex", "hexadecimal", "octal", "decimal", "converter"],
+          "featured": false,
+          "addedDate": "2025-01-20"
+        }
+      ]
+    }
+  ]
+}
