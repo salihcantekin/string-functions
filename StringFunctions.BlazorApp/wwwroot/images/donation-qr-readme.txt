@@ -1,8 +1,8 @@
-Place your donation QR code image here as 'donation-qr.png' or 'donation-qr.svg'
+Place your donation QR code image here as 'donation-qr.png'
 
 The image should be:
 - Square format (recommended 500x500 pixels or larger)
-- PNG or SVG format with transparent or white background
+- PNG format with white or transparent background
 - Contains your donation QR code (bank transfer, crypto wallet, PayPal, etc.)
 
 If you don't have a QR code yet, you can generate one using:
@@ -11,5 +11,4 @@ If you don't have a QR code yet, you can generate one using:
 - Cryptocurrency wallet QR code
 - PayPal.me QR code
 
-Note: The default component uses 'donation-qr.svg', but you can change it to use PNG
-by modifying the QRCodeImageUrl parameter in MainLayout.razor
+Simply replace the placeholder 'donation-qr.png' file with your actual QR code image.
