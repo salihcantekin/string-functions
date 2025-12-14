@@ -8,11 +8,11 @@
 
     @if (showQR)
     {
-        <div class="qr-modal-overlay" @onclick="ToggleQR">
+        <div class="qr-modal-overlay" @onclick="ToggleQR" @onkeydown="HandleKeyDown" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <div class="qr-modal-content" @onclick:stopPropagation="true">
                 <div class="qr-modal-header">
-                    <h3>Support This Project</h3>
-                    <button class="close-button" @onclick="ToggleQR">
+                    <h3 id="modal-title">Support This Project</h3>
+                    <button class="close-button" @onclick="ToggleQR" aria-label="Close">
                         <FluentIcon Value="@(new Icons.Regular.Size20.Dismiss())" />
                     </button>
                 </div>
@@ -197,5 +197,13 @@
     private void ToggleQR()
     {
         showQR = !showQR;
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            showQR = false;
+        }
     }
 }
