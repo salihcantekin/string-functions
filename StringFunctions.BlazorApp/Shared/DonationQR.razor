@@ -1,0 +1,201 @@
+@* Donation QR Code Component - Subtle and non-intrusive *@
+
+<div class="donation-qr-container">
+    <button class="donation-button" @onclick="ToggleQR" title="Support this project">
+        <FluentIcon Value="@(new Icons.Regular.Size20.Gift())" Color="Color.Custom" CustomColor="@IconColor" />
+        <span class="donation-text">Support</span>
+    </button>
+
+    @if (showQR)
+    {
+        <div class="qr-modal-overlay" @onclick="ToggleQR">
+            <div class="qr-modal-content" @onclick:stopPropagation="true">
+                <div class="qr-modal-header">
+                    <h3>Support This Project</h3>
+                    <button class="close-button" @onclick="ToggleQR">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.Dismiss())" />
+                    </button>
+                </div>
+                <div class="qr-modal-body">
+                    <div class="qr-code-placeholder">
+                        <img src="@QRCodeImageUrl" alt="Donation QR Code" class="qr-image" />
+                    </div>
+                    <p class="qr-description">Scan the QR code to support the development of this project</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .donation-qr-container {
+        position: relative;
+    }
+
+    .donation-button {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        opacity: 0.7;
+    }
+
+    .donation-button:hover {
+        opacity: 1;
+        background: var(--bg-tertiary);
+        border-color: var(--accent-primary);
+        transform: translateY(-1px);
+    }
+
+    .donation-text {
+        font-size: 0.85rem;
+    }
+
+    .qr-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        animation: fadeIn 0.2s ease;
+    }
+
+    .qr-modal-content {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    }
+
+    .qr-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .qr-modal-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.25rem;
+    }
+
+    .close-button {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        color: var(--text-secondary);
+    }
+
+    .close-button:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .qr-modal-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .qr-code-placeholder {
+        width: 250px;
+        height: 250px;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .qr-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .qr-description {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .donation-text {
+            display: none;
+        }
+
+        .donation-button {
+            padding: 8px;
+            min-width: 36px;
+            justify-content: center;
+        }
+
+        .qr-modal-content {
+            padding: 20px;
+        }
+
+        .qr-code-placeholder {
+            width: 200px;
+            height: 200px;
+        }
+    }
+</style>
+
+@code {
+    private bool showQR = false;
+
+    [Parameter]
+    public string QRCodeImageUrl { get; set; } = "images/donation-qr.svg";
+
+    [Parameter]
+    public string IconColor { get; set; } = "#b3b3b3";
+
+    private void ToggleQR()
+    {
+        showQR = !showQR;
+    }
+}

@@ -20,6 +20,7 @@
             </NavLink>
         </div>
         <div class="header-actions">
+            <DonationQR IconColor="@("#ffffff")" />
             <FluentSelect TOption="string" 
                          Value="@ThemeService.CurrentTheme.ToString()" 
                          ValueChanged="OnThemeChanged"
@@ -223,7 +224,7 @@
         height: 40px;
         width: 40px;
         object-fit: contain;
-        border-radius: 50%; /* Yuvarlak görünüm */
+        border-radius: 50%; /* Yuvarlak gï¿½rï¿½nï¿½m */
     }
 
     .header-title {
