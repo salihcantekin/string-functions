@@ -56,7 +56,13 @@ public class ThemeService(IJSRuntime jsRuntime)
         };
 
         var themeClass = _isDarkMode ? "dark-theme" : "light-theme";
-        await jsRuntime.InvokeVoidAsync("eval", $"document.documentElement.className = '{themeClass}'");
+        var removeThemeClass = _isDarkMode ? "light-theme" : "dark-theme";
+        
+        // Remove the opposite theme class and add the current theme class
+        await jsRuntime.InvokeVoidAsync("eval", $@"
+            document.documentElement.classList.remove('{removeThemeClass}');
+            document.documentElement.classList.add('{themeClass}');
+        ");
     }
 
     private async Task<bool> GetSystemPreferenceAsync()
