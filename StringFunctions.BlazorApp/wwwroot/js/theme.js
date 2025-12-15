@@ -11,6 +11,10 @@ window.themeManager = {
     },
     
     getSystemPrefersDark: function() {
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // Return false if matchMedia is not supported (older browsers)
+        if (!window.matchMedia) {
+            return false;
+        }
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
 };

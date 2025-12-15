@@ -382,28 +382,28 @@ fluent-card {
 }
 
 /* Message bar theme support */
+fluent-message-bar {
+    color: var(--text-primary) !important;
+}
+
 fluent-message-bar[intent="info"] {
     background: var(--accent-light) !important;
     border-color: var(--accent-primary) !important;
-    color: var(--text-primary) !important;
 }
 
 fluent-message-bar[intent="success"] {
     background: var(--success-bg) !important;
     border-color: var(--success) !important;
-    color: var(--text-primary) !important;
 }
 
 fluent-message-bar[intent="warning"] {
     background: var(--warning-bg) !important;
     border-color: var(--warning) !important;
-    color: var(--text-primary) !important;
 }
 
 fluent-message-bar[intent="error"] {
     background: var(--error-bg) !important;
     border-color: var(--error) !important;
-    color: var(--text-primary) !important;
 }
 
 /* ============================================
