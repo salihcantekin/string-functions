@@ -1,5 +1,64 @@
 /* Theme Variables */
-:root,
+/* Default Light Theme - applied to :root */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #f0f0f0;
+    --bg-card: #ffffff;
+    --bg-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    
+    --text-primary: #323130;
+    --text-secondary: #605e5c;
+    --text-tertiary: #8a8886;
+    --text-inverse: #ffffff;
+    
+    --border-color: #e9ecef;
+    --border-color-strong: #d2d0ce;
+    
+    --accent-primary: #0078d4;
+    --accent-hover: #106ebe;
+    --accent-light: #e7f1ff;
+    
+    --success: #107c10;
+    --success-bg: #dff6dd;
+    --warning: #ffb900;
+    --warning-bg: #fff4ce;
+    --error: #d13438;
+    --error-bg: #fde7e9;
+    
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    
+    --input-bg: #ffffff;
+    --input-border: #8a8886;
+    --input-focus-border: #0078d4;
+    --input-text: #323130;
+    
+    --code-bg: #f4f4f4;
+    
+    /* FluentUI Light Theme Variables */
+    --neutral-fill-rest: #ffffff;
+    --neutral-fill-hover: #f3f2f1;
+    --neutral-fill-active: #edebe9;
+    --neutral-fill-input-rest: #ffffff;
+    --neutral-fill-input-hover: #f3f2f1;
+    --neutral-fill-input-active: #ffffff;
+    --neutral-stroke-rest: #8a8886;
+    --neutral-stroke-hover: #323130;
+    --neutral-foreground-rest: #323130;
+    --neutral-foreground-hover: #201f1e;
+    --neutral-layer-1: #ffffff;
+    --neutral-layer-2: #f8f9fa;
+    --accent-fill-rest: #0078d4;
+    --accent-fill-hover: #106ebe;
+    --accent-fill-active: #005a9e;
+    --accent-foreground-rest: #ffffff;
+}
+
+/* Light Theme - explicit class */
+:root.light-theme,
+html.light-theme,
 .light-theme {
     --bg-primary: #ffffff;
     --bg-secondary: #f8f9fa;
@@ -56,6 +115,9 @@
     --accent-foreground-rest: #ffffff;
 }
 
+/* Dark Theme */
+:root.dark-theme,
+html.dark-theme,
 .dark-theme {
     --bg-primary: #1f1f1f;
     --bg-secondary: #2d2d2d;
@@ -228,8 +290,8 @@ fluent-card {
 
 /* Button base enhancements */
 fluent-button[appearance="accent"] {
-    --accent-fill-rest: var(--accent-primary);
-    --accent-fill-hover: var(--accent-hover);
+    --accent-fill-rest: var(--accent-primary) !important;
+    --accent-fill-hover: var(--accent-hover) !important;
 }
 
 /* ==================================================
@@ -237,135 +299,136 @@ fluent-button[appearance="accent"] {
    All FluentUI components will inherit from these
    ================================================== */
 
-/* Checkbox */
+/* Checkbox - Theme variables set on component for Shadow DOM */
 fluent-checkbox {
-    --neutral-fill-input-rest: var(--input-bg);
-    --neutral-stroke-rest: var(--input-border);
-    --neutral-foreground-rest: var(--text-primary);
-    --accent-fill-rest: var(--accent-primary);
+    --neutral-fill-input-rest: var(--input-bg) !important;
+    --neutral-stroke-rest: var(--input-border) !important;
+    --neutral-foreground-rest: var(--text-primary) !important;
+    --accent-fill-rest: var(--accent-primary) !important;
+    --accent-fill-hover: var(--accent-hover) !important;
 }
 
 fluent-checkbox::part(control) {
-    background: var(--input-bg);
-    border-color: var(--input-border);
+    background: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
 }
 
 fluent-checkbox::part(label) {
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
 }
 
-/* Select / Dropdown */
+/* Select / Dropdown - Theme variables set on component for Shadow DOM */
 fluent-select,
 fluent-combobox {
-    --neutral-fill-input-rest: var(--input-bg);
-    --neutral-fill-input-hover: var(--input-bg);
-    --neutral-stroke-rest: var(--input-border);
-    --neutral-stroke-hover: var(--input-focus-border);
-    --neutral-foreground-rest: var(--text-primary);
+    --neutral-fill-input-rest: var(--input-bg) !important;
+    --neutral-fill-input-hover: var(--input-bg) !important;
+    --neutral-stroke-rest: var(--input-border) !important;
+    --neutral-stroke-hover: var(--input-focus-border) !important;
+    --neutral-foreground-rest: var(--text-primary) !important;
 }
 
 fluent-select::part(control),
 fluent-combobox::part(control) {
-    background: var(--input-bg);
-    border-color: var(--input-border);
-    color: var(--text-primary);
+    background: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-primary) !important;
 }
 
 fluent-select::part(listbox),
 fluent-combobox::part(listbox) {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
 }
 
 fluent-option {
-    --neutral-fill-rest: var(--bg-card);
-    --neutral-fill-hover: var(--bg-tertiary);
-    --neutral-foreground-rest: var(--text-primary);
-    background: var(--bg-card);
-    color: var(--text-primary);
+    --neutral-fill-rest: var(--bg-card) !important;
+    --neutral-fill-hover: var(--bg-tertiary) !important;
+    --neutral-foreground-rest: var(--text-primary) !important;
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
 }
 
 fluent-option:hover {
-    background: var(--bg-tertiary);
+    background: var(--bg-tertiary) !important;
 }
 
-/* Button - All appearances */
+/* Button - All appearances - Theme variables set on component for Shadow DOM */
 fluent-button {
-    --neutral-fill-rest: var(--bg-secondary);
-    --neutral-fill-hover: var(--bg-tertiary);
-    --neutral-foreground-rest: var(--text-primary);
-    --neutral-stroke-rest: var(--border-color);
+    --neutral-fill-rest: var(--bg-secondary) !important;
+    --neutral-fill-hover: var(--bg-tertiary) !important;
+    --neutral-foreground-rest: var(--text-primary) !important;
+    --neutral-stroke-rest: var(--border-color) !important;
 }
 
 fluent-button::part(control) {
-    color: var(--text-primary);
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
+    color: var(--text-primary) !important;
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
 }
 
 fluent-button[appearance="accent"]::part(control) {
-    background: var(--accent-primary);
-    color: var(--text-inverse);
+    background: var(--accent-primary) !important;
+    color: var(--text-inverse) !important;
 }
 
 fluent-button[appearance="accent"]:hover::part(control) {
-    background: var(--accent-hover);
+    background: var(--accent-hover) !important;
 }
 
 fluent-button[appearance="outline"]::part(control) {
-    background: transparent;
-    border-color: var(--border-color-strong);
-    color: var(--text-primary);
+    background: transparent !important;
+    border-color: var(--border-color-strong) !important;
+    color: var(--text-primary) !important;
 }
 
 fluent-button[appearance="stealth"]::part(control) {
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-primary) !important;
 }
 
 fluent-button[appearance="stealth"]:hover::part(control) {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
 }
 
 /* TextArea and TextField theme support */
 fluent-text-area,
 fluent-text-field,
 fluent-number-field {
-    --neutral-fill-input-rest: var(--input-bg);
-    --neutral-stroke-rest: var(--input-border);
-    --neutral-foreground-rest: var(--text-primary);
-    --neutral-fill-input-hover: var(--input-bg);
-    --neutral-stroke-hover: var(--input-focus-border);
+    --neutral-fill-input-rest: var(--input-bg) !important;
+    --neutral-stroke-rest: var(--input-border) !important;
+    --neutral-foreground-rest: var(--text-primary) !important;
+    --neutral-fill-input-hover: var(--input-bg) !important;
+    --neutral-stroke-hover: var(--input-focus-border) !important;
 }
 
 fluent-text-area::part(control),
 fluent-text-field::part(control),
 fluent-number-field::part(control) {
-    background: var(--input-bg);
-    color: var(--text-primary);
-    border-color: var(--input-border);
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--input-border) !important;
 }
 
 fluent-text-area::part(control)::placeholder,
 fluent-text-field::part(control)::placeholder {
-    color: var(--text-tertiary);
+    color: var(--text-tertiary) !important;
 }
 
 /* Label */
 fluent-label {
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
 }
 
 /* Card theme support */
 fluent-card {
-    --card-background-color: var(--bg-card);
-    --neutral-fill-rest: var(--bg-card);
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
+    --card-background-color: var(--bg-card) !important;
+    --neutral-fill-rest: var(--bg-card) !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
 }
 
 /* Message bar theme support */
