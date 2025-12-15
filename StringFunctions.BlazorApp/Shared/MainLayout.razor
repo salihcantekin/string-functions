@@ -1,4 +1,4 @@
-@inherits LayoutComponentBase
+ï»¿@inherits LayoutComponentBase
 @using StringFunctions.BlazorApp.Services
 @using StringFunctions.BlazorApp.Models
 @using Microsoft.AspNetCore.Components.Routing
@@ -21,14 +21,16 @@
             </NavLink>
         </div>
         <div class="header-actions">
-            <FluentSelect TOption="string" 
-                         Value="@ThemeService.CurrentTheme.ToString()" 
-                         ValueChanged="OnThemeChanged"
-                         Style="min-width: 120px;">
+            <DonationQR IconColor="@("#ffffff")" />
+            <FluentSelect TOption="string"
+                          Value="@ThemeService.CurrentTheme.ToString()"
+                          ValueChanged="OnThemeChanged"
+                          Style="min-width: 120px;">
                 <FluentOption Value="Light">&#9728;&#65039; Light</FluentOption>
                 <FluentOption Value="Dark">&#127769; Dark</FluentOption>
                 <FluentOption Value="System">&#128187; System</FluentOption>
             </FluentSelect>
+
         </div>
     </header>
 
@@ -59,10 +61,10 @@
                 }
                 else
                 {
-                    <FluentTextField @bind-Value="@searchQuery" 
-                                    Placeholder="Search tools..." 
-                                    @oninput="OnSearchChanged"
-                                    Style="width: 100%;">
+                    <FluentTextField @bind-Value="@searchQuery"
+                                     Placeholder="Search tools..."
+                                     @oninput="OnSearchChanged"
+                                     Style="width: 100%;">
                         <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Slot="start" Color="Color.Custom" CustomColor="@IconColor" />
                     </FluentTextField>
                 }
@@ -154,8 +156,8 @@
                                             <FluentIcon Value="@GetIcon(tool.Icon)" Color="Color.Custom" CustomColor="@GetIconColor(IsActiveInCategory(tool.Route, false))" />
                                             <span class="nav-text">@tool.Name</span>
                                         </NavLink>
-                                        <button class="favorite-btn @(favoriteIds.Contains(tool.Id) ? "active" : "")" 
-                                                @onclick="() => ToggleFavorite(tool.Id)" 
+                                        <button class="favorite-btn @(favoriteIds.Contains(tool.Id) ? "active" : "")"
+                                                @onclick="() => ToggleFavorite(tool.Id)"
                                                 title="@(favoriteIds.Contains(tool.Id) ? "Remove from favorites" : "Add to favorites")">
                                             @if (favoriteIds.Contains(tool.Id))
                                             {
@@ -181,7 +183,30 @@
     </div>
 </div>
 
+
+
+
+@if (showSupportModal)
+{
+    <div class="support-modal-overlay" @onclick="HideSupportModal">
+        <div class="support-modal" @onclick:stopPropagation="true">
+            <div class="support-modal-header">
+                <span>Support String Functions</span>
+                <button class="support-modal-close" @onclick="HideSupportModal">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Dismiss())" />
+                </button>
+            </div>
+            <div class="support-modal-body">
+                <p>You can support the project by donating using this QR code.</p>
+                <img src="images/support-qr.png" alt="Support QR Code" class="support-qr-image" />
+            </div>
+        </div>
+    </div>
+}
+
 <FluentToastProvider MaxToastCount="5" Timeout="5000" />
+
+
 
 <style>
     .layout-container {
@@ -218,15 +243,15 @@
         transition: opacity 0.15s ease;
     }
 
-    .header-logo-link:hover {
-        opacity: 0.9;
-    }
+        .header-logo-link:hover {
+            opacity: 0.9;
+        }
 
     .header-logo {
         height: 40px;
         width: 40px;
         object-fit: contain;
-        border-radius: 50%; /* Yuvarlak görünüm */
+        border-radius: 50%; /* Yuvarlak gï¿½rï¿½nï¿½m */
     }
 
     .header-title {
@@ -235,11 +260,12 @@
         color: inherit;
         text-decoration: none;
         cursor: pointer;
+        padding-left: 10px;
     }
 
-    .header-title:hover {
-        opacity: 0.9;
-    }
+        .header-title:hover {
+            opacity: 0.9;
+        }
 
     .header-actions {
         display: flex;
@@ -260,9 +286,9 @@
         transition: background 0.15s ease;
     }
 
-    .menu-toggle:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
 
     .main-content {
         display: flex;
@@ -294,11 +320,11 @@
         flex-shrink: 0;
     }
 
-    .sidebar-search.collapsed {
-        padding: 8px 4px;
-        display: flex;
-        justify-content: center;
-    }
+        .sidebar-search.collapsed {
+            padding: 8px 4px;
+            display: flex;
+            justify-content: center;
+        }
 
     .search-icon-btn {
         display: flex;
@@ -312,9 +338,9 @@
         border-radius: 4px;
     }
 
-    .search-icon-btn:hover {
-        background: var(--bg-tertiary);
-    }
+        .search-icon-btn:hover {
+            background: var(--bg-tertiary);
+        }
 
     .search-results {
         border-bottom: 1px solid var(--border-color);
@@ -358,9 +384,9 @@
         transition: background 0.15s ease;
     }
 
-    .sidebar-toggle-btn:hover {
-        background: var(--bg-tertiary);
-    }
+        .sidebar-toggle-btn:hover {
+            background: var(--bg-tertiary);
+        }
 
     .toggle-text {
         color: var(--text-secondary);
@@ -419,9 +445,9 @@
         margin-bottom: 2px;
     }
 
-    .nav-section:first-of-type {
-        margin-top: 8px;
-    }
+        .nav-section:first-of-type {
+            margin-top: 8px;
+        }
 
     .nav-link-container {
         display: flex;
@@ -429,9 +455,9 @@
         position: relative;
     }
 
-    .nav-link-container:hover .favorite-btn {
-        opacity: 1;
-    }
+        .nav-link-container:hover .favorite-btn {
+            opacity: 1;
+        }
 
     .nav-link {
         display: flex;
@@ -448,34 +474,34 @@
         font-size: 0.9rem;
     }
 
-    .nav-link:hover {
-        background-color: var(--bg-tertiary);
-    }
+        .nav-link:hover {
+            background-color: var(--bg-tertiary);
+        }
 
-    .nav-link.active {
-        background-color: var(--accent-light);
-        color: var(--accent-primary);
-        font-weight: 500;
-    }
+        .nav-link.active {
+            background-color: var(--accent-light);
+            color: var(--accent-primary);
+            font-weight: 500;
+        }
 
-    .nav-link.new-badge {
-        position: relative;
-    }
+        .nav-link.new-badge {
+            position: relative;
+        }
 
-    .nav-link.new-badge::after {
-        content: 'NEW';
-        position: absolute;
-        top: 50%;
-        right: 40px;
-        transform: translateY(-50%);
-        font-size: 0.6rem;
-        font-weight: 700;
-        color: white;
-        background: var(--accent-primary);
-        padding: 2px 4px;
-        border-radius: 3px;
-        opacity: 0.7;
-    }
+            .nav-link.new-badge::after {
+                content: 'NEW';
+                position: absolute;
+                top: 50%;
+                right: 40px;
+                transform: translateY(-50%);
+                font-size: 0.6rem;
+                font-weight: 700;
+                color: white;
+                background: var(--accent-primary);
+                padding: 2px 4px;
+                border-radius: 3px;
+                opacity: 0.7;
+            }
 
     .favorite-btn {
         position: absolute;
@@ -494,13 +520,13 @@
         z-index: 10;
     }
 
-    .favorite-btn:hover {
-        background: var(--bg-tertiary);
-    }
+        .favorite-btn:hover {
+            background: var(--bg-tertiary);
+        }
 
-    .favorite-btn.active {
-        opacity: 1;
-    }
+        .favorite-btn.active {
+            opacity: 1;
+        }
 
     .nav-group-header {
         display: flex;
@@ -514,13 +540,13 @@
         white-space: nowrap;
     }
 
-    .nav-group-header:hover {
-        background-color: var(--bg-tertiary);
-    }
+        .nav-group-header:hover {
+            background-color: var(--bg-tertiary);
+        }
 
-    .nav-group-header .nav-text {
-        flex: 1;
-    }
+        .nav-group-header .nav-text {
+            flex: 1;
+        }
 
     .nav-group-items {
         padding-left: 16px;
@@ -597,10 +623,12 @@
     }
 </style>
 
+
 @code {
     private HashSet<int> expandedGroups = new();
     private bool sidebarCollapsed = false;
     private bool mobileMenuOpen = false;
+    private bool showSupportModal = false;
     private string searchQuery = string.Empty;
     private List<ToolCategory> categories = new();
     private List<Tool> searchResults = new();
@@ -622,9 +650,9 @@
             await ThemeService.InitializeAsync();
             ThemeService.OnThemeChanged += OnThemeStateChanged;
             NavigationManager.LocationChanged += OnLocationChanged;
-            
+
             ExpandCurrentPageGroup();
-            
+
             StateHasChanged();
         }
     }
@@ -634,7 +662,7 @@
         favoriteIds = (await FavoritesService.GetFavoritesAsync()).ToHashSet();
         var allTools = await ToolsService.GetAllToolsAsync();
         favoriteTools = allTools.Where(t => favoriteIds.Contains(t.Id)).ToList();
-        
+
         if (favoriteTools.Any())
         {
             expandedGroups.Add(-1); // Auto-expand favorites
@@ -739,7 +767,7 @@
         {
             await UserPreferences.SetLastVisitedPageAsync("/" + relativePath);
         }
-        
+
         ExpandCurrentPageGroup();
         mobileMenuOpen = false;
         searchQuery = string.Empty;
@@ -751,7 +779,7 @@
     {
         var path = "/" + NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         var tool = categories.SelectMany(c => c.Tools).FirstOrDefault(t => t.Route == path);
-        
+
         if (tool != null)
         {
             // If the tool is in favorites, don't expand its regular category
@@ -759,7 +787,7 @@
             {
                 return;
             }
-            
+
             var category = categories.FirstOrDefault(c => c.Tools.Contains(tool));
             if (category != null)
             {
@@ -799,37 +827,44 @@
     {
         var relativePath = "/" + NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         var isCurrentPage = href == "/" ? relativePath == "/" : relativePath == href;
-        
+
         if (!isCurrentPage) return false;
-        
-        // If this is in favorites section, only show as active if it's actually in favorites
+
         if (isFavoriteSection)
         {
             var toolId = categories.SelectMany(c => c.Tools)
                 .FirstOrDefault(t => t.Route == href)?.Id;
             return toolId != null && favoriteIds.Contains(toolId);
         }
-        
-        // If this is in regular category and the tool is in favorites, don't show active
+
         var tool = categories.SelectMany(c => c.Tools)
             .FirstOrDefault(t => t.Route == href);
-        
-        // Don't show active in regular menu if it's in favorites
+
         return tool != null && !favoriteIds.Contains(tool.Id);
     }
 
     private string GetIconColor(bool isActive) => isActive ? "#0078d4" : IconColor;
 
-    public void Dispose()
+    private void ShowSupportModal()
     {
-        ThemeService.OnThemeChanged -= OnThemeStateChanged;
-        NavigationManager.LocationChanged -= OnLocationChanged;
-        FavoritesService.OnFavoritesChanged -= OnFavoritesChanged;
+        showSupportModal = true;
+    }
+
+    private void HideSupportModal()
+    {
+        showSupportModal = false;
     }
 
     private void OnHomeClick()
     {
         UserPreferences.SkipAutoRedirect = true;
         CloseMobileMenu();
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeStateChanged;
+        NavigationManager.LocationChanged -= OnLocationChanged;
+        FavoritesService.OnFavoritesChanged -= OnFavoritesChanged;
     }
 }

@@ -841,9 +841,7 @@
             }
 
             activeResponseTab = "body";
-            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
-
-
+            
             var xForwardedFor = responseHeaders.FirstOrDefault(h => h.Key.Equals("X-Forwarded-For", StringComparison.OrdinalIgnoreCase)).Value?.FirstOrDefault();
             if (!string.IsNullOrWhiteSpace(xForwardedFor))
             {
