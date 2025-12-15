@@ -47,11 +47,3 @@ window.seoHelper = {
         link.setAttribute('href', url);
     }
 };
-
-// Google Analytics
-window.dataLayer = window.dataLayer || [];
-function gtag() { dataLayer.push(arguments); }
-gtag('js', new Date());
-
-// Initialize GA - Replace with your actual Measurement ID
-// gtag('config', 'G-XXXXXXXXXX');

@@ -319,6 +319,17 @@ fluent-button[appearance="outline"]::part(control) {
     color: var(--text-primary);
 }
 
+fluent-button[appearance="stealth"]::part(control) {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+}
+
+fluent-button[appearance="stealth"]:hover::part(control) {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
 /* TextArea and TextField theme support */
 fluent-text-area,
 fluent-text-field,
