@@ -358,24 +358,107 @@ fluent-card {
 }
 
 /* Message bar theme support */
+fluent-message-bar {
+    display: block;
+    margin: 8px 0;
+    border-radius: 4px;
+    border: 1px solid;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    padding: 0; /* Let the control part handle padding for proper layout */
+}
+
+/* Enforce flex layout on the internal control */
+fluent-message-bar::part(control) {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+fluent-message-bar::part(content) {
+    color: var(--text-primary);
+    flex-grow: 1;
+    display: block; /* Ensure text wraps properly */
+    align-self: center;
+}
+
 fluent-message-bar[intent="info"] {
     background: var(--accent-light);
     border-color: var(--accent-primary);
+    color: var(--text-primary);
 }
 
 fluent-message-bar[intent="success"] {
     background: var(--success-bg);
     border-color: var(--success);
+    color: var(--text-primary);
 }
 
 fluent-message-bar[intent="warning"] {
     background: var(--warning-bg);
     border-color: var(--warning);
+    color: var(--text-primary);
 }
 
-fluent-message-bar[intent="error"] {
+fluent-message-bar[intent="error"],
+fluent-message-bar[intent="Error"] {
     background: var(--error-bg);
     border-color: var(--error);
+    color: var(--text-primary);
+}
+
+/* Message bar icon styling */
+fluent-message-bar::part(icon) {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+    margin-top: 2px; /* Align with text baseline */
+}
+
+fluent-message-bar svg,
+fluent-message-bar fluent-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex-shrink: 0;
+}
+
+/* Message bar dismiss button */
+fluent-message-bar::part(dismiss-button) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-left: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 4px;
+    color: var(--text-primary);
+    align-self: flex-start;
+}
+
+fluent-message-bar::part(dismiss-button):hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme fluent-message-bar::part(dismiss-button):hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure message bar content is readable */
+fluent-message-bar * {
+    color: inherit;
+}
+
+/* Message bar in panels */
+.panel-content fluent-message-bar,
+.http-panel fluent-message-bar {
+    margin: 0 0 16px 0;
 }
 
 /* ============================================
@@ -513,4 +596,121 @@ fluent-text-area.textarea-xlarge::part(control) {
         min-height: 280px;
         height: 280px;
     }
+}
+
+/* Toast Provider Styling */
+fluent-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none; /* Allow clicks to pass through container */
+}
+
+fluent-toast {
+    pointer-events: auto; /* Re-enable clicks on toasts */
+    min-width: 300px;
+    max-width: 400px;
+    box-shadow: var(--shadow-lg);
+    border-radius: 4px;
+    overflow: hidden;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Ensure toast content uses the same flex layout as message bar */
+fluent-toast::part(control) {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--bg-card); /* Default background */
+    border: 1px solid var(--border-color);
+}
+
+/* Toast Intent Styling */
+fluent-toast[intent="info"]::part(control) {
+    background: var(--accent-light);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+fluent-toast[intent="success"]::part(control) {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: var(--text-primary);
+}
+
+fluent-toast[intent="warning"]::part(control) {
+    background: var(--warning-bg);
+    border-color: var(--warning);
+    color: var(--text-primary);
+}
+
+fluent-toast[intent="error"]::part(control) {
+    background: var(--error-bg);
+    border-color: var(--error);
+    color: var(--text-primary);
+}
+
+/* Toast Icon */
+fluent-toast::part(icon) {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+fluent-toast svg,
+fluent-toast fluent-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+/* Toast Content */
+fluent-toast::part(content) {
+    flex-grow: 1;
+    align-self: center;
+    color: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Toast Dismiss Button */
+fluent-toast::part(dismiss-button) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-left: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 4px;
+    color: inherit;
+    align-self: flex-start;
+    opacity: 0.7;
+}
+
+fluent-toast::part(dismiss-button):hover {
+    background: rgba(0, 0, 0, 0.1);
+    opacity: 1;
 }

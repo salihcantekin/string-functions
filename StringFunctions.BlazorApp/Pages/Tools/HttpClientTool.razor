@@ -1,7 +1,10 @@
 @page "/http-client"
+@using StringFunctions.BlazorApp.Models
 
 <SeoHead Route="http-client" />
 @inject HttpClient Http
+@inject HttpClientPresetsService PresetsService
+@inject IToastService ToastService
 
 <PageTitle>HTTP Client</PageTitle>
 
@@ -20,21 +23,54 @@
         </div>
         <div class="option-divider"></div>
         <div class="option-group" style="flex:1;">
-            <FluentTextField @bind-Value="url" 
-                            Placeholder="https://jsonplaceholder.typicode.com/todos/1" 
-                            Style="width:100%;"
-                            @onkeydown="OnUrlKeyDown" />
+            <FluentTextField @bind-Value="url"
+                             @oninput="OnUrlInput"
+                             Placeholder="https://jsonplaceholder.typicode.com/todos/1"
+                             Style="width:100%;"
+                             @onkeydown="OnUrlKeyDown" />
         </div>
         <div class="option-divider"></div>
-        <FluentButton Appearance="Appearance.Accent" OnClick="SendRequestAsync" Disabled="@isLoading">
-            @(isLoading ? "Sending..." : "Send")
-        </FluentButton>
+        <div class="option-group">
+            <span class="option-label">Timeout (s):</span>
+            <FluentNumberField @bind-Value="@timeoutSeconds" Min="1" Max="300" Style="width: 70px;" />
+        </div>
+        <div class="option-divider"></div>
+        @if (isLoading)
+        {
+            <FluentButton Appearance="Appearance.Outline" OnClick="CancelRequest">
+                Cancel
+            </FluentButton>
+        }
+        else
+        {
+            <FluentButton Appearance="Appearance.Accent" OnClick="SendRequestAsync" Disabled="@(!IsValidUrl)">
+                Send
+            </FluentButton>
+        }
     </OptionsContent>
     <ChildContent>
         <div class="http-client-layout">
             <!-- Request Panel -->
             <div class="http-panel">
-                <div class="panel-header">Request</div>
+                <div class="panel-header">
+                    Request
+                    @if (requestPresets.Any())
+                    {
+                        <div class="preset-selector">
+                            <FluentSelect TOption="string"
+                                          @bind-Value="selectedPreset"
+                                          @bind-Value:after="LoadPreset"
+                                          Style="min-width: 200px;"
+                                          Placeholder="Load preset...">
+                                <FluentOption TOption="string" Value="">-- Select Preset --</FluentOption>
+                                @foreach (var preset in requestPresets)
+                                {
+                                    <FluentOption TOption="string" Value="@preset.Name">@preset.Name</FluentOption>
+                                }
+                            </FluentSelect>
+                        </div>
+                    }
+                </div>
                 <div class="panel-tabs">
                     <button class="tab-btn @(activeRequestTab == "query" ? "active" : "")" @onclick="SetRequestTabQuery">Query</button>
                     <button class="tab-btn @(activeRequestTab == "headers" ? "active" : "")" @onclick="SetRequestTabHeaders">Headers</button>
@@ -48,8 +84,14 @@
                             {
                                 <div class="kv-row">
                                     <FluentCheckbox @bind-Value="item.Enabled" />
-                                    <FluentTextField @bind-Value="item.Name" Placeholder="key" Style="flex:1;" />
-                                    <FluentTextField @bind-Value="item.Value" Placeholder="value" Style="flex:1;" />
+                                    <FluentTextField @bind-Value="item.Name"
+                                                     @bind-Value:event="oninput"
+                                                     Placeholder="key"
+                                                     Style="flex:1;" />
+                                    <FluentTextField @bind-Value="item.Value"
+                                                     @bind-Value:event="oninput"
+                                                     Placeholder="value"
+                                                     Style="flex:1;" />
                                     <FluentButton Appearance="Appearance.Stealth" OnClick="() => RemoveQuery(item)" Title="Remove">
                                         <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" />
                                     </FluentButton>
@@ -64,18 +106,26 @@
                             <!-- Quick add common headers -->
                             <div class="quick-headers">
                                 <span class="quick-label">Quick add:</span>
-                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddContentTypeHeader" Title="Add Content-Type: application/json">Content-Type</FluentButton>
-                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddAuthorizationHeader" Title="Add Authorization header">Authorization</FluentButton>
-                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddCacheControlHeader" Title="Add Cache-Control: no-cache">Cache-Control</FluentButton>
-                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddXRequestedWithHeader" Title="Add X-Requested-With">X-Requested-With</FluentButton>
+                                <FluentButton Appearance="Appearance.Outline"
+                                              OnClick="@(() => showHeaderPresetsDialog = true)"
+                                              Style="min-width: 150px;">
+                                    <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" />
+                                    Browse Headers
+                                </FluentButton>
                             </div>
-                            
+
                             @foreach (var item in headers)
                             {
                                 <div class="kv-row">
                                     <FluentCheckbox @bind-Value="item.Enabled" />
-                                    <FluentTextField @bind-Value="item.Name" Placeholder="Header name" Style="flex:1;" />
-                                    <FluentTextField @bind-Value="item.Value" Placeholder="Header value" Style="flex:1;" />
+                                    <FluentTextField @bind-Value="item.Name"
+                                                     @bind-Value:event="oninput"
+                                                     Placeholder="Header name"
+                                                     Style="flex:1;" />
+                                    <FluentTextField @bind-Value="item.Value"
+                                                     @bind-Value:event="oninput"
+                                                     Placeholder="Header value"
+                                                     Style="flex:1;" />
                                     <FluentButton Appearance="Appearance.Stealth" OnClick="() => RemoveHeader(item)" Title="Remove">
                                         <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" />
                                     </FluentButton>
@@ -100,7 +150,10 @@
                         </div>
                         @if (bodyType != "none")
                         {
-                            <FluentTextArea @bind-Value="body" Rows="8" Resize="TextAreaResize.Vertical" Style="width:100%;" />
+                            <FluentTextArea @bind-Value="body"
+                                            Rows="8"
+                                            Resize="TextAreaResize.Vertical"
+                                            Style="width:100%;" />
                         }
                     }
                 </div>
@@ -110,84 +163,131 @@
             <div class="http-panel">
                 <div class="panel-header">
                     Response
-                    @if (statusCode is not null)
-                    {
-                        <span class="status-badge status-@GetStatusClass(statusCode.Value)">@statusCode @statusText</span>
-                        <span class="meta-item">@durationMs ms</span>
-                        @if (contentLength is not null)
+                    <div class="status-info">
+                        @if (!string.IsNullOrEmpty(errorMessage))
                         {
-                            <span class="meta-item">@contentLength bytes</span>
+                            <span class="status-badge status-error">Error</span>
+                            <span class="meta-item">@errorMessage</span>
                         }
-                    }
+                        else if (statusCode is not null)
+                        {
+                            <span class="status-badge status-@GetStatusClass(statusCode.Value)">@statusCode @statusText</span>
+                            <span class="meta-item">@durationMs ms</span>
+                            @if (contentLength is not null)
+                            {
+                                <span class="meta-item">@contentLength bytes</span>
+                            }
+                        }
+                    </div>
                 </div>
 
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <FluentMessageBar Title="Error" Intent="MessageIntent.Error">@errorMessage</FluentMessageBar>
-                }
-                else
-                {
-                    <div class="panel-tabs">
-                        <button class="tab-btn @(activeResponseTab == "body" ? "active" : "")" @onclick="SetResponseTabBody">Body</button>
-                        <button class="tab-btn @(activeResponseTab == "headers" ? "active" : "")" @onclick="SetResponseTabHeaders">Headers</button>
-                        <button class="tab-btn @(activeResponseTab == "request" ? "active" : "")" @onclick="SetResponseTabRequest">Request Info</button>
-                    </div>
-                    <div class="panel-content">
-                        @if (activeResponseTab == "body")
-                        {
-                            <div class="response-body-header">
-                                <span>Response Body</span>
-                                <CopyButton Text="@responseBody" />
-                            </div>
-                            <pre class="response-body">@responseBody</pre>
-                        }
-                        else if (activeResponseTab == "headers")
-                        {
+                <div class="panel-tabs">
+                    <button class="tab-btn @(activeResponseTab == "body" ? "active" : "")" @onclick="SetResponseTabBody">Body</button>
+                    <button class="tab-btn @(activeResponseTab == "headers" ? "active" : "")" @onclick="SetResponseTabHeaders">Headers</button>
+                    <button class="tab-btn @(activeResponseTab == "request" ? "active" : "")" @onclick="SetResponseTabRequest">Request Info</button>
+                </div>
+                <div class="panel-content">
+                    @if (activeResponseTab == "body")
+                    {
+                        <div class="response-body-header">
+                            <span>Response Body</span>
+                            <CopyButton Text="@responseBody" />
+                        </div>
+                        <pre class="response-body">@responseBody</pre>
+                    }
+                    else if (activeResponseTab == "headers")
+                    {
+                        <div class="headers-list">
+                            @if (responseHeaders.Count == 0)
+                            {
+                                <span class="meta-item">No headers received</span>
+                            }
+                            else
+                            {
+                                @foreach (var kv in responseHeaders)
+                                {
+                                    <div class="header-row">
+                                        <span class="header-name">@kv.Key:</span>
+                                        <span class="header-value">@string.Join(", ", kv.Value)</span>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                    else if (activeResponseTab == "request")
+                    {
+                        <div class="request-info">
+                            <div><strong>Method:</strong> @method</div>
+                            <div><strong>URL:</strong> @BuildUrlWithQuery(url, queryParams.Where(p => p.Enabled))</div>
+                            <div style="margin-top:8px;"><strong>Headers:</strong></div>
                             <div class="headers-list">
-                                @if (responseHeaders.Count == 0)
+                                @foreach (var h in headers.Where(h => h.Enabled && !string.IsNullOrWhiteSpace(h.Name)))
                                 {
-                                    <span class="meta-item">No headers received</span>
-                                }
-                                else
-                                {
-                                    @foreach (var kv in responseHeaders)
-                                    {
-                                        <div class="header-row">
-                                            <span class="header-name">@kv.Key:</span>
-                                            <span class="header-value">@string.Join(", ", kv.Value)</span>
-                                        </div>
-                                    }
+                                    <div class="header-row">
+                                        <span class="header-name">@h.Name:</span>
+                                        <span class="header-value">@h.Value</span>
+                                    </div>
                                 }
                             </div>
-                        }
-                        else if (activeResponseTab == "request")
-                        {
-                            <div class="request-info">
-                                <div><strong>Method:</strong> @method</div>
-                                <div><strong>URL:</strong> @BuildUrlWithQuery(url, queryParams.Where(p => p.Enabled))</div>
-                                <div style="margin-top:8px;"><strong>Headers:</strong></div>
-                                <div class="headers-list">
-                                    @foreach (var h in headers.Where(h => h.Enabled && !string.IsNullOrWhiteSpace(h.Name)))
-                                    {
-                                        <div class="header-row">
-                                            <span class="header-name">@h.Name:</span>
-                                            <span class="header-value">@h.Value</span>
-                                        </div>
-                                    }
-                                </div>
-                                @if (method is not ("GET" or "HEAD") && bodyType != "none" && !string.IsNullOrWhiteSpace(body))
-                                {
-                                    <div style="margin-top:8px;"><strong>Body:</strong></div>
-                                    <pre class="response-body">@body</pre>
-                                }
-                            </div>
-                        }
-                    </div>
-                }
+                            @if (method is not ("GET" or "HEAD") && bodyType != "none" && !string.IsNullOrWhiteSpace(body))
+                            {
+                                <div style="margin-top:8px;"><strong>Body:</strong></div>
+                                <pre class="response-body">@body</pre>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(requesterIpAddress))
+                            {
+                                <div style="margin-top:8px;"><strong>Requester IP:</strong> @requesterIpAddress</div>
+                            }
+
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </ChildContent>
 </ToolPageLayout>
+
+<!-- Header Presets Dialog -->
+@if (showHeaderPresetsDialog)
+{
+    <div class="modal-overlay" @onclick="@(() => showHeaderPresetsDialog = false)">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>Header Presets</h3>
+                <FluentButton Appearance="Appearance.Stealth" OnClick="@(() => showHeaderPresetsDialog = false)">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Dismiss())" />
+                </FluentButton>
+            </div>
+            <div class="modal-body">
+                @foreach (var category in headersByCategory)
+                {
+                    <div class="preset-category">
+                        <h4 class="category-title">@category.Key</h4>
+                        <div class="preset-items">
+                            @foreach (var header in category.Value)
+                            {
+                                <button class="preset-item" @onclick="() => AddHeaderFromPresetAndClose(header)">
+                                    <div class="preset-item-header">
+                                        <strong>@header.Name</strong>
+                                        @if (!string.IsNullOrEmpty(header.Value))
+                                        {
+                                            <span class="preset-item-value">: @header.Value</span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(header.Description))
+                                    {
+                                        <div class="preset-item-desc">@header.Description</div>
+                                    }
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
 
 <style>
     .http-client-layout {
@@ -210,6 +310,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        justify-content: space-between;
         padding: 12px 16px;
         font-weight: 600;
         font-size: 0.95rem;
@@ -217,6 +318,16 @@
         background: var(--bg-tertiary);
         border-bottom: 1px solid var(--border-color);
     }
+
+    .preset-selector {
+        margin-left: auto;
+        z-index: 100;
+    }
+
+        .preset-selector fluent-select {
+            min-width: 250px;
+            max-width: 350px;
+        }
 
     .panel-tabs {
         display: flex;
@@ -237,16 +348,16 @@
         transition: all 0.15s ease;
     }
 
-    .tab-btn:hover {
-        color: var(--text-primary);
-        background: var(--bg-secondary);
-    }
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
 
-    .tab-btn.active {
-        color: var(--accent-primary);
-        border-bottom-color: var(--accent-primary);
-        background: var(--bg-secondary);
-    }
+        .tab-btn.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+            background: var(--bg-secondary);
+        }
 
     .panel-content {
         padding: 16px;
@@ -269,25 +380,28 @@
     .quick-headers {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 8px;
         flex-wrap: wrap;
-        padding: 8px;
+        padding: 12px;
         background: var(--bg-tertiary);
         border-radius: 6px;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
     }
 
     .quick-label {
-        font-size: 0.8rem;
-        color: var(--text-tertiary);
-        margin-right: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-right: 8px;
     }
 
     .body-options {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
+        position: relative;
+        z-index: 10;
     }
 
     .status-badge {
@@ -297,13 +411,173 @@
         font-weight: 600;
     }
 
-    .status-success { background: #44bb44; color: #fff; }
-    .status-redirect { background: #ffcc00; color: #333; }
-    .status-client-error { background: #ff8800; color: #fff; }
-    .status-server-error { background: #ff4444; color: #fff; }
-    .status-info { background: #0078d4; color: #fff; }
+    .status-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-right: 5px;
+    }
 
-    .meta-item {
+    .status-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+    }
+
+    .status-icon-success {
+        color: #44bb44;
+    }
+
+    .status-icon-redirect {
+        color: #ffaa00;
+    }
+
+    .status-icon-client-error {
+        color: #ff8800;
+    }
+
+    .status-icon-server-error {
+        color: #ff4444;
+    }
+
+    .status-icon-info {
+        color: #0078d4;
+    }
+
+    .status-success {
+        background: #44bb44;
+        color: #fff;
+    }
+
+    .status-redirect {
+        background: #ffcc00;
+        color: #333;
+    }
+
+    .status-client-error {
+        background: #ff8800;
+        color: #fff;
+    }
+
+    .status-server-error {
+        background: #ff4444;
+        color: #fff;
+    }
+
+    .status-info {
+        background: #0078d4;
+        color: #fff;
+    }
+
+    .status-error {
+        background: var(--error);
+        color: #fff;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+    }
+
+    .modal-content {
+        background: var(--bg-primary);
+        border-radius: 8px;
+        max-width: 700px;
+        width: 100%;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+    .modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    .preset-category {
+        margin-bottom: 24px;
+    }
+
+        .preset-category:last-child {
+            margin-bottom: 0;
+        }
+
+    .category-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--accent-primary);
+        margin: 0 0 12px 0;
+        padding-bottom: 6px;
+        border-bottom: 2px solid var(--accent-primary);
+    }
+
+    .preset-items {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .preset-item {
+        width: 100%;
+        text-align: left;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+        .preset-item:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            transform: translateX(4px);
+        }
+
+    .preset-item-header {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .preset-item-value {
+        color: var(--text-secondary);
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.85rem;
+    }
+
+    .preset-item-desc {
         font-size: 0.8rem;
         color: var(--text-tertiary);
     }
@@ -315,62 +589,26 @@
         margin-bottom: 8px;
     }
 
-    .response-body {
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        padding: 12px;
-        font-family: 'Consolas', 'Monaco', monospace;
-        font-size: 0.85rem;
-        color: var(--text-primary);
-        overflow-x: auto;
-        white-space: pre-wrap;
-        word-break: break-word;
-        max-height: 400px;
-        overflow-y: auto;
-        margin: 0;
-    }
-
-    .headers-list {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        font-size: 0.85rem;
-    }
-
-    .header-row {
-        display: flex;
-        gap: 8px;
-    }
-
-    .header-name {
-        font-weight: 600;
-        color: var(--accent-primary);
-        min-width: 120px;
-        word-break: break-all;
-    }
-
-    .header-value {
-        color: var(--text-primary);
-        word-break: break-all;
-    }
-
-    .request-info {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        font-size: 0.85rem;
-        color: var(--text-primary);
-    }
-
     @@media (max-width: 1024px) {
         .http-client-layout {
             grid-template-columns: 1fr;
+        }
+
+        .modal-content {
+            max-width: 95%;
+            max-height: 90vh;
+        }
+
+        .modal-body {
+            padding: 16px;
         }
     }
 </style>
 
 @code {
+
+
+
     private class HeaderItem
     {
         public bool Enabled { get; set; } = true;
@@ -386,11 +624,17 @@
     }
 
     private string method = "GET";
+
+    private string requesterIpAddress = string.Empty;
     private string url = string.Empty;
     private string body = string.Empty;
     private string bodyType = "json";
     private string activeRequestTab = "headers";
     private string activeResponseTab = "body";
+    private string selectedPreset = string.Empty;
+    private int timeoutSeconds = 30;
+    private CancellationTokenSource? cancellationTokenSource;
+    private bool userCancelled;
 
     private readonly List<HeaderItem> headers = new()
     {
@@ -400,6 +644,9 @@
 
     private readonly List<QueryParamItem> queryParams = new();
 
+    private List<RequestPreset> requestPresets = new();
+    private Dictionary<string, List<HeaderPreset>> headersByCategory = new();
+
     private string? responseBody;
     private readonly Dictionary<string, IEnumerable<string>> responseHeaders = new();
     private int? statusCode;
@@ -408,6 +655,26 @@
     private long? contentLength;
     private bool isLoading;
     private string? errorMessage;
+    private bool showHeaderPresetsDialog = false;
+
+    private bool IsValidUrl
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return false;
+
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                   && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load presets
+        requestPresets = await PresetsService.GetRequestPresetsAsync();
+        headersByCategory = await PresetsService.GetHeadersByCategoryAsync();
+    }
 
     // Tab switching methods
     private void SetRequestTabQuery() => activeRequestTab = "query";
@@ -423,11 +690,55 @@
     private void AddQuery() => queryParams.Add(new QueryParamItem());
     private void RemoveQuery(QueryParamItem item) => queryParams.Remove(item);
 
-    // Quick add header methods
-    private void AddContentTypeHeader() => AddOrUpdateHeader("Content-Type", "application/json");
-    private void AddAuthorizationHeader() => AddOrUpdateHeader("Authorization", "Bearer ");
-    private void AddCacheControlHeader() => AddOrUpdateHeader("Cache-Control", "no-cache");
-    private void AddXRequestedWithHeader() => AddOrUpdateHeader("X-Requested-With", "XMLHttpRequest");
+    private void AddHeaderFromPreset(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return;
+
+        var parts = value.Split('|');
+        if (parts.Length == 2)
+        {
+            AddOrUpdateHeader(parts[0], parts[1]);
+        }
+    }
+
+    private void AddHeaderFromPresetAndClose(HeaderPreset preset)
+    {
+        AddOrUpdateHeader(preset.Name, preset.Value);
+        showHeaderPresetsDialog = false;
+    }
+
+    private void LoadPreset()
+    {
+        if (string.IsNullOrEmpty(selectedPreset)) return;
+
+        var preset = requestPresets.FirstOrDefault(p => p.Name == selectedPreset);
+        if (preset == null) return;
+
+        // Load preset data
+        method = preset.Method;
+        url = preset.Url;
+
+        if (!string.IsNullOrEmpty(preset.Body))
+        {
+            body = preset.Body;
+            bodyType = preset.BodyType ?? "json";
+        }
+
+        // Clear and load headers
+        headers.Clear();
+        foreach (var h in preset.Headers)
+        {
+            headers.Add(new HeaderItem
+            {
+                Name = h.Name,
+                Value = h.Value,
+                Enabled = h.IsEnabled
+            });
+        }
+
+        // Reset preset selection
+        selectedPreset = string.Empty;
+    }
 
     private void AddOrUpdateHeader(string name, string value)
     {
@@ -443,9 +754,14 @@
         }
     }
 
+    private void OnUrlInput(ChangeEventArgs e)
+    {
+        url = e.Value?.ToString() ?? string.Empty;
+    }
+
     private async Task OnUrlKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !isLoading)
+        if (e.Key == "Enter" && !isLoading && IsValidUrl)
         {
             await SendRequestAsync();
         }
@@ -453,6 +769,7 @@
 
     private async Task SendRequestAsync()
     {
+        // Reset previous state
         errorMessage = null;
         responseBody = null;
         responseHeaders.Clear();
@@ -460,13 +777,19 @@
         statusText = null;
         durationMs = null;
         contentLength = null;
+        requesterIpAddress = string.Empty;
         isLoading = true;
+        userCancelled = false;
+
+        // Create new cancellation token source
+        cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+
+
+
         StateHasChanged();
 
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-
             var finalUrl = BuildUrlWithQuery(url, queryParams.Where(p => p.Enabled));
 
             using var request = new HttpRequestMessage(new HttpMethod(method), finalUrl);
@@ -491,7 +814,7 @@
             }
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            using var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            using var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
             sw.Stop();
 
             statusCode = (int)response.StatusCode;
@@ -501,32 +824,80 @@
             foreach (var h in response.Headers)
                 responseHeaders[h.Key] = h.Value.ToArray();
 
+            // Try to capture requester IP from common headers if provided by the server
+            requesterIpAddress =
+                response.Headers.TryGetValues("X-Client-IP", out var clientIpValues) ? clientIpValues.FirstOrDefault() ?? string.Empty :
+                response.Headers.TryGetValues("X-Forwarded-For", out var forwardedForValues) ? forwardedForValues.FirstOrDefault() ?? string.Empty :
+                requesterIpAddress;
+
             if (response.Content != null)
             {
                 foreach (var h in response.Content.Headers)
                     responseHeaders[h.Key] = h.Value.ToArray();
 
                 contentLength = response.Content.Headers.ContentLength;
-                var text = await response.Content.ReadAsStringAsync(cts.Token);
+                var text = await response.Content.ReadAsStringAsync(cancellationTokenSource.Token);
                 responseBody = PrettyPrintBody(text);
             }
 
             activeResponseTab = "body";
+            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+
+
+            var xForwardedFor = responseHeaders.FirstOrDefault(h => h.Key.Equals("X-Forwarded-For", StringComparison.OrdinalIgnoreCase)).Value?.FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(xForwardedFor))
+            {
+                requesterIpAddress = xForwardedFor.Split(',').FirstOrDefault()?.Trim();
+            }
+            else
+            {
+                requesterIpAddress = responseHeaders.FirstOrDefault(h => h.Key.Equals("X-Client-IP", StringComparison.OrdinalIgnoreCase)).Value?.FirstOrDefault()?.Trim();
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // If the user explicitly clicked Cancel, treat as cancelled;
+            // otherwise it is a timeout coming from the HttpClient/CTS.
+            if (userCancelled)
+            {
+                errorMessage = "Request was cancelled";
+            }
+            else
+            {
+                errorMessage = $"Request timeout after {timeoutSeconds} seconds";
+            }
+
+            responseBody = errorMessage;
+        }
+        catch (OperationCanceledException)
+        {
+            errorMessage = userCancelled ? "Request was cancelled" : $"Request timeout after {timeoutSeconds} seconds";
+            responseBody = errorMessage;
         }
         catch (Exception ex)
         {
             errorMessage = ex.Message;
+            responseBody = ex.Message;
         }
         finally
         {
             isLoading = false;
+            cancellationTokenSource?.Dispose();
+            cancellationTokenSource = null;
             StateHasChanged();
         }
     }
 
+    private void CancelRequest()
+    {
+        userCancelled = true;
+        cancellationTokenSource?.Cancel();
+    }
+
     private static string BuildUrlWithQuery(string baseUrl, IEnumerable<QueryParamItem> items)
     {
-        if (string.IsNullOrWhiteSpace(baseUrl)) return string.Empty;
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            return string.Empty;
 
         try
         {
@@ -539,6 +910,7 @@
             }
 
             uriBuilder.Query = query.ToString();
+
             return uriBuilder.ToString();
         }
         catch
@@ -555,6 +927,7 @@
         try
         {
             using var doc = System.Text.Json.JsonDocument.Parse(body);
+
             return System.Text.Json.JsonSerializer.Serialize(doc.RootElement, new System.Text.Json.JsonSerializerOptions
             {
                 WriteIndented = true
@@ -611,3 +984,4 @@
         }
     }
 }
+

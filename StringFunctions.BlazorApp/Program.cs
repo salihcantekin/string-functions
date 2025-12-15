@@ -8,7 +8,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Register services
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddFluentUIComponents();
 builder.Services.AddScoped<ThemeService>();
@@ -16,5 +15,6 @@ builder.Services.AddScoped<UserPreferencesService>();
 builder.Services.AddScoped<SeoService>();
 builder.Services.AddScoped<ToolsService>();
 builder.Services.AddScoped<FavoritesService>();
+builder.Services.AddScoped<HttpClientPresetsService>();
 
 await builder.Build().RunAsync();

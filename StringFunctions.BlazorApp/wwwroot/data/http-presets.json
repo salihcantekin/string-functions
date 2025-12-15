@@ -1,0 +1,239 @@
+{
+  "commonHeaders": [
+    {
+      "name": "Content-Type",
+      "value": "application/json",
+      "description": "JSON content type",
+      "category": "Content",
+      "isEnabled": true
+    },
+    {
+      "name": "Host",
+      "value": "stringfunctions.net",
+      "description": "Host name",
+      "category": "Content",
+      "isEnabled": true
+    },
+    {
+      "name": "Content-Type",
+      "value": "application/xml",
+      "description": "XML content type",
+      "category": "Content",
+      "isEnabled": true
+    },
+    {
+      "name": "Content-Type",
+      "value": "application/x-www-form-urlencoded",
+      "description": "Form encoded content",
+      "category": "Content",
+      "isEnabled": true
+    },
+    {
+      "name": "Content-Type",
+      "value": "multipart/form-data",
+      "description": "Multipart form data",
+      "category": "Content",
+      "isEnabled": true
+    },
+    {
+      "name": "Accept",
+      "value": "application/json",
+      "description": "Accept JSON response",
+      "category": "Accept",
+      "isEnabled": true
+    },
+    {
+      "name": "Accept",
+      "value": "application/xml",
+      "description": "Accept XML response",
+      "category": "Accept",
+      "isEnabled": true
+    },
+    {
+      "name": "Accept",
+      "value": "*/*",
+      "description": "Accept any response type",
+      "category": "Accept",
+      "isEnabled": true
+    },
+    {
+      "name": "Authorization",
+      "value": "Bearer {token}",
+      "description": "Bearer token authentication",
+      "category": "Authentication",
+      "isEnabled": true
+    },
+    {
+      "name": "Authorization",
+      "value": "Basic {base64}",
+      "description": "Basic authentication",
+      "category": "Authentication",
+      "isEnabled": true
+    },
+    {
+      "name": "Authorization",
+      "value": "ApiKey {key}",
+      "description": "API Key authentication",
+      "category": "Authentication",
+      "isEnabled": true
+    },
+    {
+      "name": "User-Agent",
+      "value": "StringFunctions-HTTP-Client/1.0",
+      "description": "Custom user agent",
+      "category": "Request",
+      "isEnabled": true
+    },
+    {
+      "name": "Cache-Control",
+      "value": "no-cache",
+      "description": "Disable caching",
+      "category": "Cache",
+      "isEnabled": true
+    },
+    {
+      "name": "Cache-Control",
+      "value": "no-store",
+      "description": "No store in cache",
+      "category": "Cache",
+      "isEnabled": true
+    },
+    {
+      "name": "Cache-Control",
+      "value": "max-age=3600",
+      "description": "Cache for 1 hour",
+      "category": "Cache",
+      "isEnabled": true
+    },
+    {
+      "name": "X-Requested-With",
+      "value": "XMLHttpRequest",
+      "description": "AJAX request indicator",
+      "category": "Request",
+      "isEnabled": true
+    },
+    {
+      "name": "Origin",
+      "value": "https://string-functions.azurewebsites.net",
+      "description": "Request origin",
+      "category": "CORS",
+      "isEnabled": true
+    },
+    {
+      "name": "Referer",
+      "value": "https://string-functions.azurewebsites.net",
+      "description": "Request referrer",
+      "category": "Request",
+      "isEnabled": true
+    },
+    {
+      "name": "Accept-Encoding",
+      "value": "gzip, deflate, br",
+      "description": "Accept compressed response",
+      "category": "Accept",
+      "isEnabled": true
+    },
+    {
+      "name": "Accept-Language",
+      "value": "en-US,en;q=0.9",
+      "description": "Preferred language",
+      "category": "Accept",
+      "isEnabled": true
+    },
+    {
+      "name": "X-API-Key",
+      "value": "",
+      "description": "API Key header",
+      "category": "Authentication",
+      "isEnabled": true
+    },
+    {
+      "name": "X-Request-ID",
+      "value": "",
+      "description": "Request tracking ID",
+      "category": "Request",
+      "isEnabled": true
+    }
+  ],
+  "requestPresets": [
+    {
+      "name": "Get Todo",
+      "description": "Get a single todo item",
+      "method": "GET",
+      "url": "https://jsonplaceholder.typicode.com/todos/1",
+      "headers": [
+        {
+          "name": "Accept",
+          "value": "application/json",
+          "description": "Accept JSON",
+          "category": "Accept",
+          "isEnabled": true
+        }
+      ]
+    },
+    {
+      "name": "List Todos",
+      "description": "Get a list of todos",
+      "method": "GET",
+      "url": "https://jsonplaceholder.typicode.com/todos",
+      "headers": [
+        {
+          "name": "Accept",
+          "value": "application/json",
+          "description": "Accept JSON",
+          "category": "Accept",
+          "isEnabled": true
+        }
+      ]
+    },
+    {
+      "name": "Filter Todos by User",
+      "description": "Get todos for a specific user (userId=1)",
+      "method": "GET",
+      "url": "https://jsonplaceholder.typicode.com/todos?userId=1",
+      "headers": [
+        {
+          "name": "Accept",
+          "value": "application/json",
+          "description": "Accept JSON",
+          "category": "Accept",
+          "isEnabled": true
+        }
+      ]
+    },
+    {
+      "name": "Create Todo",
+      "description": "Create a new todo",
+      "method": "POST",
+      "url": "https://jsonplaceholder.typicode.com/todos",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": "JSON content",
+          "category": "Content",
+          "isEnabled": true
+        }
+      ],
+      "body": "{\n  \"userId\": 1,\n  \"title\": \"New sample todo\",\n  \"completed\": false\n}",
+      "bodyType": "json"
+    },
+    {
+      "name": "Update Todo",
+      "description": "Update an existing todo (PUT)",
+      "method": "PUT",
+      "url": "https://jsonplaceholder.typicode.com/todos/1",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "description": "JSON content",
+          "category": "Content",
+          "isEnabled": true
+        }
+      ],
+      "body": "{\n  \"id\": 1,\n  \"userId\": 1,\n  \"title\": \"Updated todo title\",\n  \"completed\": true\n}",
+      "bodyType": "json"
+    }
+  ]
+}
