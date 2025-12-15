@@ -66,6 +66,7 @@
                                 <span class="quick-label">Quick add:</span>
                                 <FluentButton Appearance="Appearance.Stealth" OnClick="AddContentTypeHeader" Title="Add Content-Type: application/json">Content-Type</FluentButton>
                                 <FluentButton Appearance="Appearance.Stealth" OnClick="AddAuthorizationHeader" Title="Add Authorization header">Authorization</FluentButton>
+                                <FluentButton Appearance="Appearance.Stealth" OnClick="AddHostHeader" Title="Add Host header">Host</FluentButton>
                                 <FluentButton Appearance="Appearance.Stealth" OnClick="AddCacheControlHeader" Title="Add Cache-Control: no-cache">Cache-Control</FluentButton>
                                 <FluentButton Appearance="Appearance.Stealth" OnClick="AddXRequestedWithHeader" Title="Add X-Requested-With">X-Requested-With</FluentButton>
                             </div>
@@ -426,6 +427,7 @@
     // Quick add header methods
     private void AddContentTypeHeader() => AddOrUpdateHeader("Content-Type", "application/json");
     private void AddAuthorizationHeader() => AddOrUpdateHeader("Authorization", "Bearer ");
+    private void AddHostHeader() => AddOrUpdateHeader("Host", "");
     private void AddCacheControlHeader() => AddOrUpdateHeader("Cache-Control", "no-cache");
     private void AddXRequestedWithHeader() => AddOrUpdateHeader("X-Requested-With", "XMLHttpRequest");
 
