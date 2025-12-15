@@ -58,19 +58,15 @@ public class ThemeService(IJSRuntime jsRuntime)
         var themeClass = _isDarkMode ? "dark-theme" : "light-theme";
         var removeThemeClass = _isDarkMode ? "light-theme" : "dark-theme";
         
-        // Remove the opposite theme class and add the current theme class
-        await jsRuntime.InvokeVoidAsync("eval", $@"
-            document.documentElement.classList.remove('{removeThemeClass}');
-            document.documentElement.classList.add('{themeClass}');
-        ");
+        // Use dedicated theme manager JavaScript function
+        await jsRuntime.InvokeVoidAsync("themeManager.setTheme", themeClass, removeThemeClass);
     }
 
     private async Task<bool> GetSystemPreferenceAsync()
     {
         try
         {
-            return await jsRuntime.InvokeAsync<bool>("eval", 
-                "window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches");
+            return await jsRuntime.InvokeAsync<bool>("themeManager.getSystemPrefersDark");
         }
         catch
         {

@@ -1,62 +1,6 @@
 /* Theme Variables */
-/* Default Light Theme - applied to :root */
-:root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --bg-tertiary: #f0f0f0;
-    --bg-card: #ffffff;
-    --bg-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    
-    --text-primary: #323130;
-    --text-secondary: #605e5c;
-    --text-tertiary: #8a8886;
-    --text-inverse: #ffffff;
-    
-    --border-color: #e9ecef;
-    --border-color-strong: #d2d0ce;
-    
-    --accent-primary: #0078d4;
-    --accent-hover: #106ebe;
-    --accent-light: #e7f1ff;
-    
-    --success: #107c10;
-    --success-bg: #dff6dd;
-    --warning: #ffb900;
-    --warning-bg: #fff4ce;
-    --error: #d13438;
-    --error-bg: #fde7e9;
-    
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-    
-    --input-bg: #ffffff;
-    --input-border: #8a8886;
-    --input-focus-border: #0078d4;
-    --input-text: #323130;
-    
-    --code-bg: #f4f4f4;
-    
-    /* FluentUI Light Theme Variables */
-    --neutral-fill-rest: #ffffff;
-    --neutral-fill-hover: #f3f2f1;
-    --neutral-fill-active: #edebe9;
-    --neutral-fill-input-rest: #ffffff;
-    --neutral-fill-input-hover: #f3f2f1;
-    --neutral-fill-input-active: #ffffff;
-    --neutral-stroke-rest: #8a8886;
-    --neutral-stroke-hover: #323130;
-    --neutral-foreground-rest: #323130;
-    --neutral-foreground-hover: #201f1e;
-    --neutral-layer-1: #ffffff;
-    --neutral-layer-2: #f8f9fa;
-    --accent-fill-rest: #0078d4;
-    --accent-fill-hover: #106ebe;
-    --accent-fill-active: #005a9e;
-    --accent-foreground-rest: #ffffff;
-}
-
-/* Light Theme - explicit class */
+/* Light Theme - Default theme applied to :root and explicit light-theme class */
+:root,
 :root.light-theme,
 html.light-theme,
 .light-theme {
@@ -115,7 +59,7 @@ html.light-theme,
     --accent-foreground-rest: #ffffff;
 }
 
-/* Dark Theme */
+/* Dark Theme - Override light theme when dark-theme class is present */
 :root.dark-theme,
 html.dark-theme,
 .dark-theme {
@@ -297,6 +241,12 @@ fluent-button[appearance="accent"] {
 /* ==================================================
    CENTRALIZED FLUENTUI COMPONENT THEME STYLES
    All FluentUI components will inherit from these
+   
+   NOTE: !important is required here because FluentUI
+   components use Shadow DOM, which isolates their styles.
+   CSS variables can penetrate Shadow DOM boundaries, but
+   we need !important to ensure theme changes override
+   the component's internal default styles.
    ================================================== */
 
 /* Checkbox - Theme variables set on component for Shadow DOM */
