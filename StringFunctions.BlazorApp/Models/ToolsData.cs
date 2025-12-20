@@ -22,6 +22,8 @@ public class Tool
     public string Route { get; set; } = string.Empty;
     public string Icon { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string OgTitle { get; set; } = string.Empty;
+    public string OgDescription { get; set; } = string.Empty;
     public List<string> Keywords { get; set; } = new();
     public bool Featured { get; set; }
     public string AddedDate { get; set; } = string.Empty;

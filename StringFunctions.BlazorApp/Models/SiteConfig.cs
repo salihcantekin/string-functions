@@ -15,6 +15,8 @@ public class SiteConfig
 public class SeoConfig
 {
     public string DefaultImageUrl { get; set; } = string.Empty;
+    public string OgLogoUrl { get; set; } = string.Empty;
+    public string OgIconUrl { get; set; } = string.Empty;
     public string Locale { get; set; } = string.Empty;
     public string TwitterCardType { get; set; } = string.Empty;
 }

@@ -13,6 +13,8 @@
           "route": "/reverse",
           "icon": "ArrowSwap",
           "description": "Reverse strings or lines",
+          "ogTitle": "String Reverse Tool - Reverse Text Online Free",
+          "ogDescription": "Instantly reverse any text, strings or lines online. Free string reversal tool for developers and writers. Fast, easy and secure.",
           "keywords": ["reverse", "backwards", "flip"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -23,6 +25,8 @@
           "route": "/case-converter",
           "icon": "TextCaseTitle",
           "description": "Convert text case (camelCase, snake_case...)",
+          "ogTitle": "Case Converter - camelCase, snake_case, PascalCase",
+          "ogDescription": "Convert text between camelCase, PascalCase, snake_case, kebab-case and more. Perfect for developers and programmers. Fast and free.",
           "keywords": ["case", "camel", "pascal", "snake", "kebab"],
           "featured": true,
           "addedDate": "2024-01-01"
@@ -33,6 +37,8 @@
           "route": "/trim-pad",
           "icon": "Cut",
           "description": "Whitespace operations",
+          "ogTitle": "Trim & Pad Tool - Remove Whitespace & Add Padding",
+          "ogDescription": "Trim whitespace or add padding to text online. Remove leading/trailing spaces, add left/right padding. Free text formatting tool.",
           "keywords": ["trim", "pad", "whitespace"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -43,6 +49,8 @@
           "route": "/line-counter",
           "icon": "NumberSymbol",
           "description": "Count lines, words, characters",
+          "ogTitle": "Line Counter - Count Lines, Words & Characters",
+          "ogDescription": "Count lines, words, and characters in text online. Free counter tool for developers and writers with real-time statistics.",
           "keywords": ["count", "lines", "words", "characters"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -53,6 +61,8 @@
           "route": "/line-operations",
           "icon": "TextBulletListSquare",
           "description": "Sort, filter, dedupe lines (Notepad++ style)",
+          "ogTitle": "Line Operations - Sort, Filter & Dedupe (Notepad++)",
+          "ogDescription": "Advanced line operations tool. Sort lines, remove duplicates, filter by pattern, number lines. Notepad++ style text processing online.",
           "keywords": ["sort", "filter", "dedupe", "unique"],
           "featured": false,
           "addedDate": "2025-01-15"
@@ -63,6 +73,8 @@
           "route": "/compare",
           "icon": "DocumentMultiple",
           "description": "Compare texts side by side",
+          "ogTitle": "Text Compare Tool - Compare Two Texts Side by Side",
+          "ogDescription": "Compare two text documents side by side online. Find differences and similarities quickly. Free text comparison tool for developers.",
           "keywords": ["compare", "diff", "difference"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -82,6 +94,8 @@
           "route": "/base64",
           "icon": "Code",
           "description": "Encode/Decode Base64",
+          "ogTitle": "Base64 Encode/Decode - Free Base64 Converter",
+          "ogDescription": "Fast and secure Base64 encoder and decoder. Convert text to Base64 or decode Base64 to text. Supports UTF-8, ASCII, Unicode encoding.",
           "keywords": ["base64", "encode", "decode"],
           "featured": true,
           "addedDate": "2024-01-01"
@@ -92,6 +106,8 @@
           "route": "/url-encode",
           "icon": "Link",
           "description": "URL encoding/decoding",
+          "ogTitle": "URL Encoder/Decoder - Free URL Encode Tool",
+          "ogDescription": "Encode and decode URLs online. Convert special characters for web URLs. Free URL encoder and decoder tool for developers.",
           "keywords": ["url", "encode", "decode", "percent"],
           "featured": true,
           "addedDate": "2024-01-01"
@@ -102,6 +118,8 @@
           "route": "/hash-generator",
           "icon": "ShieldKeyhole",
           "description": "MD5, SHA1, SHA256, SHA512",
+          "ogTitle": "Hash Generator - MD5, SHA1, SHA256, SHA512 Online",
+          "ogDescription": "Generate cryptographic hashes online. Create MD5, SHA1, SHA256, SHA512 hashes from text. Free hash generator tool for developers.",
           "keywords": ["hash", "md5", "sha", "checksum"],
           "featured": false,
           "addedDate": "2025-01-15"
@@ -121,6 +139,8 @@
           "route": "/json-formatter",
           "icon": "DocumentText",
           "description": "Format and validate JSON",
+          "ogTitle": "JSON Formatter & Validator - Format JSON Online",
+          "ogDescription": "Format, validate, minify, and beautify JSON data online. Syntax highlighting and error detection for developers. Free JSON formatter.",
           "keywords": ["json", "format", "beautify", "validate"],
           "featured": true,
           "addedDate": "2024-01-01"
@@ -131,6 +151,8 @@
           "route": "/json-compare",
           "icon": "DocumentSearch",
           "description": "Compare two JSON documents",
+          "ogTitle": "JSON Compare - Compare & Diff JSON Files Online",
+          "ogDescription": "Compare two JSON documents online. Find differences, visualize changes, and validate JSON structure. Free JSON diff tool for developers.",
           "keywords": ["json", "compare", "diff"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -141,6 +163,8 @@
           "route": "/json-to-csharp",
           "icon": "Document",
           "description": "Generate C# classes from JSON",
+          "ogTitle": "JSON to C# Class Generator - Convert JSON to C#",
+          "ogDescription": "Generate C# classes from JSON instantly. Free online tool to convert JSON to C# POCO classes with proper naming and data types.",
           "keywords": ["json", "csharp", "c#", "class", "generate"],
           "featured": true,
           "addedDate": "2024-01-01"
@@ -151,6 +175,8 @@
           "route": "/json-to-java",
           "icon": "Document",
           "description": "Generate Java POJOs from JSON",
+          "ogTitle": "JSON to Java POJO Generator - Convert JSON to Java",
+          "ogDescription": "Generate Java POJO classes from JSON data. Free tool to convert JSON to Java objects with Gson, Jackson annotations support.",
           "keywords": ["json", "java", "pojo", "generate"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -161,6 +187,8 @@
           "route": "/json-to-typescript",
           "icon": "Document",
           "description": "Generate TypeScript interfaces",
+          "ogTitle": "JSON to TypeScript - Generate TS Interfaces Online",
+          "ogDescription": "Generate TypeScript interfaces from JSON. Free online tool to convert JSON to TypeScript types and interfaces instantly.",
           "keywords": ["json", "typescript", "interface", "generate"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -180,6 +208,8 @@
           "route": "/regex-search",
           "icon": "Search",
           "description": "Search with regular expressions",
+          "ogTitle": "Regex Tester - Test Regular Expressions Online",
+          "ogDescription": "Test and debug regular expressions online. Live regex tester with syntax highlighting and match details. Free regex tool for developers.",
           "keywords": ["regex", "search", "pattern", "match"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -190,6 +220,8 @@
           "route": "/regex-replace",
           "icon": "ArrowRepeatAll",
           "description": "Find and replace with regex",
+          "ogTitle": "Regex Replace - Find & Replace with RegEx Online",
+          "ogDescription": "Replace text using regular expressions online. Pattern-based find and replace with regex support. Free tool for developers.",
           "keywords": ["regex", "replace", "pattern"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -200,6 +232,8 @@
           "route": "/extract",
           "icon": "ArrowExportUp",
           "description": "Extract patterns from text",
+          "ogTitle": "Text Extract Tool - Extract Patterns with Regex",
+          "ogDescription": "Extract text patterns using regular expressions. Extract emails, URLs, numbers, and custom patterns from text. Free extraction tool.",
           "keywords": ["extract", "regex", "pattern", "parse"],
           "featured": false,
           "addedDate": "2024-01-01"
@@ -219,6 +253,8 @@
           "route": "/datetime-formatter",
           "icon": "CalendarClock",
           "description": "Test C# DateTime format strings",
+          "ogTitle": "DateTime Formatter - Test C# DateTime Formats",
+          "ogDescription": "Test C# DateTime format strings online. Preview different date and time formats instantly. Free tool for .NET developers.",
           "keywords": ["datetime", "format", "date", "time"],
           "featured": false,
           "addedDate": "2025-01-15"
@@ -229,6 +265,8 @@
           "route": "/string-formatter",
           "icon": "TextQuote",
           "description": "Test C# string formatting",
+          "ogTitle": "String Formatter - Test C# String Format Online",
+          "ogDescription": "Test C# string formatting and interpolation online. Preview composite formatting, string interpolation, and format specifiers.",
           "keywords": ["string", "format", "interpolation"],
           "featured": false,
           "addedDate": "2025-01-15"
@@ -239,6 +277,8 @@
           "route": "/guid-generator",
           "icon": "Key",
           "description": "Generate and format GUIDs",
+          "ogTitle": "GUID Generator - Generate UUID/GUID Online",
+          "ogDescription": "Generate GUIDs (UUIDs) online in multiple formats. Create random GUIDs instantly. Free UUID/GUID generator for developers.",
           "keywords": ["guid", "uuid", "generate"],
           "featured": false,
           "addedDate": "2025-01-15"
@@ -249,6 +289,8 @@
           "route": "/password-generator",
           "icon": "Password",
           "description": "Generate secure passwords",
+          "ogTitle": "Password Generator - Generate Strong Passwords",
+          "ogDescription": "Generate strong, secure passwords online. Customize length and character types. Free random password generator tool.",
           "keywords": ["password", "generate", "random", "secure"],
           "featured": false,
           "addedDate": "2025-01-15"
@@ -259,6 +301,8 @@
           "route": "/http-client",
           "icon": "GlobeSearch",
           "description": "Build and send HTTP requests",
+          "ogTitle": "HTTP Client - Test HTTP Requests & REST APIs",
+          "ogDescription": "Build and send HTTP requests online. Test REST APIs with custom headers, body, and methods. Free HTTP client for developers.",
           "keywords": ["http", "rest", "api", "request"],
           "featured": false,
           "addedDate": "2025-01-15"
@@ -269,6 +313,8 @@
           "route": "/number-converter",
           "icon": "NumberCircle",
           "description": "Convert between Binary, Decimal, Hex, Octal",
+          "ogTitle": "Number Converter - Binary, Hex, Decimal, Octal",
+          "ogDescription": "Convert numbers between binary, decimal, hexadecimal, and octal. Free online number system converter for programmers.",
           "keywords": ["number", "binary", "hex", "hexadecimal", "octal", "decimal", "converter"],
           "featured": false,
           "addedDate": "2025-01-20"
