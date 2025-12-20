@@ -2,6 +2,7 @@
 @using StringFunctions.BlazorApp.Models
 @inject SeoService SeoService
 @inject NavigationManager NavigationManager
+@inject SiteConfigService SiteConfigService
 
 <HeadContent>
     @if (_metadata != null)
@@ -22,11 +23,11 @@
         <meta property="og:title" content="@_metadata.Title" />
         <meta property="og:description" content="@_metadata.Description" />
         <meta property="og:image" content="@GetFullImageUrl(_metadata.ImageUrl)" />
-        <meta property="og:site_name" content="String Functions" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:site_name" content="@siteName" />
+        <meta property="og:locale" content="@locale" />
         
         <!-- Twitter -->
-        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:card" content="@twitterCardType" />
         <meta property="twitter:url" content="@_metadata.Url" />
         <meta property="twitter:title" content="@_metadata.Title" />
         <meta property="twitter:description" content="@_metadata.Description" />
@@ -36,7 +37,7 @@
         <meta name="robots" content="index, follow" />
         <meta name="language" content="English" />
         <meta name="revisit-after" content="7 days" />
-        <meta name="author" content="String Functions" />
+        <meta name="author" content="@author" />
         
         <!-- Structured Data -->
         <script type="application/ld+json">
@@ -50,15 +51,36 @@
     public string? Route { get; set; }
 
     private PageMetadata? _metadata;
+    private string siteName = "String Functions";
+    private string locale = "en_US";
+    private string twitterCardType = "summary_large_image";
+    private string author = "String Functions";
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadSiteConfig();
         UpdateMetadata();
     }
 
     protected override async Task OnParametersSetAsync()
     {
         UpdateMetadata();
+    }
+
+    private async Task LoadSiteConfig()
+    {
+        try
+        {
+            var config = await SiteConfigService.GetSiteConfigAsync();
+            siteName = config.SiteName;
+            author = config.Author;
+            locale = config.Seo.Locale;
+            twitterCardType = config.Seo.TwitterCardType;
+        }
+        catch
+        {
+            // Use default values if config loading fails
+        }
     }
 
     private void UpdateMetadata()

@@ -7,6 +7,7 @@
 @inject UserPreferencesService UserPreferences
 @inject ToolsService ToolsService
 @inject FavoritesService FavoritesService
+@inject SiteConfigService SiteConfigService
 @implements IDisposable
 
 <div class="layout-container @(ThemeService.IsDarkMode ? "dark-theme" : "light-theme") @(sidebarCollapsed ? "sidebar-collapsed" : "") @(mobileMenuOpen ? "mobile-menu-open" : "")">
@@ -16,8 +17,8 @@
                 <FluentIcon Value="@(new Icons.Regular.Size20.Navigation())" Color="Color.Custom" CustomColor="#ffffff" />
             </button>
             <NavLink class="header-logo-link" href="" Match="NavLinkMatch.All" @onclick="OnHomeClick">
-                <img src="images/logo.png" alt="String Functions" class="header-logo" />
-                <span class="header-title">String Functions</span>
+                <img src="@logoPath" alt="@siteName" class="header-logo" />
+                <span class="header-title">@siteName</span>
             </NavLink>
         </div>
         <div class="header-actions">
@@ -635,12 +636,29 @@
     private List<Tool> favoriteTools = new();
     private HashSet<string> favoriteIds = new();
     private string IconColor => ThemeService.IsDarkMode ? "#b3b3b3" : "#323130";
+    private string siteName = "String Functions";
+    private string logoPath = "images/logo.png";
 
     protected override async Task OnInitializedAsync()
     {
         categories = await ToolsService.GetCategoriesAsync();
         await LoadFavorites();
+        await LoadSiteConfig();
         FavoritesService.OnFavoritesChanged += OnFavoritesChanged;
+    }
+
+    private async Task LoadSiteConfig()
+    {
+        try
+        {
+            var config = await SiteConfigService.GetSiteConfigAsync();
+            siteName = config.SiteName;
+            logoPath = config.LogoPath;
+        }
+        catch
+        {
+            // Use default values if config loading fails
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

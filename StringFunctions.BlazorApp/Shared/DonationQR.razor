@@ -1,4 +1,6 @@
 ﻿@* Donation QR Code Component - Subtle and non-intrusive *@
+@using StringFunctions.BlazorApp.Services
+@inject SiteConfigService SiteConfigService
 
 <div class="donation-qr-container">
     <button class="donation-button" @onclick="ToggleQR" title="Support this project">
@@ -17,10 +19,23 @@
                     </button>
                 </div>
                 <div class="qr-modal-body">
+                    <p class="qr-welcome-text">Thank you for considering a donation! Your support helps keep this project free and continuously improving.</p>
                     <div class="qr-code-placeholder">
                         <img src="@QRCodeImageUrl" alt="Donation QR Code" class="qr-image" />
                     </div>
-                    <p class="qr-description">Scan the QR code to support the development of this project</p>
+                    <p class="qr-description">Scan the QR code with your mobile device</p>
+                    <div class="donation-divider">
+                        <span>or</span>
+                    </div>
+                    <a href="@paypalUrl" target="_blank" rel="noopener noreferrer" class="paypal-button">
+                        <svg class="paypal-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.794.68l-.04.22-.63 3.993-.028.15a.805.805 0 0 1-.793.679H7.72a.483.483 0 0 1-.477-.558L9.22 10.48h1.674c4.646 0 6.06-.842 6.84-4.244.22-1.025.196-1.82-.134-2.446" fill="#009cde"/>
+                            <path d="M7.155 3.023c.176-.885.852-1.547 1.772-1.547h5.603c1.987 0 3.35.389 4.048 1.395.344.496.552 1.081.641 1.766.098.743.075 1.631-.099 2.714-.013.084-.027.169-.043.254C18.301 11.394 16.265 12.5 12.426 12.5H10.39a.99.99 0 0 0-.976.826l-1.182 7.487a.727.727 0 0 1-.718.614H4.487a.59.59 0 0 1-.583-.69L7.155 3.023z" fill="#012169"/>
+                            <path d="M18.95 7.605a7.497 7.497 0 0 1-.395.19c-.774 3.402-2.188 4.244-6.834 4.244H9.22l-1.977 12.548a.483.483 0 0 0 .477.558h3.348a.805.805 0 0 0 .793-.679l.028-.15.63-3.994.04-.22a.805.805 0 0 1 .794-.679h.5c3.237 0 5.773-1.314 6.514-5.12.256-1.313.192-2.446-.3-3.327a2.7 2.7 0 0 0-.117-.371z" fill="#003087"/>
+                        </svg>
+                        <span>Donate via PayPal</span>
+                    </a>
+                    <p class="donation-footer">Every contribution, no matter how small, makes a difference! 💙</p>
                 </div>
             </div>
         </div>
@@ -118,6 +133,15 @@
         gap: 16px;
     }
 
+    .qr-welcome-text {
+        text-align: center;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin: 0;
+        padding: 0 8px;
+    }
+
     .qr-code-placeholder {
         width: 250px;
         height: 250px;
@@ -141,6 +165,70 @@
         color: var(--text-secondary);
         font-size: 0.9rem;
         margin: 0;
+    }
+
+    .donation-divider {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        margin: 8px 0;
+    }
+
+        .donation-divider::before,
+        .donation-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .donation-divider span {
+            padding: 0 16px;
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+    .paypal-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px 24px;
+        background: #0070ba;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.1s ease;
+        box-shadow: 0 2px 8px rgba(0, 112, 186, 0.2);
+    }
+
+        .paypal-button:hover {
+            background: #005ea6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 112, 186, 0.3);
+        }
+
+        .paypal-button:active {
+            transform: translateY(0);
+        }
+
+    .paypal-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .donation-footer {
+        text-align: center;
+        color: var(--text-tertiary);
+        font-size: 0.85rem;
+        margin: 8px 0 0 0;
+        padding: 0 8px;
     }
 
     @@keyframes fadeIn {
@@ -189,12 +277,33 @@
 
 @code {
     private bool showQR = false;
+    private string paypalUrl = "https://www.paypal.com/ncp/payment/6GVW3NYM36V22";
 
     [Parameter]
     public string QRCodeImageUrl { get; set; } = "images/donation-qr.png";
 
     [Parameter]
     public string IconColor { get; set; } = "#b3b3b3";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var config = await SiteConfigService.GetSiteConfigAsync();
+            if (!string.IsNullOrEmpty(config.PaypalDonationUrl))
+            {
+                paypalUrl = config.PaypalDonationUrl;
+            }
+            if (!string.IsNullOrEmpty(config.DonationQRImagePath))
+            {
+                QRCodeImageUrl = config.DonationQRImagePath;
+            }
+        }
+        catch
+        {
+            // Use default values if config loading fails
+        }
+    }
 
     private void ToggleQR()
     {
