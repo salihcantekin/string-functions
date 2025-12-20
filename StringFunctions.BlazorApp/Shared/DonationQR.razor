@@ -277,7 +277,7 @@
 
 @code {
     private bool showQR = false;
-    private string paypalUrl = "https://www.paypal.com/ncp/payment/6GVW3NYM36V22";
+    private string paypalUrl = "";
 
     [Parameter]
     public string QRCodeImageUrl { get; set; } = "images/donation-qr.png";
@@ -301,7 +301,8 @@
         }
         catch
         {
-            // Use default values if config loading fails
+            // If config loading fails, the default values will be used
+            // This ensures the component still renders even if config service fails
         }
     }
 
