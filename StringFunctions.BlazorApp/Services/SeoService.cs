@@ -15,7 +15,7 @@ public class SeoService(IJSRuntime jsRuntime, ToolsService toolsService)
         var cleanRoute = route.TrimStart('/').ToLowerInvariant();
         
         // Try to get tool-specific metadata from tools.json
-        var tool = await toolsService.GetToolByRouteAsync(cleanRoute);
+        var tool = await toolsService.GetToolByRouteAsync("/" + cleanRoute);
         if (tool != null && !string.IsNullOrEmpty(tool.OgTitle))
         {
             return new PageMetadata
@@ -43,8 +43,6 @@ public class SeoService(IJSRuntime jsRuntime, ToolsService toolsService)
         return ["Home", tool.Name];
     }
 
-    private PageMetadata GetDefaultPageMetadata(string route)
-    {
     private PageMetadata GetDefaultPageMetadata(string route)
     {
         var metadata = route switch
