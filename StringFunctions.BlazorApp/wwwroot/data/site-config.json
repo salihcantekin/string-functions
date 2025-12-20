@@ -1,0 +1,14 @@
+{
+  "siteName": "String Functions",
+  "siteUrl": "https://stringfunctions.net",
+  "siteDescription": "Powerful tools collection for developers",
+  "author": "String Functions",
+  "logoPath": "images/logo.png",
+  "paypalDonationUrl": "https://www.paypal.com/ncp/payment/6GVW3NYM36V22",
+  "donationQRImagePath": "images/donation-qr.png",
+  "seo": {
+    "defaultImageUrl": "/images/logo-large.png",
+    "locale": "en_US",
+    "twitterCardType": "summary"
+  }
+}

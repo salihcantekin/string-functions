@@ -5,14 +5,15 @@
 @inject NavigationManager NavigationManager
 @inject ToolsService ToolsService
 @inject FavoritesService FavoritesService
+@inject SiteConfigService SiteConfigService
 
 <SeoHead Route="" />
-<PageTitle>String Functions - Home</PageTitle>
+<PageTitle>@siteName - Home</PageTitle>
 
 <div class="home-page">
     <div class="hero-section">
-        <h1 class="hero-title">&#9889; String Functions</h1>
-        <p class="hero-subtitle">Powerful tools collection for developers</p>
+        <h1 class="hero-title">&#9889; @siteName</h1>
+        <p class="hero-subtitle">@siteDescription</p>
     </div>
 
     <div class="welcome-section">
@@ -389,12 +390,30 @@
 @code {
     private List<ToolCategory> categories = new();
     private List<Tool> favoriteTools = new();
+    private string siteName = "String Functions";
+    private string siteDescription = "Powerful tools collection for developers";
 
     protected override async Task OnInitializedAsync()
     {
         categories = await ToolsService.GetCategoriesAsync();
         await LoadFavorites();
+        await LoadSiteConfig();
         FavoritesService.OnFavoritesChanged += OnFavoritesChanged;
+    }
+
+    private async Task LoadSiteConfig()
+    {
+        try
+        {
+            var config = await SiteConfigService.GetSiteConfigAsync();
+            siteName = config.SiteName;
+            siteDescription = config.SiteDescription;
+        }
+        catch
+        {
+            // If config loading fails, default values are already set
+            // Home page will still display with defaults
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

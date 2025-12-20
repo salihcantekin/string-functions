@@ -16,5 +16,6 @@ builder.Services.AddScoped<SeoService>();
 builder.Services.AddScoped<ToolsService>();
 builder.Services.AddScoped<FavoritesService>();
 builder.Services.AddScoped<HttpClientPresetsService>();
+builder.Services.AddScoped<SiteConfigService>();
 
 await builder.Build().RunAsync();

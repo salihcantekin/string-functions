@@ -7,7 +7,7 @@ public class SeoService(IJSRuntime jsRuntime)
 {
     private readonly string baseUrl = "https://stringfunctions.net";
     private readonly string siteName = "String Functions";
-    private readonly string defaultImage = "/icon-512.png";
+    private readonly string defaultImage = "/images/logo-large.png";
 
     public PageMetadata GetPageMetadata(string route)
     {
