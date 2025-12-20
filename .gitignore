@@ -4,3 +4,7 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 /.vs
+
+# Generated Open Graph pages (build artifacts)
+StringFunctions.BlazorApp/wwwroot/*/index.html
+!StringFunctions.BlazorApp/wwwroot/index.html

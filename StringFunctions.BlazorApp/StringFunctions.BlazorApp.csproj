@@ -31,4 +31,10 @@
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.10.2" />
   </ItemGroup>
 
+  <!-- Generate Open Graph HTML pages after build -->
+  <Target Name="GenerateOpenGraphPages" AfterTargets="AfterBuild">
+    <Message Text="Generating Open Graph pages..." Importance="high" />
+    <Exec Command="node generate-og-pages.js" WorkingDirectory="$(ProjectDir)" />
+  </Target>
+
 </Project>
