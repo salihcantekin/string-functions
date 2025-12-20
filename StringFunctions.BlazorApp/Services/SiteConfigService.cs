@@ -20,9 +20,9 @@ public class SiteConfigService(HttpClient httpClient)
         DonationQRImagePath = "images/donation-qr.png",
         Seo = new SeoConfig
         {
-            DefaultImageUrl = "/images/logo-large.png",
+            DefaultImageUrl = "/images/og-image.png",
             Locale = "en_US",
-            TwitterCardType = "summary"
+            TwitterCardType = "summary_large_image"
         }
     };
 
