@@ -7,8 +7,8 @@
   "paypalDonationUrl": "https://www.paypal.com/ncp/payment/6GVW3NYM36V22",
   "donationQRImagePath": "images/donation-qr.png",
   "seo": {
-    "defaultImageUrl": "/icon-512.png",
+    "defaultImageUrl": "/images/logo-large.png",
     "locale": "en_US",
-    "twitterCardType": "summary_large_image"
+    "twitterCardType": "summary"
   }
 }
