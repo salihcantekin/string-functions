@@ -14,6 +14,9 @@ window.seoHelper = {
         this.setMetaTag('property', 'og:title', metadata.title);
         this.setMetaTag('property', 'og:description', metadata.description);
         this.setMetaTag('property', 'og:image', metadata.image);
+        this.setMetaTag('property', 'og:image:width', '512');
+        this.setMetaTag('property', 'og:image:height', '512');
+        this.setMetaTag('property', 'og:image:type', 'image/png');
         this.setMetaTag('property', 'og:site_name', metadata.siteName);
         
         // Set og:logo if provided
@@ -58,5 +61,5 @@ window.dataLayer = window.dataLayer || [];
 function gtag() { dataLayer.push(arguments); }
 gtag('js', new Date());
 
-// Initialize GA - Replace with your actual Measurement ID
-// gtag('config', 'G-XXXXXXXXXX');
+// Initialize GA
+gtag('config', 'G-LTNBR0BZ3G');

@@ -84,12 +84,12 @@
                             {
                                 <div class="kv-row">
                                     <FluentCheckbox @bind-Value="item.Enabled" />
-                                    <FluentTextField @bind-Value="item.Name"
-                                                     @bind-Value:event="oninput"
+                                    <FluentTextField Value="@item.Name"
+                                                     @oninput="@(e => item.Name = e.Value?.ToString() ?? string.Empty)"
                                                      Placeholder="key"
                                                      Style="flex:1;" />
-                                    <FluentTextField @bind-Value="item.Value"
-                                                     @bind-Value:event="oninput"
+                                    <FluentTextField Value="@item.Value"
+                                                     @oninput="@(e => item.Value = e.Value?.ToString() ?? string.Empty)"
                                                      Placeholder="value"
                                                      Style="flex:1;" />
                                     <FluentButton Appearance="Appearance.Stealth" OnClick="() => RemoveQuery(item)" Title="Remove">
@@ -118,12 +118,12 @@
                             {
                                 <div class="kv-row">
                                     <FluentCheckbox @bind-Value="item.Enabled" />
-                                    <FluentTextField @bind-Value="item.Name"
-                                                     @bind-Value:event="oninput"
+                                    <FluentTextField Value="@item.Name"
+                                                     @oninput="@(e => item.Name = e.Value?.ToString() ?? string.Empty)"
                                                      Placeholder="Header name"
                                                      Style="flex:1;" />
-                                    <FluentTextField @bind-Value="item.Value"
-                                                     @bind-Value:event="oninput"
+                                    <FluentTextField Value="@item.Value"
+                                                     @oninput="@(e => item.Value = e.Value?.ToString() ?? string.Empty)"
                                                      Placeholder="Header value"
                                                      Style="flex:1;" />
                                     <FluentButton Appearance="Appearance.Stealth" OnClick="() => RemoveHeader(item)" Title="Remove">
