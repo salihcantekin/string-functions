@@ -8,6 +8,8 @@
   "donationQRImagePath": "images/donation-qr.png",
   "seo": {
     "defaultImageUrl": "/images/logo-large.png",
+    "ogLogoUrl": "/images/logo.png",
+    "ogIconUrl": "/images/icon-512.png",
     "locale": "en_US",
     "twitterCardType": "summary"
   }

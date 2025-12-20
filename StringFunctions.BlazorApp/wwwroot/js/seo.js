@@ -16,6 +16,11 @@ window.seoHelper = {
         this.setMetaTag('property', 'og:image', metadata.image);
         this.setMetaTag('property', 'og:site_name', metadata.siteName);
         
+        // Set og:logo if provided
+        if (metadata.logo) {
+            this.setMetaTag('property', 'og:logo', metadata.logo);
+        }
+        
         // Twitter
         this.setMetaTag('property', 'twitter:card', 'summary_large_image');
         this.setMetaTag('property', 'twitter:url', metadata.url);
