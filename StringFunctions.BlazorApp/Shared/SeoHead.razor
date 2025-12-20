@@ -23,19 +23,31 @@
         <meta property="og:title" content="@_metadata.Title" />
         <meta property="og:description" content="@_metadata.Description" />
         <meta property="og:image" content="@GetFullImageUrl(_metadata.ImageUrl)" />
-        @if (!string.IsNullOrEmpty(ogLogoUrl))
-        {
-            <meta property="og:logo" content="@GetFullImageUrl(ogLogoUrl)" />
-        }
+        <meta property="og:image:secure_url" content="@GetFullImageUrl(_metadata.ImageUrl)" />
         <meta property="og:image:alt" content="@_metadata.Title" />
-        <meta property="og:image:width" content="512" />
-        <meta property="og:image:height" content="512" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:site_name" content="@siteName" />
         <meta property="og:locale" content="@locale" />
+        @if (_metadata.PublishedTime.HasValue)
+        {
+            <meta property="article:published_time" content="@_metadata.PublishedTime.Value.ToString("o")" />
+        }
+        @if (_metadata.ModifiedTime.HasValue)
+        {
+            <meta property="article:modified_time" content="@_metadata.ModifiedTime.Value.ToString("o")" />
+        }
+        @if (_metadata.Tags.Count > 0)
+        {
+            @foreach (var tag in _metadata.Tags)
+            {
+                <meta property="article:tag" content="@tag" />
+            }
+        }
         
         <!-- Twitter Card -->
-        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:card" content="@twitterCardType" />
         <meta name="twitter:url" content="@_metadata.Url" />
         <meta name="twitter:title" content="@_metadata.Title" />
         <meta name="twitter:description" content="@_metadata.Description" />
