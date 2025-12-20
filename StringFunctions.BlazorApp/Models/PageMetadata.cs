@@ -9,8 +9,6 @@ public class PageMetadata
     public string ImageUrl { get; set; } = string.Empty;
     public string Type { get; set; } = "website";
     public string? Author { get; set; }
-    public DateTime? PublishedTime { get; set; }
-    public DateTime? ModifiedTime { get; set; }
     public List<string> Tags { get; set; } = [];
     
     // Schema.org structured data
