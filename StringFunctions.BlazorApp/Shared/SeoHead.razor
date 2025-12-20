@@ -17,21 +17,25 @@
         }
         <link rel="canonical" href="@_metadata.Url" />
         
-        <!-- Open Graph / Facebook -->
+        <!-- Open Graph (General - works for LinkedIn, Facebook, etc.) -->
         <meta property="og:type" content="@_metadata.Type" />
         <meta property="og:url" content="@_metadata.Url" />
         <meta property="og:title" content="@_metadata.Title" />
         <meta property="og:description" content="@_metadata.Description" />
         <meta property="og:image" content="@GetFullImageUrl(_metadata.ImageUrl)" />
+        <meta property="og:image:alt" content="@_metadata.Title" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:site_name" content="@siteName" />
         <meta property="og:locale" content="@locale" />
         
-        <!-- Twitter -->
-        <meta property="twitter:card" content="@twitterCardType" />
-        <meta property="twitter:url" content="@_metadata.Url" />
-        <meta property="twitter:title" content="@_metadata.Title" />
-        <meta property="twitter:description" content="@_metadata.Description" />
-        <meta property="twitter:image" content="@GetFullImageUrl(_metadata.ImageUrl)" />
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="@twitterCardType" />
+        <meta name="twitter:url" content="@_metadata.Url" />
+        <meta name="twitter:title" content="@_metadata.Title" />
+        <meta name="twitter:description" content="@_metadata.Description" />
+        <meta name="twitter:image" content="@GetFullImageUrl(_metadata.ImageUrl)" />
+        <meta name="twitter:image:alt" content="@_metadata.Title" />
         
         <!-- Additional SEO -->
         <meta name="robots" content="index, follow" />
