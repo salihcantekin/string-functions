@@ -17,7 +17,13 @@ public class SiteConfigService(HttpClient httpClient)
         Author = "String Functions",
         LogoPath = "images/logo.png",
         PaypalDonationUrl = "https://www.paypal.com/ncp/payment/6GVW3NYM36V22",
-        DonationQRImagePath = "images/donation-qr.png"
+        DonationQRImagePath = "images/donation-qr.png",
+        Seo = new SeoConfig
+        {
+            DefaultImageUrl = "/images/logo.png",
+            Locale = "en_US",
+            TwitterCardType = "summary_large_image"
+        }
     };
 
     public async Task<SiteConfig> GetSiteConfigAsync()

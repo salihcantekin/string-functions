@@ -52,6 +52,7 @@
 
     private PageMetadata? _metadata;
     private string siteName = "String Functions";
+    private string siteUrl = "https://stringfunctions.net";
     private string locale = "en_US";
     private string twitterCardType = "summary_large_image";
     private string author = "String Functions";
@@ -73,6 +74,7 @@
         {
             var config = await SiteConfigService.GetSiteConfigAsync();
             siteName = config.SiteName;
+            siteUrl = config.SiteUrl;
             author = config.Author;
             locale = config.Seo.Locale;
             twitterCardType = config.Seo.TwitterCardType;
@@ -94,6 +96,6 @@
     {
         if (string.IsNullOrEmpty(imageUrl)) return "";
         if (imageUrl.StartsWith("http")) return imageUrl;
-        return $"https://stringfunctions.net{imageUrl}";
+        return $"{siteUrl}{imageUrl}";
     }
 }
