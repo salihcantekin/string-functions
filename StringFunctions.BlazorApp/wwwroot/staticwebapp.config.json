@@ -5,10 +5,10 @@
     "exclude": [
       "/_framework/*",
       "/css/*",
-      "/*.js",
-      "/*.json",
-      "/*.png",
-      "/*.ico",
+      "*.js",
+      "*.json",
+      "*.png",
+      "*.ico",
       "/*/index.html"
     ]
   },
@@ -57,7 +57,7 @@
       }
     },
     {
-      "route": "/*.js",
+      "route": "*.js",
       "headers": {
         "Cache-Control": "public, max-age=604800"
       }
