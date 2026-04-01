@@ -714,3 +714,21 @@ fluent-toast::part(dismiss-button):hover {
     background: rgba(0, 0, 0, 0.1);
     opacity: 1;
 }
+
+/* FluentMessageBar Global Fixes */
+fluent-message-bar {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    margin-bottom: 12px;
+}
+
+fluent-message-bar::part(control) {
+    overflow: visible;
+    word-break: break-word;
+}
+
+fluent-message-bar::part(content) {
+    white-space: normal;
+    overflow-wrap: break-word;
+}

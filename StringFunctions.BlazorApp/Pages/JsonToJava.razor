@@ -24,7 +24,9 @@
     <ChildContent>
         <div class="json-tool-grid">
             <JsonInputArea Title="JSON Input"
-                          @bind-Value="@inputJson"
+                          Value="@inputJson"
+                          ValueChanged="@(v => inputJson = v)"
+                          OnChange="@(_ => { if (string.IsNullOrEmpty(jsonError)) GenerateJava(); })"
                           Placeholder='{"name": "John", "age": 30, "isActive": true}'
                           ShowFormatButton="true"
                           ShowCopyButton="false"
@@ -34,15 +36,35 @@
             <div class="output-panel">
                 <div class="output-header">
                     <span class="output-title">Java Code</span>
-                    <CopyButton Text="@outputCode" />
+                    <div class="output-actions">
+                        <FluentButton Appearance="Appearance.Lightweight" 
+                                     IconStart="@(new Icons.Regular.Size20.ArrowExpand())"
+                                     @onclick="OpenFullscreen"
+                                     Disabled="@string.IsNullOrWhiteSpace(outputCode)"
+                                     title="Open in fullscreen">
+                        </FluentButton>
+                        <CopyButton Text="@outputCode" />
+                    </div>
                 </div>
                 <FluentTextArea Value="@outputCode" 
                                ReadOnly="true"
                                Resize="TextAreaResize.Vertical" />
             </div>
         </div>
+
+        <FluentButton Appearance="Appearance.Accent" 
+                     @onclick="GenerateJava"
+                     Disabled="@(string.IsNullOrWhiteSpace(inputJson) || !string.IsNullOrEmpty(jsonError))"
+                     Style="margin-top: 12px;">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Code())" Slot="start" Color="Color.Fill" />
+            Generate Java Classes
+        </FluentButton>
     </ChildContent>
 </ToolPageLayout>
+
+<OutputViewer @bind-IsOpen="@isViewerOpen"
+             Title="Generated Java Code"
+             Content="@outputCode" />
 
 <style>
     .json-tool-grid {
@@ -63,6 +85,12 @@
         justify-content: space-between;
         align-items: center;
         height: 32px;
+    }
+
+    .output-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .output-title {
@@ -89,6 +117,12 @@
     private bool useJackson = true;
     private bool generateGettersSetters = false;
     private string? jsonError;
+    private bool isViewerOpen = false;
+
+    private void OpenFullscreen()
+    {
+        isViewerOpen = true;
+    }
 
     private void OnJsonError(string? error)
     {

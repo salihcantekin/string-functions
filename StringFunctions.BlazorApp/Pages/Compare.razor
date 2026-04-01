@@ -15,27 +15,39 @@
         <FluentCheckbox @bind-Value="@showLineByLine" Label="Line-by-line comparison" @bind-Value:after="ProcessComparison" />
     </OptionsContent>
     <ChildContent>
+        <div class="action-bar">
+            <FluentButton Appearance="Appearance.Accent" 
+                         @onclick="ProcessComparison"
+                         Disabled="@(string.IsNullOrEmpty(text1) && string.IsNullOrEmpty(text2))">
+                <FluentIcon Value="@(new Icons.Regular.Size20.TextGrammarCheckmark())" Slot="start" Color="Color.Fill" />
+                Compare Strings
+            </FluentButton>
+        </div>
+
         <div class="compare-grid">
             <div class="io-panel">
                 <div class="io-panel-header">
                     <span class="io-panel-title">String 1</span>
                     <span class="io-panel-stats">@text1.Length chars | @text1.Split('\n').Length lines</span>
                 </div>
-                <FluentTextArea @bind-Value="@text1" 
+                <FluentTextArea Value="@text1"
+                               ValueChanged="@(v => { text1 = v; ProcessComparison(); })"
                                Placeholder="Enter first string..."
-                               Resize="TextAreaResize.Vertical"
-                               @oninput="OnTextChanged" />
+                               Resize="TextAreaResize.Vertical" />
             </div>
 
             <div class="io-panel">
                 <div class="io-panel-header">
-                    <span class="io-panel-title">String 2</span>
-                    <span class="io-panel-stats">@text2.Length chars | @text2.Split('\n').Length lines</span>
+                    <div class="header-left">
+                        <span class="io-panel-title">String 2</span>
+                        <span class="io-panel-stats">@text2.Length chars | @text2.Split('\n').Length lines</span>
+                    </div>
+                    <CopyToInputButton Text="@text2" OnCopy="@(text => { text1 = text; ProcessComparison(); StateHasChanged(); })" />
                 </div>
-                <FluentTextArea @bind-Value="@text2" 
+                <FluentTextArea Value="@text2"
+                               ValueChanged="@(v => { text2 = v; ProcessComparison(); })"
                                Placeholder="Enter second string..."
-                               Resize="TextAreaResize.Vertical"
-                               @oninput="OnTextChanged" />
+                               Resize="TextAreaResize.Vertical" />
             </div>
         </div>
 
@@ -85,6 +97,19 @@
 </ToolPageLayout>
 
 <style>
+    .action-bar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--bg-primary);
+        padding: 12px 0;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
     .compare-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -103,6 +128,12 @@
         justify-content: space-between;
         align-items: center;
         height: 32px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .io-panel-title {
@@ -200,13 +231,17 @@
     private string statistics = string.Empty;
     private List<LineDifference> lineDifferences = new();
 
-    private void OnTextChanged(ChangeEventArgs e)
-    {
-        ProcessComparison();
-    }
-
     private void ProcessComparison()
     {
+        // Don't process if both texts are empty
+        if (string.IsNullOrWhiteSpace(text1) && string.IsNullOrWhiteSpace(text2))
+        {
+            areEqual = false;
+            lineDifferences.Clear();
+            statistics = string.Empty;
+            return;
+        }
+
         var processedText1 = ProcessText(text1);
         var processedText2 = ProcessText(text2);
 

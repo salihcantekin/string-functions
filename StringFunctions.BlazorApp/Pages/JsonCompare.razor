@@ -16,7 +16,9 @@
     <ChildContent>
         <div class="compare-grid">
             <JsonInputArea Title="JSON 1"
-                          @bind-Value="@json1"
+                          Value="@json1"
+                          ValueChanged="@(v => json1 = v)"
+                          OnChange="@CompareJson"
                           Placeholder='{"name": "John", "age": 30}'
                           ShowFormatButton="true"
                           ShowCopyButton="false"
@@ -24,13 +26,23 @@
                           OnError="e => error1 = e" />
 
             <JsonInputArea Title="JSON 2"
-                          @bind-Value="@json2"
+                          Value="@json2"
+                          ValueChanged="@(v => json2 = v)"
+                          OnChange="@CompareJson"
                           Placeholder='{"name": "Jane", "age": 25}'
                           ShowFormatButton="true"
                           ShowCopyButton="false"
                           AutoFormat="true"
                           OnError="e => error2 = e" />
         </div>
+
+        <FluentButton Appearance="Appearance.Accent" 
+                     @onclick="CompareJson"
+                     Disabled="@(string.IsNullOrWhiteSpace(json1) || string.IsNullOrWhiteSpace(json2))"
+                     Style="margin-top: 12px; margin-bottom: 12px;">
+            <FluentIcon Value="@(new Icons.Regular.Size20.TextGrammarCheckmark())" Slot="start" Color="Color.Fill" />
+            Compare JSON
+        </FluentButton>
 
         <div class="result-section">
             @if (isValid && areEqual)

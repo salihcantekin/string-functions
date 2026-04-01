@@ -121,6 +121,9 @@
     [Parameter]
     public EventCallback<string?> OnError { get; set; }
 
+    [Parameter]
+    public EventCallback<string> OnChange { get; set; }
+
     private string internalValue = string.Empty;
     private string? ValidationMessage;
     private bool HasError;
@@ -142,10 +145,16 @@
     {
         internalValue = e.Value?.ToString() ?? string.Empty;
         await ValueChanged.InvokeAsync(internalValue);
-        
+
         if (ValidateOnChange)
         {
             ValidateJson();
+        }
+
+        // Always invoke OnChange if there's a delegate
+        if (OnChange.HasDelegate)
+        {
+            await OnChange.InvokeAsync(internalValue);
         }
     }
 
@@ -154,6 +163,12 @@
         if (AutoFormat && !string.IsNullOrWhiteSpace(internalValue) && IsValid)
         {
             await FormatJson();
+        }
+
+        // Also invoke OnChange on blur to ensure processing
+        if (OnChange.HasDelegate && !ValidateOnChange)
+        {
+            await OnChange.InvokeAsync(internalValue);
         }
     }
 

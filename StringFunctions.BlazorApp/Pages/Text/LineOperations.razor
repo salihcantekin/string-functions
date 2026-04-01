@@ -21,6 +21,10 @@
                 <FluentOption Value="number-lines">Add Line Numbers</FluentOption>
                 <FluentOption Value="remove-numbers">Remove Line Numbers</FluentOption>
                 <FluentOption Value="trim-lines">Trim Each Line</FluentOption>
+                <FluentOption Value="trim-start">Trim Start (N chars)</FluentOption>
+                <FluentOption Value="trim-end">Trim End (N chars)</FluentOption>
+                <FluentOption Value="trim-prefix">Remove Prefix</FluentOption>
+                <FluentOption Value="trim-suffix">Remove Suffix</FluentOption>
                 <FluentOption Value="prefix">Add Prefix to Lines</FluentOption>
                 <FluentOption Value="suffix">Add Suffix to Lines</FluentOption>
                 <FluentOption Value="wrap">Wrap Lines</FluentOption>
@@ -31,12 +35,20 @@
                 <FluentOption Value="filter-regex">Filter: Regex Match</FluentOption>
             </FluentSelect>
         </div>
-        @if (operation == "prefix" || operation == "suffix")
+        @if (operation == "prefix" || operation == "suffix" || operation == "trim-prefix" || operation == "trim-suffix")
         {
             <div class="option-divider"></div>
             <div class="option-group">
                 <span class="option-label">Text:</span>
                 <FluentTextField @bind-Value="@extraText" Placeholder="Enter text..." Style="width: 150px;" @bind-Value:after="Process" />
+            </div>
+        }
+        @if (operation == "trim-start" || operation == "trim-end")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Chars:</span>
+                <FluentNumberField @bind-Value="@trimCharCount" Min="0" Style="width: 70px;" @bind-Value:after="Process" />
             </div>
         }
         @if (operation == "wrap")
@@ -130,7 +142,10 @@
             <div class="io-panel">
                 <div class="io-panel-header">
                     <span class="io-panel-title">Output</span>
-                    <CopyButton Text="@outputText" />
+                    <div class="output-actions">
+                        <CopyToInputButton Text="@outputText" OnCopy="@(text => { inputText = text; Process(); StateHasChanged(); })" />
+                        <CopyButton Text="@outputText" />
+                    </div>
                 </div>
                 <FluentTextArea Value="@outputText" 
                                ReadOnly="true"
@@ -181,6 +196,12 @@
         height: 32px;
     }
 
+    .output-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
     .io-panel-title {
         font-weight: 600;
         color: var(--text-primary);
@@ -213,7 +234,8 @@
     private bool filterIgnoreCase = true;
     private bool caseSensitive = false;
     private string errorMessage = string.Empty;
-    
+    private int trimCharCount = 1;
+
     private int inputLineCount => string.IsNullOrEmpty(inputText) ? 0 : inputText.Split('\n').Length;
     private int outputLineCount => string.IsNullOrEmpty(outputText) ? 0 : outputText.Split('\n').Length;
     private int linesChanged => outputLineCount - inputLineCount;
@@ -267,6 +289,10 @@
                 "number-lines" => lines.Select((l, i) => string.Format(numberFormat, i + startNumber) + l),
                 "remove-numbers" => lines.Select(l => Regex.Replace(l, @"^\s*\d+[\.\)\-:\s]+", "")),
                 "trim-lines" => lines.Select(l => l.Trim()),
+                "trim-start" => lines.Select(l => l.Length > trimCharCount ? l.Substring(trimCharCount) : ""),
+                "trim-end" => lines.Select(l => l.Length > trimCharCount ? l.Substring(0, l.Length - trimCharCount) : ""),
+                "trim-prefix" => lines.Select(l => l.StartsWith(extraText) ? l.Substring(extraText.Length) : l),
+                "trim-suffix" => lines.Select(l => l.EndsWith(extraText) ? l.Substring(0, l.Length - extraText.Length) : l),
                 "prefix" => lines.Select(l => extraText + l),
                 "suffix" => lines.Select(l => l + extraText),
                 "wrap" => lines.Select(l => wrapBefore + l + wrapAfter),

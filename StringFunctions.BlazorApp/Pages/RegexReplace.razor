@@ -53,7 +53,10 @@
             <div class="io-panel">
                 <div class="io-panel-header">
                     <span class="io-panel-title">Output @(replacementCount > 0 ? $"({replacementCount} replacements)" : "")</span>
-                    <CopyButton Text="@outputText" />
+                    <div class="output-actions">
+                        <CopyToInputButton Text="@outputText" OnCopy="@(text => { inputText = text; ProcessReplace(); StateHasChanged(); })" />
+                        <CopyButton Text="@outputText" />
+                    </div>
                 </div>
                 <FluentTextArea Value="@outputText" 
                                ReadOnly="true"
@@ -82,6 +85,12 @@
         justify-content: space-between;
         align-items: center;
         height: 32px;
+    }
+
+    .output-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .io-panel-title {

@@ -29,20 +29,31 @@
     <ChildContent>
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <FluentMessageBar Title="JSON Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+            <FluentMessageBar Title="JSON Error" Intent="MessageIntent.Error" Class="message-bar">
                 @errorMessage
             </FluentMessageBar>
         }
         else if (isValid)
         {
-            <FluentMessageBar Title="Valid JSON" Intent="MessageIntent.Success" Style="margin-bottom: 8px;">
+            <FluentMessageBar Title="Valid JSON" Intent="MessageIntent.Success" Class="message-bar">
                 @statistics
             </FluentMessageBar>
         }
 
+        <div class="action-bar">
+            <FluentButton Appearance="Appearance.Accent" 
+                         @onclick="ProcessJson"
+                         Disabled="@string.IsNullOrWhiteSpace(inputJson)">
+                <FluentIcon Value="@(new Icons.Regular.Size20.Code())" Slot="start" Color="Color.Fill" />
+                Format JSON
+            </FluentButton>
+        </div>
+
         <div class="json-tool-grid">
             <JsonInputArea Title="Input JSON"
-                          @bind-Value="@inputJson"
+                          Value="@inputJson"
+                          ValueChanged="@(v => inputJson = v)"
+                          OnChange="@ProcessJson"
                           Placeholder='{"name": "John", "age": 30}'
                           ShowFormatButton="false"
                           ShowCopyButton="false"
@@ -51,17 +62,63 @@
             <div class="output-panel">
                 <div class="output-header">
                     <span class="output-title">Output JSON</span>
-                    <CopyButton Text="@outputJson" />
+                    <div class="output-actions">
+                        <CopyToInputButton Text="@outputJson" OnCopy="@(text => { inputJson = text; StateHasChanged(); })" />
+                        <FluentButton Appearance="Appearance.Lightweight" 
+                                     IconStart="@(new Icons.Regular.Size20.ArrowExpand())"
+                                     @onclick="OpenFullscreen"
+                                     Disabled="@string.IsNullOrWhiteSpace(outputJson)"
+                                     title="Open in fullscreen">
+                        </FluentButton>
+                        <CopyButton Text="@outputJson" />
+                    </div>
                 </div>
                 <FluentTextArea Value="@outputJson" 
                                ReadOnly="true"
                                Resize="TextAreaResize.Vertical" />
             </div>
         </div>
+
+        <FluentButton Appearance="Appearance.Accent" 
+                     @onclick="ProcessJson"
+                     Disabled="@string.IsNullOrWhiteSpace(inputJson)"
+                     Style="margin-top: 12px;">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Code())" Slot="start" />
+            Format JSON
+        </FluentButton>
     </ChildContent>
 </ToolPageLayout>
 
+<OutputViewer @bind-IsOpen="@isViewerOpen"
+             Title="Formatted JSON"
+             Content="@outputJson"
+             Footer="@statistics" />
+
 <style>
+    .message-bar {
+        margin-bottom: 12px;
+        max-width: 100%;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .message-bar::part(control) {
+        overflow: visible;
+    }
+
+    .action-bar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--bg-primary);
+        padding: 12px 0;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
     .json-tool-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -80,6 +137,12 @@
         justify-content: space-between;
         align-items: center;
         height: 32px;
+    }
+
+    .output-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .output-title {
@@ -106,6 +169,12 @@
     private bool sortKeys = false;
     private bool escapeNonAscii = false;
     private bool isValid = false;
+    private bool isViewerOpen = false;
+
+    private void OpenFullscreen()
+    {
+        isViewerOpen = true;
+    }
 
     private void ProcessJson()
     {

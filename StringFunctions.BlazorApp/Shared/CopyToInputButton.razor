@@ -1,0 +1,26 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+
+@if (!string.IsNullOrWhiteSpace(Text))
+{
+    <FluentButton Appearance="Appearance.Lightweight" 
+                 IconStart="@(new Icons.Regular.Size16.ArrowLeft())"
+                 @onclick="CopyToInput"
+                 title="Copy to input">
+    </FluentButton>
+}
+
+@code {
+    [Parameter]
+    public string Text { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnCopy { get; set; }
+
+    private async Task CopyToInput()
+    {
+        if (!string.IsNullOrWhiteSpace(Text))
+        {
+            await OnCopy.InvokeAsync(Text);
+        }
+    }
+}
