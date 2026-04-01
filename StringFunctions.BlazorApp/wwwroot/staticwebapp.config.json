@@ -5,11 +5,8 @@
     "exclude": [
       "/_framework/*",
       "/css/*",
-      "*.js",
-      "*.json",
-      "*.png",
-      "*.ico",
-      "/*/index.html"
+      "/_content/*",
+      "*.{js,css,png,jpg,jpeg,gif,svg,ico,json,wasm,dll,pdb,dat,blat}"
     ]
   },
   "globalHeaders": {
@@ -26,38 +23,19 @@
       }
     },
     {
-      "route": "/*/index.html",
-      "headers": {
-        "Cache-Control": "no-cache"
-      }
-    },
-    {
       "route": "/_framework/blazor.webassembly.js",
       "headers": {
         "Cache-Control": "no-cache"
       }
     },
     {
-      "route": "/_framework/*.dll",
+      "route": "/_framework/*",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
-      "route": "/_framework/*.wasm",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable",
-        "Content-Type": "application/wasm"
-      }
-    },
-    {
       "route": "/css/*",
-      "headers": {
-        "Cache-Control": "public, max-age=604800"
-      }
-    },
-    {
-      "route": "*.js",
       "headers": {
         "Cache-Control": "public, max-age=604800"
       }
@@ -76,5 +54,10 @@
     ".blat": "application/octet-stream",
     ".json": "application/json",
     ".pdb": "application/octet-stream"
+  },
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html"
+    }
   }
 }
