@@ -11,8 +11,8 @@
         <div class="option-group">
             <span class="option-label">Mode:</span>
             <FluentSelect TOption="string" @bind-Value="@formatMode" Style="min-width: 140px;" @bind-Value:after="ProcessJson">
-                <FluentOption Value="prettify">Prettify</FluentOption>
-                <FluentOption Value="minify">Minify</FluentOption>
+                <FluentOption Value="prettify">✨ Prettify</FluentOption>
+                <FluentOption Value="minify">📦 Minify</FluentOption>
             </FluentSelect>
         </div>
         @if (formatMode == "prettify")

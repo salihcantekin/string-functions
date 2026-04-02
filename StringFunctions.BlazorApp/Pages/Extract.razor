@@ -9,11 +9,11 @@
     <OptionsContent>
         <div class="option-group">
             <span class="option-label">Mode:</span>
-            <FluentSelect TOption="string" @bind-Value="@extractMode" Style="min-width: 150px;" @bind-Value:after="Process">
-                <FluentOption Value="substring">Substring</FluentOption>
-                <FluentOption Value="between">Between delimiters</FluentOption>
-                <FluentOption Value="regex">Regex pattern</FluentOption>
-                <FluentOption Value="lines">Line range</FluentOption>
+            <FluentSelect TOption="string" @bind-Value="@extractMode" Style="min-width: 220px;" @bind-Value:after="Process">
+                <FluentOption Value="substring">🔤 Substring</FluentOption>
+                <FluentOption Value="between">✂️ Between Delimiters</FluentOption>
+                <FluentOption Value="regex">🔍 Regex Pattern</FluentOption>
+                <FluentOption Value="lines">📄 Line Range</FluentOption>
             </FluentSelect>
         </div>
         <div class="option-divider"></div>
@@ -64,6 +64,15 @@
             </FluentMessageBar>
         }
 
+        <div class="stats-bar">
+            <span>Input: @inputText.Length chars</span>
+            <span>Output: @outputText.Length chars</span>
+            @if (matchCount > 0)
+            {
+                <span class="success">✓ @matchCount match@(matchCount > 1 ? "es" : "") found</span>
+            }
+        </div>
+
         <div class="io-grid">
             <div class="io-panel">
                 <div class="io-panel-header">
@@ -92,6 +101,22 @@
 </ToolPageLayout>
 
 <style>
+    .stats-bar {
+        display: flex;
+        gap: 16px;
+        padding: 8px 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-bar .success {
+        color: var(--success);
+    }
+
     .io-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -143,6 +168,7 @@
     private bool regexIgnoreCase = false;
     private string lineRange = "1-5";
     private string errorMessage = string.Empty;
+    private int matchCount = 0;
 
     private void OnInputChanged(ChangeEventArgs e)
     {
@@ -153,7 +179,8 @@
     private void Process()
     {
         errorMessage = string.Empty;
-        
+        matchCount = 0;
+
         if (string.IsNullOrEmpty(inputText))
         {
             outputText = string.Empty;
@@ -170,6 +197,11 @@
                 "lines" => ExtractLines(),
                 _ => inputText
             };
+
+            if (!string.IsNullOrEmpty(outputText))
+            {
+                matchCount = outputText.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
+            }
         }
         catch (Exception ex)
         {

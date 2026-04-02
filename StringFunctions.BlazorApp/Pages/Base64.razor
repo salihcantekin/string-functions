@@ -7,19 +7,19 @@
     <OptionsContent>
         <div class="option-group">
             <span class="option-label">Operation:</span>
-            <FluentSelect TOption="string" @bind-Value="@mode" Style="min-width: 180px;" @bind-Value:after="Process">
-                <FluentOption Value="encode">Encode (Text → Base64)</FluentOption>
-                <FluentOption Value="decode">Decode (Base64 → Text)</FluentOption>
+            <FluentSelect TOption="string" @bind-Value="@mode" Style="min-width: 240px;" @bind-Value:after="Process">
+                <FluentOption Value="encode">🔐 Encode (Text → Base64)</FluentOption>
+                <FluentOption Value="decode">🔓 Decode (Base64 → Text)</FluentOption>
             </FluentSelect>
         </div>
         <div class="option-divider"></div>
         <div class="option-group">
             <span class="option-label">Encoding:</span>
             <FluentSelect TOption="string" @bind-Value="@encoding" Style="min-width: 120px;" @bind-Value:after="Process">
-                <FluentOption Value="utf8">UTF-8</FluentOption>
-                <FluentOption Value="ascii">ASCII</FluentOption>
-                <FluentOption Value="unicode">Unicode</FluentOption>
-                <FluentOption Value="utf32">UTF-32</FluentOption>
+                <FluentOption Value="utf8">📝 UTF-8</FluentOption>
+                <FluentOption Value="ascii">📄 ASCII</FluentOption>
+                <FluentOption Value="unicode">🌐 Unicode</FluentOption>
+                <FluentOption Value="utf32">🌍 UTF-32</FluentOption>
             </FluentSelect>
         </div>
     </OptionsContent>

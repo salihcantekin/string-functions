@@ -1,0 +1,747 @@
+@page "/jwt-tool"
+
+<SeoHead Route="jwt-tool" />
+
+<PageTitle>JWT Tool</PageTitle>
+
+<ToolPageLayout Title="JWT Generator & Validator" Description="Create, decode, and validate JSON Web Tokens (JWT) with various algorithms.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Mode:</span>
+            <FluentSelect TOption="string" @bind-Value="@mode" Style="min-width: 160px;" @bind-Value:after="StateHasChanged">
+                <FluentOption Value="generate">🔐 Generate JWT</FluentOption>
+                <FluentOption Value="validate">✅ Validate JWT</FluentOption>
+                <FluentOption Value="decode">🔍 Decode JWT</FluentOption>
+            </FluentSelect>
+        </div>
+        @if (mode == "generate")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Algorithm:</span>
+                <FluentSelect TOption="string" @bind-Value="@algorithm" Style="min-width: 120px;">
+                    <FluentOption Value="HS256">HS256</FluentOption>
+                    <FluentOption Value="HS384">HS384</FluentOption>
+                    <FluentOption Value="HS512">HS512</FluentOption>
+                </FluentSelect>
+            </div>
+        }
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <FluentMessageBar Title="Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @errorMessage
+            </FluentMessageBar>
+        }
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <FluentMessageBar Title="Success" Intent="MessageIntent.Success" Style="margin-bottom: 8px;">
+                @successMessage
+            </FluentMessageBar>
+        }
+
+        @if (mode == "generate")
+        {
+            <div class="jwt-layout">
+                <div class="config-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">⚙️ JWT Configuration</span>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h4>Claims (Payload)</h4>
+                        <div class="form-field">
+                            <label>Issuer (iss):</label>
+                            <FluentTextField @bind-Value="@issuer" Placeholder="https://yourapp.com" Style="width: 100%;" />
+                        </div>
+                        <div class="form-field">
+                            <label>Audience (aud):</label>
+                            <FluentTextField @bind-Value="@audience" Placeholder="https://api.yourapp.com" Style="width: 100%;" />
+                        </div>
+                        <div class="form-field">
+                            <label>Subject (sub):</label>
+                            <FluentTextField @bind-Value="@subject" Placeholder="user@example.com" Style="width: 100%;" />
+                        </div>
+                        <div class="form-field">
+                            <label>Expiration (minutes):</label>
+                            <FluentNumberField @bind-Value="@expirationMinutes" Min="1" Max="525600" Style="width: 100%;" />
+                        </div>
+                        
+                        <h4>Custom Claims (JSON)</h4>
+                        <FluentTextArea @bind-Value="@customClaims"
+                                       Placeholder='{"userId": "123", "role": "admin"}'
+                                       Resize="TextAreaResize.Vertical"
+                                       Style="min-height: 100px; font-family: monospace;" />
+                    </div>
+
+                    <div class="config-section">
+                        <h4>Secret Key</h4>
+                        <FluentTextField @bind-Value="@secretKey" 
+                                        Placeholder="Enter secret key..." 
+                                        Type="@(showSecret ? "text" : "password")"
+                                        Style="width: 100%;" />
+                        <FluentCheckbox @bind-Value="@showSecret" Label="Show secret" />
+                    </div>
+
+                    <FluentButton Appearance="Appearance.Accent" 
+                                 @onclick="GenerateJWT"
+                                 Style="width: 100%; margin-top: 12px;">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.Key())" Slot="start" />
+                        Generate JWT
+                    </FluentButton>
+                </div>
+
+                <div class="output-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🎫 Generated JWT</span>
+                        <div class="panel-actions">
+                            <CopyButton Text="@generatedToken" />
+                        </div>
+                    </div>
+                    <FluentTextArea Value="@generatedToken"
+                                   ReadOnly="true"
+                                   Resize="TextAreaResize.Vertical"
+                                   Placeholder="Generated JWT will appear here..."
+                                   Class="token-display" />
+
+                    @if (!string.IsNullOrEmpty(generatedToken))
+                    {
+                        <div class="token-parts">
+                            <div class="token-part header">
+                                <h5>Header</h5>
+                                <pre>@decodedHeader</pre>
+                            </div>
+                            <div class="token-part payload">
+                                <h5>Payload</h5>
+                                <pre>@decodedPayload</pre>
+                            </div>
+                            <div class="token-part signature">
+                                <h5>Signature</h5>
+                                <code>@tokenSignature</code>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (mode == "validate")
+        {
+            <div class="jwt-layout">
+                <div class="input-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🎫 JWT Token</span>
+                    </div>
+                    <FluentTextArea @bind-Value="@jwtToValidate"
+                                   Placeholder="Paste JWT token here..."
+                                   Resize="TextAreaResize.Vertical"
+                                   Class="token-input" />
+
+                    <div class="config-section">
+                        <h4>Validation Settings</h4>
+                        <div class="form-field">
+                            <label>Secret Key:</label>
+                            <FluentTextField @bind-Value="@validationSecret" 
+                                            Placeholder="Enter secret key..." 
+                                            Type="@(showValidationSecret ? "text" : "password")"
+                                            Style="width: 100%;" />
+                            <FluentCheckbox @bind-Value="@showValidationSecret" Label="Show secret" />
+                        </div>
+                        <FluentCheckbox @bind-Value="@validateExpiration" Label="Validate expiration" />
+                        <FluentCheckbox @bind-Value="@validateIssuer" Label="Validate issuer" />
+                        @if (validateIssuer)
+                        {
+                            <FluentTextField @bind-Value="@expectedIssuer" Placeholder="Expected issuer" Style="width: 100%; margin-top: 8px;" />
+                        }
+                    </div>
+
+                    <FluentButton Appearance="Appearance.Accent" 
+                                 @onclick="ValidateJWT"
+                                 Style="width: 100%; margin-top: 12px;">
+                        <FluentIcon Value="@(new Icons.Regular.Size20.CheckmarkCircle())" Slot="start" />
+                        Validate JWT
+                    </FluentButton>
+                </div>
+
+                <div class="output-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">✅ Validation Result</span>
+                    </div>
+                    @if (validationResult != null)
+                    {
+                        <div class="validation-result @(validationResult.IsValid ? "valid" : "invalid")">
+                            <h3>@(validationResult.IsValid ? "✅ Valid Token" : "❌ Invalid Token")</h3>
+                            @if (!string.IsNullOrEmpty(validationResult.Message))
+                            {
+                                <p>@validationResult.Message</p>
+                            }
+                            
+                            @if (validationResult.IsValid && validationResult.Claims.Any())
+                            {
+                                <h4>Claims:</h4>
+                                <div class="claims-list">
+                                    @foreach (var claim in validationResult.Claims)
+                                    {
+                                        <div class="claim-item">
+                                            <strong>@claim.Key:</strong>
+                                            <span>@claim.Value</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (mode == "decode")
+        {
+            <div class="jwt-layout">
+                <div class="input-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🎫 JWT Token</span>
+                    </div>
+                    <FluentTextArea @bind-Value="@jwtToDecode"
+                                   Placeholder="Paste JWT token here..."
+                                   Resize="TextAreaResize.Vertical"
+                                   @oninput="OnDecodeInputChanged"
+                                   Class="token-input" />
+                    <p class="hint">💡 Decoding doesn't require a secret key (decoding only reads the token, doesn't verify it)</p>
+                </div>
+
+                <div class="output-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">🔍 Decoded Content</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(decodeResult))
+                    {
+                        <div class="decode-result">
+                            <pre>@decodeResult</pre>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div style="margin-top: 20px;">
+            <CollapsiblePanel Title="JWT Information" @bind-IsExpanded="@infoExpanded">
+                <div class="info-content">
+                    <h4>What is JWT?</h4>
+                    <p>JSON Web Token (JWT) is a compact, URL-safe means of representing claims to be transferred between two parties.</p>
+                    
+                    <h4>JWT Structure:</h4>
+                    <ul>
+                        <li><strong>Header:</strong> Contains the token type (JWT) and hashing algorithm</li>
+                        <li><strong>Payload:</strong> Contains the claims (user data and metadata)</li>
+                        <li><strong>Signature:</strong> Ensures the token hasn't been altered</li>
+                    </ul>
+
+                    <h4>Common Claims:</h4>
+                    <ul>
+                        <li><strong>iss (Issuer):</strong> Who created the token</li>
+                        <li><strong>sub (Subject):</strong> Who the token is about</li>
+                        <li><strong>aud (Audience):</strong> Who should accept the token</li>
+                        <li><strong>exp (Expiration):</strong> When the token expires</li>
+                        <li><strong>iat (Issued At):</strong> When the token was created</li>
+                    </ul>
+
+                    <h4>Algorithms:</h4>
+                    <ul>
+                        <li><strong>HS256:</strong> HMAC with SHA-256 (symmetric)</li>
+                        <li><strong>HS384:</strong> HMAC with SHA-384 (symmetric)</li>
+                        <li><strong>HS512:</strong> HMAC with SHA-512 (symmetric)</li>
+                    </ul>
+
+                    <p><strong>⚠️ Security Note:</strong> Never expose your secret keys. JWT tokens can be decoded by anyone, but only validated with the secret key.</p>
+                </div>
+            </CollapsiblePanel>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .jwt-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .config-panel,
+    .input-panel,
+    .output-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .config-section {
+        padding: 16px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+    }
+
+    .config-section h4 {
+        margin: 0 0 12px 0;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .form-field {
+        margin-bottom: 12px;
+    }
+
+    .form-field label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .token-display,
+    .token-input {
+        min-height: 150px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.85rem;
+    }
+
+    .token-display::part(control),
+    .token-input::part(control) {
+        min-height: 150px;
+    }
+
+    .token-parts {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .token-part {
+        padding: 12px;
+        border-radius: 6px;
+        border-left: 4px solid;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    .token-part.header {
+        border-left: 4px solid #1976d2;
+    }
+
+    .token-part.payload {
+        border-left: 4px solid #7b1fa2;
+    }
+
+    .token-part.signature {
+        border-left: 4px solid #f57c00;
+    }
+
+    .token-part h5 {
+        margin: 0 0 8px 0;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+    }
+
+    .token-part pre {
+        margin: 0;
+        font-family: 'Consolas', monospace;
+        font-size: 0.8rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: var(--text-secondary);
+    }
+
+    .token-part code {
+        word-break: break-all;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .validation-result {
+        padding: 20px;
+        border-radius: 8px;
+        border: 2px solid;
+        background: var(--bg-secondary);
+    }
+
+    .validation-result.valid {
+        border-color: #4caf50;
+    }
+
+    .validation-result.invalid {
+        border-color: #f44336;
+    }
+
+    .validation-result h3 {
+        margin: 0 0 12px 0;
+        color: var(--text-primary);
+    }
+
+    .validation-result p {
+        margin: 0 0 16px 0;
+        color: var(--text-secondary);
+    }
+
+    .validation-result h4 {
+        margin: 16px 0 8px 0;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+    }
+
+    .claims-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .claim-item {
+        padding: 8px 12px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    .claim-item strong {
+        color: var(--text-primary);
+        margin-right: 8px;
+    }
+
+    .claim-item span {
+        color: var(--text-secondary);
+        word-break: break-all;
+    }
+
+    .decode-result {
+        padding: 16px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+    }
+
+    .decode-result pre {
+        margin: 0;
+        font-family: 'Consolas', monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    .hint {
+        padding: 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .info-content {
+        padding: 16px;
+    }
+
+    .info-content h4 {
+        margin: 16px 0 8px 0;
+        color: var(--text-primary);
+    }
+
+    .info-content h4:first-child {
+        margin-top: 0;
+    }
+
+    .info-content p {
+        margin: 8px 0;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .info-content ul {
+        margin: 8px 0;
+        padding-left: 20px;
+    }
+
+    .info-content li {
+        margin: 6px 0;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    @@media (max-width: 968px) {
+        .jwt-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private string mode = "generate";
+    private string algorithm = "HS256";
+    
+    // Generate mode
+    private string issuer = "https://yourapp.com";
+    private string audience = "https://api.yourapp.com";
+    private string subject = "user@example.com";
+    private int expirationMinutes = 60;
+    private string customClaims = "{}";
+    private string secretKey = "my-super-secret-key-for-jwt-signing-minimum-32-characters-required";
+    private bool showSecret = false;
+    private string generatedToken = "";
+    private string decodedHeader = "";
+    private string decodedPayload = "";
+    private string tokenSignature = "";
+
+    // Validate mode
+    private string jwtToValidate = "";
+    private string validationSecret = "";
+    private bool showValidationSecret = false;
+    private bool validateExpiration = true;
+    private bool validateIssuer = false;
+    private string expectedIssuer = "";
+    private ValidationResult? validationResult;
+
+    // Decode mode
+    private string jwtToDecode = "";
+    private string decodeResult = "";
+
+    private string errorMessage = "";
+    private string successMessage = "";
+    private bool infoExpanded = false;
+
+    private void GenerateJWT()
+    {
+        errorMessage = "";
+        successMessage = "";
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(secretKey))
+            {
+                errorMessage = "Secret key is required";
+                return;
+            }
+
+            var securityKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(secretKey));
+
+            var credentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(
+                securityKey, 
+                algorithm);
+
+            var claims = new List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Iss, issuer),
+                new System.Security.Claims.Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub, subject),
+                new System.Security.Claims.Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Aud, audience),
+                new System.Security.Claims.Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Iat, 
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), System.Security.Claims.ClaimValueTypes.Integer64),
+            };
+
+            // Parse custom claims
+            if (!string.IsNullOrWhiteSpace(customClaims) && customClaims != "{}")
+            {
+                try
+                {
+                    var customClaimsDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(customClaims);
+                    if (customClaimsDict != null)
+                    {
+                        foreach (var kvp in customClaimsDict)
+                        {
+                            claims.Add(new System.Security.Claims.Claim(kvp.Key, kvp.Value?.ToString() ?? ""));
+                        }
+                    }
+                }
+                catch
+                {
+                    errorMessage = "Invalid JSON in custom claims";
+                    return;
+                }
+            }
+
+            var token = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+                signingCredentials: credentials
+            );
+
+            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            generatedToken = tokenHandler.WriteToken(token);
+
+            // Decode for display
+            DecodeTokenParts(generatedToken);
+            
+            successMessage = "JWT generated successfully!";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Generation failed: {ex.Message}";
+        }
+    }
+
+    private void DecodeTokenParts(string token)
+    {
+        try
+        {
+            var parts = token.Split('.');
+            if (parts.Length == 3)
+            {
+                decodedHeader = DecodeBase64(parts[0]);
+                decodedPayload = DecodeBase64(parts[1]);
+                tokenSignature = parts[2];
+            }
+        }
+        catch { }
+    }
+
+    private string DecodeBase64(string base64)
+    {
+        try
+        {
+            base64 = base64.Replace('-', '+').Replace('_', '/');
+            switch (base64.Length % 4)
+            {
+                case 2: base64 += "=="; break;
+                case 3: base64 += "="; break;
+            }
+            var bytes = Convert.FromBase64String(base64);
+            var json = System.Text.Encoding.UTF8.GetString(bytes);
+            
+            // Pretty print JSON
+            var jsonDoc = System.Text.Json.JsonDocument.Parse(json);
+            return System.Text.Json.JsonSerializer.Serialize(jsonDoc, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return "Unable to decode";
+        }
+    }
+
+    private void ValidateJWT()
+    {
+        errorMessage = "";
+        successMessage = "";
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(jwtToValidate))
+            {
+                errorMessage = "JWT token is required";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(validationSecret))
+            {
+                errorMessage = "Secret key is required for validation";
+                return;
+            }
+
+            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var key = System.Text.Encoding.UTF8.GetBytes(validationSecret);
+
+            var validationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
+                ValidateIssuer = validateIssuer,
+                ValidIssuer = validateIssuer ? expectedIssuer : null,
+                ValidateAudience = false,
+                ValidateLifetime = validateExpiration,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            var principal = tokenHandler.ValidateToken(jwtToValidate, validationParameters, out var validatedToken);
+            
+            validationResult = new ValidationResult
+            {
+                IsValid = true,
+                Message = "Token is valid and signature verified!",
+                Claims = principal.Claims.ToDictionary(c => c.Type, c => c.Value)
+            };
+
+            successMessage = "Token validated successfully!";
+        }
+        catch (Exception ex)
+        {
+            validationResult = new ValidationResult
+            {
+                IsValid = false,
+                Message = ex.Message
+            };
+            errorMessage = "Token validation failed";
+        }
+    }
+
+    private void OnDecodeInputChanged(ChangeEventArgs e)
+    {
+        jwtToDecode = e.Value?.ToString() ?? "";
+        DecodeJWT();
+    }
+
+    private void DecodeJWT()
+    {
+        errorMessage = "";
+        
+        try
+        {
+            if (string.IsNullOrWhiteSpace(jwtToDecode))
+            {
+                decodeResult = "";
+                return;
+            }
+
+            var parts = jwtToDecode.Trim().Split('.');
+            if (parts.Length != 3)
+            {
+                errorMessage = "Invalid JWT format (should have 3 parts separated by dots)";
+                return;
+            }
+
+            var header = DecodeBase64(parts[0]);
+            var payload = DecodeBase64(parts[1]);
+            
+            decodeResult = $@"=== HEADER ===
+{header}
+
+=== PAYLOAD ===
+{payload}
+
+=== SIGNATURE ===
+{parts[2]}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Decode failed: {ex.Message}";
+            decodeResult = "";
+        }
+    }
+
+    private class ValidationResult
+    {
+        public bool IsValid { get; set; }
+        public string Message { get; set; } = "";
+        public Dictionary<string, string> Claims { get; set; } = new();
+    }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+}

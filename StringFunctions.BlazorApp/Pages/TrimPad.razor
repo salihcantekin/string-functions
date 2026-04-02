@@ -8,12 +8,12 @@
     <OptionsContent>
         <div class="option-group">
             <span class="option-label">Operation:</span>
-            <FluentSelect TOption="string" @bind-Value="@operationMode" Style="min-width: 180px;" @bind-Value:after="Process">
-                <FluentOption Value="trim">Trim (both ends)</FluentOption>
-                <FluentOption Value="trimstart">Trim Start</FluentOption>
-                <FluentOption Value="trimend">Trim End</FluentOption>
-                <FluentOption Value="padleft">Pad Left</FluentOption>
-                <FluentOption Value="padright">Pad Right</FluentOption>
+            <FluentSelect TOption="string" @bind-Value="@operationMode" Style="min-width: 200px;" @bind-Value:after="Process">
+                <FluentOption Value="trim">✂️ Trim (both ends)</FluentOption>
+                <FluentOption Value="trimstart">✂️ Trim Start</FluentOption>
+                <FluentOption Value="trimend">✂️ Trim End</FluentOption>
+                <FluentOption Value="padleft">➕ Pad Left</FluentOption>
+                <FluentOption Value="padright">➕ Pad Right</FluentOption>
             </FluentSelect>
         </div>
         @if (operationMode.StartsWith("pad"))
@@ -40,6 +40,17 @@
         <FluentCheckbox @bind-Value="@applyToEachLine" Label="Apply to each line" @bind-Value:after="Process" />
     </OptionsContent>
     <ChildContent>
+        <div class="stats-bar">
+            <span>Input: @inputText.Length chars</span>
+            <span>Output: @outputText.Length chars</span>
+            @if (charsDelta != 0)
+            {
+                <span class="@(charsDelta > 0 ? "added" : "removed")">
+                    @(charsDelta > 0 ? $"+{charsDelta}" : charsDelta) chars @(charsDelta > 0 ? "added" : "removed")
+                </span>
+            }
+        </div>
+
         <div class="io-grid">
             <div class="io-panel">
                 <div class="io-panel-header">
@@ -68,6 +79,26 @@
 </ToolPageLayout>
 
 <style>
+    .stats-bar {
+        display: flex;
+        gap: 16px;
+        padding: 8px 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-bar .added {
+        color: var(--success);
+    }
+
+    .stats-bar .removed {
+        color: var(--error);
+    }
+
     .io-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -115,6 +146,7 @@
     private string paddingChar = " ";
     private string trimChars = string.Empty;
     private bool applyToEachLine = false;
+    private int charsDelta => outputText.Length - inputText.Length;
 
     private void OnInputChanged(ChangeEventArgs e)
     {

@@ -1,6 +1,6 @@
 @namespace StringFunctions.BlazorApp.Shared
 
-<div class="collapsible-panel @(IsExpanded ? "expanded" : "collapsed")">
+<div class="collapsible-panel @(IsExpanded ? "expanded" : "collapsed")" @ref="panelRef">
     <div class="collapsible-header" @onclick="Toggle">
         <span class="collapsible-title">@Title</span>
         @if (!string.IsNullOrEmpty(Subtitle))
@@ -109,9 +109,34 @@
     [Parameter] public bool IsExpanded { get; set; } = true;
     [Parameter] public EventCallback<bool> IsExpandedChanged { get; set; }
 
+    private ElementReference panelRef;
+
     private async Task Toggle()
     {
         IsExpanded = !IsExpanded;
         await IsExpandedChanged.InvokeAsync(IsExpanded);
+
+        // Auto scroll to panel when expanded
+        if (IsExpanded)
+        {
+            await Task.Delay(250); // Wait for animation
+            await ScrollToPanel();
+        }
     }
+
+    private async Task ScrollToPanel()
+    {
+        try
+        {
+            // Scroll panel into view
+            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/scroll-helper.js");
+            await module.InvokeVoidAsync("scrollToElement", panelRef);
+        }
+        catch
+        {
+            // Fallback - silently fail if JS interop doesn't work
+        }
+    }
+
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
 }

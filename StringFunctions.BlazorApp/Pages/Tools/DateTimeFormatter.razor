@@ -50,7 +50,8 @@
                 <p class="format-code">dateTime.ToString("@customFormat")</p>
             </div>
 
-            <CollapsiblePanel Title="Standard Formats" Subtitle="@($"{standardFormats.Count} formats")" @bind-IsExpanded="standardExpanded">
+            <div style="margin-top: 16px;">
+                <CollapsiblePanel Title="Standard Formats" Subtitle="@($"{standardFormats.Count} formats")" @bind-IsExpanded="standardExpanded">
                 <div class="panel-content">
                     @foreach (var format in standardFormats)
                     {
@@ -62,9 +63,11 @@
                         </div>
                     }
                 </div>
-            </CollapsiblePanel>
+                </CollapsiblePanel>
+            </div>
 
-            <CollapsiblePanel Title="Common Patterns" Subtitle="@($"{commonPatterns.Count} patterns")" @bind-IsExpanded="patternsExpanded">
+            <div style="margin-top: 12px;">
+                <CollapsiblePanel Title="Common Patterns" Subtitle="@($"{commonPatterns.Count} patterns")" @bind-IsExpanded="patternsExpanded">
                 <div class="panel-content">
                     @foreach (var format in commonPatterns)
                     {
@@ -75,9 +78,11 @@
                         </div>
                     }
                 </div>
-            </CollapsiblePanel>
+                </CollapsiblePanel>
+            </div>
 
-            <CollapsiblePanel Title="Individual Components" Subtitle="@($"{componentFormats.Count} components")" @bind-IsExpanded="componentsExpanded">
+            <div style="margin-top: 12px;">
+                <CollapsiblePanel Title="Individual Components" Subtitle="@($"{componentFormats.Count} components")" @bind-IsExpanded="componentsExpanded">
                 <div class="panel-content">
                     @foreach (var format in componentFormats)
                     {
@@ -88,9 +93,11 @@
                         </div>
                     }
                 </div>
-            </CollapsiblePanel>
+                </CollapsiblePanel>
+            </div>
 
-            <CollapsiblePanel Title="Format Specifiers Reference" Subtitle="@($"{formatSpecifiers.Count} specifiers")" @bind-IsExpanded="referenceExpanded">
+            <div style="margin-top: 12px;">
+                <CollapsiblePanel Title="Format Specifiers Reference" Subtitle="@($"{formatSpecifiers.Count} specifiers")" @bind-IsExpanded="referenceExpanded">
                 <div class="panel-content">
                     <div class="reference-grid">
                         @foreach (var spec in formatSpecifiers)
@@ -102,10 +109,11 @@
                         }
                     </div>
                 </div>
-            </CollapsiblePanel>
-        </div>
-    </ChildContent>
-</ToolPageLayout>
+                            </CollapsiblePanel>
+                        </div>
+                    </div>
+                </ChildContent>
+            </ToolPageLayout>
 
 <style>
     .formatter-layout {

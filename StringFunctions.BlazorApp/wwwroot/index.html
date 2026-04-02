@@ -156,6 +156,13 @@
     <!-- SEO Helper -->
     <script src="js/seo.js"></script>
 
+    <!-- Mermaid.js for Diagrams -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        window.mermaid = mermaid;
+    </script>
+    <script src="js/mermaid-helper.js"></script>
+
     <!-- Blazor WebAssembly -->
     <script src="_framework/blazor.webassembly.js" autostart="false"></script>
     <script>

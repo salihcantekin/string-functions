@@ -9,30 +9,30 @@
     <OptionsContent>
         <div class="option-group">
             <span class="option-label">Operation:</span>
-            <FluentSelect TOption="string" @bind-Value="@operation" Style="min-width: 220px;" @bind-Value:after="Process">
-                <FluentOption Value="remove-empty">Remove Empty Lines</FluentOption>
-                <FluentOption Value="remove-blank">Remove Blank Lines (whitespace only)</FluentOption>
-                <FluentOption Value="remove-duplicates">Remove Duplicate Lines</FluentOption>
-                <FluentOption Value="sort-asc">Sort Lines (A-Z)</FluentOption>
-                <FluentOption Value="sort-desc">Sort Lines (Z-A)</FluentOption>
-                <FluentOption Value="sort-length">Sort by Line Length</FluentOption>
-                <FluentOption Value="shuffle">Shuffle Lines</FluentOption>
-                <FluentOption Value="reverse-order">Reverse Line Order</FluentOption>
-                <FluentOption Value="number-lines">Add Line Numbers</FluentOption>
-                <FluentOption Value="remove-numbers">Remove Line Numbers</FluentOption>
-                <FluentOption Value="trim-lines">Trim Each Line</FluentOption>
-                <FluentOption Value="trim-start">Trim Start (N chars)</FluentOption>
-                <FluentOption Value="trim-end">Trim End (N chars)</FluentOption>
-                <FluentOption Value="trim-prefix">Remove Prefix</FluentOption>
-                <FluentOption Value="trim-suffix">Remove Suffix</FluentOption>
-                <FluentOption Value="prefix">Add Prefix to Lines</FluentOption>
-                <FluentOption Value="suffix">Add Suffix to Lines</FluentOption>
-                <FluentOption Value="wrap">Wrap Lines</FluentOption>
-                <FluentOption Value="join">Join Lines</FluentOption>
-                <FluentOption Value="split">Split to Lines</FluentOption>
-                <FluentOption Value="filter-contains">Filter: Contains</FluentOption>
-                <FluentOption Value="filter-not-contains">Filter: Not Contains</FluentOption>
-                <FluentOption Value="filter-regex">Filter: Regex Match</FluentOption>
+            <FluentSelect TOption="string" @bind-Value="@operation" Style="min-width: 280px;" @bind-Value:after="Process">
+                <FluentOption Value="remove-empty">🗑️ Remove Empty Lines</FluentOption>
+                <FluentOption Value="remove-blank">🗑️ Remove Blank Lines</FluentOption>
+                <FluentOption Value="remove-duplicates">🗑️ Remove Duplicate Lines</FluentOption>
+                <FluentOption Value="remove-numbers">🗑️ Remove Line Numbers</FluentOption>
+                <FluentOption Value="sort-asc">📊 Sort Lines (A-Z)</FluentOption>
+                <FluentOption Value="sort-desc">📊 Sort Lines (Z-A)</FluentOption>
+                <FluentOption Value="sort-length">📊 Sort by Line Length</FluentOption>
+                <FluentOption Value="trim-lines">✂️ Trim Each Line</FluentOption>
+                <FluentOption Value="trim-start">✂️ Trim Start (N chars)</FluentOption>
+                <FluentOption Value="trim-end">✂️ Trim End (N chars)</FluentOption>
+                <FluentOption Value="trim-prefix">✂️ Remove Prefix</FluentOption>
+                <FluentOption Value="trim-suffix">✂️ Remove Suffix</FluentOption>
+                <FluentOption Value="number-lines">➕ Add Line Numbers</FluentOption>
+                <FluentOption Value="prefix">➕ Add Prefix to Lines</FluentOption>
+                <FluentOption Value="suffix">➕ Add Suffix to Lines</FluentOption>
+                <FluentOption Value="reverse-order">🔄 Reverse Line Order</FluentOption>
+                <FluentOption Value="shuffle">🔄 Shuffle Lines</FluentOption>
+                <FluentOption Value="wrap">🔄 Wrap Lines</FluentOption>
+                <FluentOption Value="join">🔄 Join Lines</FluentOption>
+                <FluentOption Value="split">🔄 Split to Lines</FluentOption>
+                <FluentOption Value="filter-contains">🔍 Filter: Contains</FluentOption>
+                <FluentOption Value="filter-not-contains">🔍 Filter: Not Contains</FluentOption>
+                <FluentOption Value="filter-regex">🔍 Filter: Regex Match</FluentOption>
             </FluentSelect>
         </div>
         @if (operation == "prefix" || operation == "suffix" || operation == "trim-prefix" || operation == "trim-suffix")

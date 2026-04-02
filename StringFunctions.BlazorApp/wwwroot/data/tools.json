@@ -318,6 +318,66 @@
           "keywords": ["number", "binary", "hex", "hexadecimal", "octal", "decimal", "converter"],
           "featured": false,
           "addedDate": "2025-01-20"
+        },
+        {
+          "id": "html-viewer",
+          "name": "HTML Viewer",
+          "route": "/html-viewer",
+          "icon": "Code",
+          "description": "Preview and render HTML code in real-time",
+          "ogTitle": "HTML Viewer - Preview HTML Code Online",
+          "ogDescription": "Preview HTML code online in real-time. Live HTML viewer with split view and templates. Free HTML preview tool for developers.",
+          "keywords": ["html", "preview", "viewer", "render", "live"],
+          "featured": true,
+          "addedDate": "2025-01-21"
+        },
+        {
+          "id": "markdown-viewer",
+          "name": "Markdown Viewer",
+          "route": "/markdown-viewer",
+          "icon": "DocumentText",
+          "description": "Write and preview Markdown in real-time",
+          "ogTitle": "Markdown Viewer - Preview Markdown Online",
+          "ogDescription": "Write and preview Markdown in real-time. Live markdown editor with syntax highlighting and templates. Free markdown viewer for developers.",
+          "keywords": ["markdown", "md", "preview", "viewer", "editor"],
+          "featured": true,
+          "addedDate": "2025-01-21"
+        },
+        {
+          "id": "diagram-viewer",
+          "name": "Diagram Viewer",
+          "route": "/diagram-viewer",
+          "icon": "DocumentText",
+          "description": "Create diagrams with Mermaid - flowcharts, sequence, class diagrams",
+          "ogTitle": "Diagram Viewer - Create Diagrams with Mermaid Syntax",
+          "ogDescription": "Create professional diagrams using Mermaid syntax. Flowcharts, sequence diagrams, class diagrams, Gantt charts and more. Free diagram tool for developers.",
+          "keywords": ["diagram", "mermaid", "flowchart", "sequence", "uml", "visualization"],
+          "featured": true,
+          "addedDate": "2025-01-21"
+        },
+        {
+          "id": "barcode-generator",
+          "name": "Barcode Generator",
+          "route": "/barcode-generator",
+          "icon": "Barcode",
+          "description": "Generate QR codes and EAN barcodes",
+          "ogTitle": "Barcode Generator - Create QR Codes & EAN Barcodes",
+          "ogDescription": "Generate QR codes and EAN-13/EAN-8 barcodes online. Create scannable barcodes for products, URLs, and data. Free barcode generator tool.",
+          "keywords": ["barcode", "qr", "qr code", "ean", "ean13", "ean8", "generator"],
+          "featured": true,
+          "addedDate": "2025-01-22"
+        },
+        {
+          "id": "jwt-tool",
+          "name": "JWT Tool",
+          "route": "/jwt-tool",
+          "icon": "Key",
+          "description": "Generate, decode, and validate JSON Web Tokens",
+          "ogTitle": "JWT Tool - Generate, Decode & Validate JSON Web Tokens",
+          "ogDescription": "Create, decode, and validate JWT tokens online. Test JWT authentication with multiple algorithms (HS256, HS384, HS512). Free JWT tool for developers.",
+          "keywords": ["jwt", "json web token", "token", "authentication", "auth", "validate", "decode"],
+          "featured": true,
+          "addedDate": "2025-01-22"
         }
       ]
     }

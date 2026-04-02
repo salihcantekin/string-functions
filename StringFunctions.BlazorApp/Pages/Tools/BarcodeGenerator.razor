@@ -1,0 +1,557 @@
+@page "/barcode-generator"
+
+<SeoHead Route="barcode-generator" />
+
+<PageTitle>Barcode Generator</PageTitle>
+
+<ToolPageLayout Title="Barcode Generator" Description="Generate QR codes and EAN barcodes from text, URLs, and data.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Type:</span>
+            <FluentSelect TOption="string" @bind-Value="@barcodeType" Style="min-width: 140px;" @bind-Value:after="GenerateBarcode">
+                <FluentOption Value="qr">📱 QR Code</FluentOption>
+                <FluentOption Value="ean13">🏷️ EAN-13</FluentOption>
+                <FluentOption Value="ean8">🏷️ EAN-8</FluentOption>
+            </FluentSelect>
+        </div>
+        @if (barcodeType == "qr")
+        {
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Size:</span>
+                <FluentNumberField @bind-Value="@qrSize" Min="100" Max="1000" Step="50" Style="width: 100px;" @bind-Value:after="GenerateBarcode" />
+            </div>
+            <div class="option-divider"></div>
+            <div class="option-group">
+                <span class="option-label">Error Correction:</span>
+                <FluentSelect TOption="string" @bind-Value="@errorCorrection" Style="min-width: 100px;" @bind-Value:after="GenerateBarcode">
+                    <FluentOption Value="L">Low</FluentOption>
+                    <FluentOption Value="M">Medium</FluentOption>
+                    <FluentOption Value="Q">Quartile</FluentOption>
+                    <FluentOption Value="H">High</FluentOption>
+                </FluentSelect>
+            </div>
+        }
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <FluentMessageBar Title="Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @errorMessage
+            </FluentMessageBar>
+        }
+
+        <div class="stats-bar">
+            <span>@inputText.Length chars</span>
+            @if (barcodeType == "qr")
+            {
+                <span>QR Size: @qrSize px</span>
+                <span>Error Correction: @errorCorrection</span>
+            }
+        </div>
+
+        <div class="barcode-layout">
+            <div class="input-panel">
+                <div class="panel-header">
+                    <span class="panel-title">📝 Input Data</span>
+                    <div class="panel-actions">
+                        <CopyButton Text="@inputText" />
+                    </div>
+                </div>
+                @if (barcodeType == "qr")
+                {
+                    <FluentTextArea @bind-Value="@inputText"
+                                   Placeholder="Enter text, URL, or data to generate QR code..."
+                                   Resize="TextAreaResize.Vertical"
+                                   @oninput="OnInputChanged"
+                                   Class="input-area"
+                                   Style="font-family: 'Consolas', 'Courier New', monospace;" />
+                }
+                else
+                {
+                    <FluentTextField @bind-Value="@inputText"
+                                    Placeholder="@GetPlaceholder()"
+                                    @oninput="OnInputChanged"
+                                    Style="width: 100%; font-family: 'Consolas', 'Courier New', monospace;" />
+                    <div class="ean-info">
+                        @if (barcodeType == "ean13")
+                        {
+                            <p>Enter 12 digits (13th digit is calculated automatically)</p>
+                            <p>Example: 590123456789</p>
+                        }
+                        else if (barcodeType == "ean8")
+                        {
+                            <p>Enter 7 digits (8th digit is calculated automatically)</p>
+                            <p>Example: 9638507</p>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="output-panel">
+                <div class="panel-header">
+                    <span class="panel-title">🖼️ Generated Barcode</span>
+                    <div class="panel-actions">
+                        <FluentButton Appearance="Appearance.Lightweight"
+                                     IconStart="@(new Icons.Regular.Size20.ArrowDownload())"
+                                     @onclick="DownloadBarcode"
+                                     Disabled="@string.IsNullOrEmpty(barcodeImage)"
+                                     title="Download as PNG">
+                        </FluentButton>
+                        <FluentButton Appearance="Appearance.Lightweight"
+                                     IconStart="@(new Icons.Regular.Size20.ArrowClockwise())"
+                                     @onclick="GenerateBarcode"
+                                     title="Regenerate">
+                        </FluentButton>
+                    </div>
+                </div>
+                <div class="barcode-container">
+                    @if (!string.IsNullOrEmpty(barcodeImage))
+                    {
+                        <img src="@barcodeImage" alt="Generated barcode" class="barcode-image" />
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <FluentIcon Value="@(new Icons.Regular.Size20.ScanDash())" Color="Color.Custom" CustomColor="#999" />
+                            <p>Enter data to generate barcode...</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <CollapsiblePanel Title="Quick Templates" @bind-IsExpanded="@templatesExpanded">
+                <div class="templates-grid">
+                    <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("url"))">
+                        🌐 Website URL
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("wifi"))">
+                        📶 WiFi Network
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("vcard"))">
+                        👤 Contact Card
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("email"))">
+                        📧 Email
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("sms"))">
+                        💬 SMS Message
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("phone"))">
+                        📞 Phone Number
+                    </FluentButton>
+                </div>
+            </CollapsiblePanel>
+        </div>
+
+        <div style="margin-top: 12px;">
+            <CollapsiblePanel Title="Barcode Information" @bind-IsExpanded="@infoExpanded">
+                <div class="info-content">
+                    @if (barcodeType == "qr")
+                    {
+                        <h4>QR Code Features:</h4>
+                        <ul>
+                            <li><strong>Capacity:</strong> Up to 4,296 alphanumeric characters</li>
+                            <li><strong>Error Correction:</strong> Can recover from up to 30% damage</li>
+                            <li><strong>Use Cases:</strong> URLs, WiFi credentials, contact info, payment data</li>
+                            <li><strong>Scanning:</strong> Works with any smartphone camera</li>
+                        </ul>
+                    }
+                    else if (barcodeType == "ean13")
+                    {
+                        <h4>EAN-13 Barcode:</h4>
+                        <ul>
+                            <li><strong>Format:</strong> 13 digits (12 data + 1 check digit)</li>
+                            <li><strong>Use:</strong> International product identification</li>
+                            <li><strong>Structure:</strong> Country code (2-3) + Company (4-5) + Product (5) + Check (1)</li>
+                            <li><strong>Common in:</strong> Retail, supermarkets, inventory management</li>
+                        </ul>
+                    }
+                    else if (barcodeType == "ean8")
+                    {
+                        <h4>EAN-8 Barcode:</h4>
+                        <ul>
+                            <li><strong>Format:</strong> 8 digits (7 data + 1 check digit)</li>
+                            <li><strong>Use:</strong> Small packages where space is limited</li>
+                            <li><strong>Structure:</strong> Country code (2-3) + Product (4-5) + Check (1)</li>
+                            <li><strong>Common in:</strong> Small retail items, cosmetics</li>
+                        </ul>
+                    }
+                </div>
+            </CollapsiblePanel>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<style>
+    .stats-bar {
+        display: flex;
+        gap: 16px;
+        padding: 8px 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .barcode-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .input-panel,
+    .output-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .input-area {
+        min-height: 300px;
+        flex: 1;
+    }
+
+    .input-area::part(control) {
+        height: 300px;
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .barcode-container {
+        padding: 40px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: white;
+        min-height: 300px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .barcode-image {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #999;
+        padding: 60px 20px;
+    }
+
+    .empty-state p {
+        margin-top: 16px;
+        font-size: 0.95rem;
+    }
+
+    .ean-info {
+        padding: 12px;
+        background: var(--bg-secondary);
+        border-radius: 4px;
+        margin-top: 8px;
+    }
+
+    .ean-info p {
+        margin: 4px 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .templates-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .info-content {
+        padding: 12px;
+    }
+
+    .info-content h4 {
+        margin: 0 0 12px 0;
+        color: var(--text-primary);
+    }
+
+    .info-content ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .info-content li {
+        margin: 8px 0;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    @@media (max-width: 768px) {
+        .barcode-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .templates-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private string barcodeType = "qr";
+    private string inputText = "";
+    private string barcodeImage = "";
+    private string errorMessage = "";
+    private int qrSize = 300;
+    private string errorCorrection = "M";
+    private bool templatesExpanded = false;
+    private bool infoExpanded = false;
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        inputText = e.Value?.ToString() ?? string.Empty;
+        GenerateBarcode();
+    }
+
+    private void GenerateBarcode()
+    {
+        errorMessage = string.Empty;
+        
+        if (string.IsNullOrWhiteSpace(inputText))
+        {
+            barcodeImage = string.Empty;
+            return;
+        }
+
+        try
+        {
+            if (barcodeType == "qr")
+            {
+                GenerateQRCode();
+            }
+            else if (barcodeType == "ean13")
+            {
+                GenerateEAN13();
+            }
+            else if (barcodeType == "ean8")
+            {
+                GenerateEAN8();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            barcodeImage = string.Empty;
+        }
+    }
+
+    private void GenerateQRCode()
+    {
+        using var qrGenerator = new QRCoder.QRCodeGenerator();
+        var level = errorCorrection switch
+        {
+            "L" => QRCoder.QRCodeGenerator.ECCLevel.L,
+            "M" => QRCoder.QRCodeGenerator.ECCLevel.M,
+            "Q" => QRCoder.QRCodeGenerator.ECCLevel.Q,
+            "H" => QRCoder.QRCodeGenerator.ECCLevel.H,
+            _ => QRCoder.QRCodeGenerator.ECCLevel.M
+        };
+        
+        var qrCodeData = qrGenerator.CreateQrCode(inputText, level);
+        using var qrCode = new QRCoder.PngByteQRCode(qrCodeData);
+        var qrCodeImage = qrCode.GetGraphic(20);
+        barcodeImage = $"data:image/png;base64,{Convert.ToBase64String(qrCodeImage)}";
+    }
+
+    private void GenerateEAN13()
+    {
+        // Validate input
+        if (!System.Text.RegularExpressions.Regex.IsMatch(inputText, @"^\d{12,13}$"))
+        {
+            throw new Exception("EAN-13 requires 12 or 13 digits");
+        }
+
+        var digits = inputText.PadRight(12, '0').Substring(0, 12);
+        var checkDigit = CalculateEAN13CheckDigit(digits);
+        var fullCode = digits + checkDigit;
+        
+        GenerateEANBarcode(fullCode, 13);
+    }
+
+    private void GenerateEAN8()
+    {
+        // Validate input
+        if (!System.Text.RegularExpressions.Regex.IsMatch(inputText, @"^\d{7,8}$"))
+        {
+            throw new Exception("EAN-8 requires 7 or 8 digits");
+        }
+
+        var digits = inputText.PadRight(7, '0').Substring(0, 7);
+        var checkDigit = CalculateEAN8CheckDigit(digits);
+        var fullCode = digits + checkDigit;
+        
+        GenerateEANBarcode(fullCode, 8);
+    }
+
+    private void GenerateEANBarcode(string code, int type)
+    {
+        // Simple SVG-based barcode generation
+        var width = type == 13 ? 260 : 160;
+        var barWidth = 2;
+        var height = 80;
+        
+        var svg = $@"<svg width=""{width}"" height=""{height + 40}"" xmlns=""http://www.w3.org/2000/svg"">
+            <rect width=""{width}"" height=""{height + 40}"" fill=""white""/>
+            <g transform=""translate(10, 10)"">";
+
+        var x = 0;
+        var pattern = GetEANPattern(code, type);
+        
+        foreach (var bar in pattern)
+        {
+            if (bar == '1')
+            {
+                svg += $@"<rect x=""{x}"" y=""0"" width=""{barWidth}"" height=""{height}"" fill=""black""/>";
+            }
+            x += barWidth;
+        }
+
+        // Add text
+        svg += $@"<text x=""{width/2 - 10}"" y=""{height + 20}"" font-family=""monospace"" font-size=""14"" fill=""black"">{code}</text>";
+        svg += "</g></svg>";
+
+        var svgBytes = System.Text.Encoding.UTF8.GetBytes(svg);
+        barcodeImage = $"data:image/svg+xml;base64,{Convert.ToBase64String(svgBytes)}";
+    }
+
+    private string GetEANPattern(string code, int type)
+    {
+        // Simplified EAN encoding (for demonstration)
+        // Real implementation would use proper EAN encoding tables
+        var pattern = "101"; // Start
+        
+        foreach (var digit in code)
+        {
+            pattern += digit switch
+            {
+                '0' => "0001101",
+                '1' => "0011001",
+                '2' => "0010011",
+                '3' => "0111101",
+                '4' => "0100011",
+                '5' => "0110001",
+                '6' => "0101111",
+                '7' => "0111011",
+                '8' => "0110111",
+                '9' => "0001011",
+                _ => "0001101"
+            };
+        }
+        
+        pattern += "101"; // End
+        return pattern;
+    }
+
+    private string CalculateEAN13CheckDigit(string digits)
+    {
+        var sum = 0;
+        for (int i = 0; i < 12; i++)
+        {
+            var digit = int.Parse(digits[i].ToString());
+            sum += (i % 2 == 0) ? digit : digit * 3;
+        }
+        var checkDigit = (10 - (sum % 10)) % 10;
+        return checkDigit.ToString();
+    }
+
+    private string CalculateEAN8CheckDigit(string digits)
+    {
+        var sum = 0;
+        for (int i = 0; i < 7; i++)
+        {
+            var digit = int.Parse(digits[i].ToString());
+            sum += (i % 2 == 0) ? digit * 3 : digit;
+        }
+        var checkDigit = (10 - (sum % 10)) % 10;
+        return checkDigit.ToString();
+    }
+
+    private string GetPlaceholder()
+    {
+        return barcodeType switch
+        {
+            "ean13" => "Enter 12-13 digits (e.g., 590123456789)",
+            "ean8" => "Enter 7-8 digits (e.g., 9638507)",
+            _ => "Enter data..."
+        };
+    }
+
+    private async Task DownloadBarcode()
+    {
+        if (string.IsNullOrEmpty(barcodeImage))
+            return;
+
+        try
+        {
+            var fileName = $"{barcodeType}-{DateTime.Now:yyyyMMddHHmmss}.png";
+            var base64Data = barcodeImage.Split(',')[1];
+            
+            await JSRuntime.InvokeVoidAsync("eval", $@"
+                const link = document.createElement('a');
+                link.href = '{barcodeImage}';
+                link.download = '{fileName}';
+                link.click();
+            ");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Download failed: {ex.Message}";
+        }
+    }
+
+    private void LoadTemplate(string template)
+    {
+        barcodeType = "qr";
+        
+        inputText = template switch
+        {
+            "url" => "https://github.com",
+            "wifi" => "WIFI:T:WPA;S:MyNetwork;P:MyPassword;;",
+            "vcard" => @"BEGIN:VCARD
+VERSION:3.0
+FN:John Doe
+TEL:+1234567890
+EMAIL:john@example.com
+END:VCARD",
+            "email" => "mailto:example@email.com?subject=Hello&body=Message",
+            "sms" => "SMSTO:+1234567890:Hello, this is a text message",
+            "phone" => "tel:+1234567890",
+            _ => inputText
+        };
+
+        GenerateBarcode();
+    }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+}

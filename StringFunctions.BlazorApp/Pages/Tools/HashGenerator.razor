@@ -6,7 +6,7 @@
 
 <PageTitle>Hash Generator</PageTitle>
 
-<ToolPageLayout Title="Hash Generator" Description="Generate cryptographic hashes (MD5, SHA1, SHA256, SHA512) from text.">
+<ToolPageLayout Title="Hash Generator" Description="Generate cryptographic hashes (SHA-256, SHA-384, SHA-512) from text.">
     <OptionsContent>
         <div class="option-group">
             <span class="option-label">Encoding:</span>
@@ -20,6 +20,10 @@
         <FluentCheckbox @bind-Value="@uppercase" Label="Uppercase" @bind-Value:after="GenerateHashes" />
     </OptionsContent>
     <ChildContent>
+        <FluentMessageBar Intent="MessageIntent.Info" Style="margin-bottom: 12px;">
+            ℹ️ Note: MD5 and SHA-1 are not available in this web version due to security concerns. Use SHA-256 or higher for secure hashing.
+        </FluentMessageBar>
+
         <div class="hash-layout">
             <div class="input-section">
                 <div class="io-panel-header">
@@ -75,7 +79,8 @@
                 }
             </div>
 
-            <CollapsiblePanel Title="Algorithm Comparison" @bind-IsExpanded="infoExpanded">
+            <div style="margin-top: 16px;">
+                <CollapsiblePanel Title="Algorithm Comparison" @bind-IsExpanded="infoExpanded">
                 <div class="info-table">
                     <div class="info-header">
                         <span>Algorithm</span>
@@ -83,17 +88,17 @@
                         <span>Security</span>
                         <span>Use Case</span>
                     </div>
-                    <div class="info-row">
+                    <div class="info-row deprecated">
                         <span class="algo-name">MD5</span>
                         <span>128 bits (32 hex)</span>
-                        <span class="status-weak">?? Weak</span>
-                        <span>Checksums, legacy systems</span>
+                        <span class="status-weak">⚠️ Deprecated</span>
+                        <span>Not available (security risk)</span>
                     </div>
-                    <div class="info-row">
+                    <div class="info-row deprecated">
                         <span class="algo-name">SHA-1</span>
                         <span>160 bits (40 hex)</span>
-                        <span class="status-weak">?? Weak</span>
-                        <span>Git commits, legacy</span>
+                        <span class="status-weak">⚠️ Deprecated</span>
+                        <span>Not available (security risk)</span>
                     </div>
                     <div class="info-row">
                         <span class="algo-name">SHA-256</span>
@@ -114,10 +119,11 @@
                         <span>High security applications</span>
                     </div>
                 </div>
-            </CollapsiblePanel>
-        </div>
-    </ChildContent>
-</ToolPageLayout>
+                            </CollapsiblePanel>
+                        </div>
+                    </div>
+                </ChildContent>
+            </ToolPageLayout>
 
 <style>
     .hash-layout {
@@ -234,6 +240,11 @@
         border-bottom: none;
     }
 
+    .info-row.deprecated {
+        opacity: 0.6;
+        background: var(--bg-tertiary);
+    }
+
     .algo-name {
         font-weight: 600;
         color: var(--text-primary);
@@ -291,11 +302,19 @@
 
         var bytes = encoding.GetBytes(inputText);
 
-        hashResults.Add(new HashResult("MD5", 128, ComputeHash(MD5.Create(), bytes)));
-        hashResults.Add(new HashResult("SHA-1", 160, ComputeHash(SHA1.Create(), bytes)));
-        hashResults.Add(new HashResult("SHA-256", 256, ComputeHash(SHA256.Create(), bytes)));
-        hashResults.Add(new HashResult("SHA-384", 384, ComputeHash(SHA384.Create(), bytes)));
-        hashResults.Add(new HashResult("SHA-512", 512, ComputeHash(SHA512.Create(), bytes)));
+        // Note: MD5 and SHA1 are not available in .NET 8 WebAssembly due to security concerns
+        // We only use SHA256+ which are secure and available
+        try
+        {
+            hashResults.Add(new HashResult("SHA-256", 256, ComputeHash(SHA256.Create(), bytes)));
+            hashResults.Add(new HashResult("SHA-384", 384, ComputeHash(SHA384.Create(), bytes)));
+            hashResults.Add(new HashResult("SHA-512", 512, ComputeHash(SHA512.Create(), bytes)));
+        }
+        catch (Exception ex)
+        {
+            // If any algorithm fails, show error
+            Console.WriteLine($"Hash generation error: {ex.Message}");
+        }
 
         VerifyHash();
     }

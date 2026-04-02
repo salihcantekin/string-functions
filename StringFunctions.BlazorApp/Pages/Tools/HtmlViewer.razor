@@ -1,0 +1,562 @@
+@page "/html-viewer"
+
+<SeoHead Route="html-viewer" />
+
+<PageTitle>HTML Viewer</PageTitle>
+
+<ToolPageLayout Title="HTML Viewer" Description="Preview and render HTML code in real-time.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Mode:</span>
+            <FluentSelect TOption="string" @bind-Value="@viewMode" Style="min-width: 160px;" @bind-Value:after="StateHasChanged">
+                <FluentOption Value="preview">👁️ Preview</FluentOption>
+                <FluentOption Value="split">📄 Split View</FluentOption>
+                <FluentOption Value="code">💻 Code Only</FluentOption>
+            </FluentSelect>
+        </div>
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@autoRefresh" Label="Auto refresh" />
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@sanitizeHtml" Label="Sanitize HTML" @bind-Value:after="StateHasChanged" />
+    </OptionsContent>
+    <ChildContent>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <FluentMessageBar Title="Error" Intent="MessageIntent.Error" Style="margin-bottom: 8px;">
+                @errorMessage
+            </FluentMessageBar>
+        }
+
+        @if (sanitizeHtml)
+        {
+            <FluentMessageBar Intent="MessageIntent.Warning" Style="margin-bottom: 8px;">
+                ⚠️ HTML Sanitization is enabled. Scripts and potentially unsafe content will be removed.
+            </FluentMessageBar>
+        }
+
+        <div class="stats-bar">
+            <span>@htmlContent.Length chars</span>
+            <span>@(htmlContent.Split('\n').Length) lines</span>
+            @if (sanitizeHtml)
+            {
+                <span class="warning">🛡️ Sanitized</span>
+            }
+        </div>
+
+        <div class="html-viewer-layout @viewMode">
+            @if (viewMode == "code" || viewMode == "split")
+            {
+                <div class="html-editor">
+                    <div class="panel-header">
+                        <span class="panel-title">HTML Code</span>
+                        <div class="panel-actions">
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.ArrowExpand())"
+                                         @onclick="OpenCodeFullscreen"
+                                         title="Open in fullscreen">
+                            </FluentButton>
+                            <CopyButton Text="@htmlContent" />
+                        </div>
+                    </div>
+                    <FluentTextArea @bind-Value="@htmlContent"
+                                   Placeholder="Enter HTML code here..."
+                                   Resize="TextAreaResize.Vertical"
+                                   @oninput="OnHtmlChanged"
+                                   Class="code-editor"
+                                   Style="font-family: 'Consolas', 'Courier New', monospace;" />
+                </div>
+            }
+
+            @if (viewMode == "preview" || viewMode == "split")
+            {
+                <div class="html-preview">
+                    <div class="panel-header">
+                        <span class="panel-title">Preview</span>
+                        <div class="panel-actions">
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.ArrowExpand())"
+                                         @onclick="OpenPreviewFullscreen"
+                                         title="Open in fullscreen">
+                            </FluentButton>
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.DocumentArrowDown())"
+                                         @onclick="ExportRenderedHtml"
+                                         title="Save as HTML">
+                            </FluentButton>
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.Code())"
+                                         @onclick="ExportHtmlCode"
+                                         title="Save HTML Code">
+                            </FluentButton>
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.ArrowClockwise())"
+                                         @onclick="RefreshPreview"
+                                         title="Refresh preview">
+                            </FluentButton>
+                        </div>
+                    </div>
+                    <div class="preview-container">
+                        <iframe srcdoc="@GetRenderedHtml()" 
+                                sandbox="allow-same-origin allow-scripts"
+                                @key="@iframeKey"></iframe>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div style="margin-top: 20px;">
+            <CollapsiblePanel Title="HTML Templates" @bind-IsExpanded="@templatesExpanded">
+            <div class="templates-grid">
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("basic"))">
+                    📄 Basic HTML
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("form"))">
+                    📝 Form
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("table"))">
+                    📊 Table
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("card"))">
+                    🎴 Card
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("grid"))">
+                    📐 Grid Layout
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("navbar"))">
+                    🧭 Navigation Bar
+                </FluentButton>
+            </div>
+        </CollapsiblePanel>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<OutputViewer @bind-IsOpen="@isCodeViewerOpen"
+             Title="HTML Code"
+             Content="@htmlContent"
+             ContentChanged="@((value) => { htmlContent = value; StateHasChanged(); })"
+             IsEditable="true"
+             Footer="@($"{htmlContent.Length} characters, {htmlContent.Split('\n').Length} lines")" />
+
+<OutputViewer @bind-IsOpen="@isPreviewViewerOpen"
+             Title="HTML Preview"
+             Footer="Rendered HTML"
+             ShowCopyButton="false">
+    <div style="width: 100%; height: 100%; background: white;">
+        <iframe srcdoc="@GetRenderedHtml()" 
+                sandbox="allow-same-origin allow-scripts"
+                style="width: 100%; height: 100%; border: none;"
+                @key="@iframeKey"></iframe>
+    </div>
+</OutputViewer>
+
+<style>
+    .stats-bar {
+        display: flex;
+        gap: 16px;
+        padding: 8px 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-bar .warning {
+        color: var(--warning);
+    }
+
+    .html-viewer-layout {
+        display: grid;
+        gap: 16px;
+        height: 600px;
+        margin-bottom: 20px;
+    }
+
+    .html-viewer-layout.preview {
+        grid-template-columns: 1fr;
+    }
+
+    .html-viewer-layout.split {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .html-viewer-layout.code {
+        grid-template-columns: 1fr;
+    }
+
+    .html-editor,
+    .html-preview {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: 100%;
+        max-height: 600px;
+    }
+
+    .html-editor .code-editor {
+        flex: 1;
+        height: 100%;
+    }
+
+    .html-editor .code-editor::part(control) {
+        height: 100% !important;
+        max-height: 100%;
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .preview-container {
+        flex: 1;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        background: white;
+        height: 100%;
+    }
+
+    .preview-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .templates-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    @@media (max-width: 768px) {
+        .html-viewer-layout.split {
+            grid-template-columns: 1fr;
+        }
+
+        .templates-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private string htmlContent = @"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>HTML Preview</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Welcome to HTML Viewer! 👋</h1>
+    <p>Start editing the HTML code to see live preview.</p>
+</body>
+</html>";
+
+    private string viewMode = "split";
+    private bool autoRefresh = true;
+    private bool sanitizeHtml = false;
+    private string errorMessage = string.Empty;
+    private bool templatesExpanded = false;
+    private int iframeKey = 0;
+    private bool isCodeViewerOpen = false;
+    private bool isPreviewViewerOpen = false;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private void OnHtmlChanged(ChangeEventArgs e)
+    {
+        htmlContent = e.Value?.ToString() ?? string.Empty;
+        if (autoRefresh)
+        {
+            RefreshPreview();
+        }
+    }
+
+    private void RefreshPreview()
+    {
+        iframeKey++;
+        StateHasChanged();
+    }
+
+    private void OpenCodeFullscreen()
+    {
+        isCodeViewerOpen = true;
+    }
+
+    private void OpenPreviewFullscreen()
+    {
+        isPreviewViewerOpen = true;
+    }
+
+    private async Task ExportHtml(string format)
+    {
+        try
+        {
+            var content = format == "html" ? GetRenderedHtml() : htmlContent;
+            var fileName = format == "html" ? "preview.html" : "code.html";
+
+            await JSRuntime.InvokeVoidAsync("downloadTextFile", content, fileName);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private Task ExportRenderedHtml() => ExportHtml("html");
+    private Task ExportHtmlCode() => ExportHtml("code");
+
+    private string GetRenderedHtml()
+    {
+        if (string.IsNullOrWhiteSpace(htmlContent))
+            return "<html><body style='padding:20px;color:#999;'>Enter HTML code to preview...</body></html>";
+
+        if (sanitizeHtml)
+        {
+            return SanitizeHtml(htmlContent);
+        }
+
+        return htmlContent;
+    }
+
+    private string SanitizeHtml(string html)
+    {
+        var sanitized = html
+            .Replace("<script", "&lt;script", StringComparison.OrdinalIgnoreCase)
+            .Replace("</script>", "&lt;/script&gt;", StringComparison.OrdinalIgnoreCase)
+            .Replace("javascript:", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("onerror=", "data-onerror=", StringComparison.OrdinalIgnoreCase)
+            .Replace("onclick=", "data-onclick=", StringComparison.OrdinalIgnoreCase);
+
+        return sanitized;
+    }
+
+    private void LoadTemplate(string templateName)
+    {
+        htmlContent = templateName switch
+        {
+            "basic" => @"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>My Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        header { background: #007bff; color: white; padding: 20px; border-radius: 8px; }
+        main { margin: 20px 0; }
+        footer { text-align: center; color: #666; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <header><h1>My Website</h1></header>
+    <main>
+        <h2>Welcome</h2>
+        <p>This is a basic HTML template.</p>
+    </main>
+    <footer><p>&copy; 2024 My Website</p></footer>
+</body>
+</html>",
+
+            "form" => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial; max-width: 500px; margin: 50px auto; padding: 20px; }
+        form { background: #f9f9f9; padding: 30px; border-radius: 8px; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 12px 30px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <form>
+        <h2>Contact Form</h2>
+        <label>Name:</label>
+        <input type=""text"" placeholder=""Your name"" required>
+        
+        <label>Email:</label>
+        <input type=""email"" placeholder=""your@email.com"" required>
+        
+        <label>Message:</label>
+        <textarea rows=""4"" placeholder=""Your message...""></textarea>
+        
+        <button type=""submit"">Send Message</button>
+    </form>
+</body>
+</html>",
+
+            "table" => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        th { background: #007bff; color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h2>Data Table</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>John Doe</td>
+                <td>john@example.com</td>
+                <td>Active</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Jane Smith</td>
+                <td>jane@example.com</td>
+                <td>Active</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Bob Johnson</td>
+                <td>bob@example.com</td>
+                <td>Inactive</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>",
+
+            "card" => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+                max-width: 400px; margin: 20px auto; overflow: hidden; }
+        .card-header { background: #007bff; color: white; padding: 20px; }
+        .card-body { padding: 20px; }
+        .card-footer { padding: 15px 20px; background: #f9f9f9; border-top: 1px solid #eee; }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class=""card"">
+        <div class=""card-header"">
+            <h2 style=""margin:0"">Card Title</h2>
+        </div>
+        <div class=""card-body"">
+            <p>This is a card component with header, body, and footer sections.</p>
+            <p>You can customize this template for your needs.</p>
+        </div>
+        <div class=""card-footer"">
+            <button class=""btn"">Action Button</button>
+        </div>
+    </div>
+</body>
+</html>",
+
+            "grid" => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .grid-item { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .grid-item h3 { margin-top: 0; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <h1>Grid Layout</h1>
+        <div class=""grid"">
+            <div class=""grid-item"">
+                <h3>Item 1</h3>
+                <p>Content for item 1</p>
+            </div>
+            <div class=""grid-item"">
+                <h3>Item 2</h3>
+                <p>Content for item 2</p>
+            </div>
+            <div class=""grid-item"">
+                <h3>Item 3</h3>
+                <p>Content for item 3</p>
+            </div>
+            <div class=""grid-item"">
+                <h3>Item 4</h3>
+                <p>Content for item 4</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>",
+
+            "navbar" => @"<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; }
+        nav { background: #333; color: white; padding: 0 20px; }
+        nav ul { list-style: none; display: flex; }
+        nav li { padding: 15px 20px; }
+        nav a { color: white; text-decoration: none; }
+        nav a:hover { opacity: 0.8; }
+        .content { padding: 20px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href=""#"">Home</a></li>
+            <li><a href=""#"">About</a></li>
+            <li><a href=""#"">Services</a></li>
+            <li><a href=""#"">Contact</a></li>
+        </ul>
+    </nav>
+    <div class=""content"">
+        <h1>Welcome</h1>
+        <p>This is a simple navigation bar template.</p>
+    </div>
+</body>
+</html>",
+
+            _ => htmlContent
+        };
+
+        RefreshPreview();
+    }
+}

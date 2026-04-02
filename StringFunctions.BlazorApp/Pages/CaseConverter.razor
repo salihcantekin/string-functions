@@ -9,17 +9,17 @@
     <OptionsContent>
         <div class="option-group">
             <span class="option-label">Convert to:</span>
-            <FluentSelect TOption="string" @bind-Value="@caseMode" Style="min-width: 200px;" @bind-Value:after="ProcessCase">
-                <FluentOption Value="upper">UPPERCASE</FluentOption>
-                <FluentOption Value="lower">lowercase</FluentOption>
-                <FluentOption Value="title">Title Case</FluentOption>
-                <FluentOption Value="sentence">Sentence case</FluentOption>
-                <FluentOption Value="camel">camelCase</FluentOption>
-                <FluentOption Value="pascal">PascalCase</FluentOption>
-                <FluentOption Value="snake">snake_case</FluentOption>
-                <FluentOption Value="kebab">kebab-case</FluentOption>
-                <FluentOption Value="constant">CONSTANT_CASE</FluentOption>
-                <FluentOption Value="toggle">tOGGLE cASE</FluentOption>
+            <FluentSelect TOption="string" @bind-Value="@caseMode" Style="min-width: 240px;" @bind-Value:after="ProcessCase">
+                <FluentOption Value="upper">🔠 UPPERCASE</FluentOption>
+                <FluentOption Value="lower">🔡 lowercase</FluentOption>
+                <FluentOption Value="title">📝 Title Case</FluentOption>
+                <FluentOption Value="sentence">📝 Sentence case</FluentOption>
+                <FluentOption Value="camel">💻 camelCase</FluentOption>
+                <FluentOption Value="pascal">💻 PascalCase</FluentOption>
+                <FluentOption Value="snake">🐍 snake_case</FluentOption>
+                <FluentOption Value="kebab">🔗 kebab-case</FluentOption>
+                <FluentOption Value="constant">🔒 CONSTANT_CASE</FluentOption>
+                <FluentOption Value="toggle">🔄 tOGGLE cASE</FluentOption>
             </FluentSelect>
         </div>
     </OptionsContent>

@@ -8,9 +8,9 @@
     <OptionsContent>
         <div class="option-group">
             <span class="option-label">Operation:</span>
-            <FluentSelect TOption="string" @bind-Value="@mode" Style="min-width: 200px;" @bind-Value:after="Process">
-                <FluentOption Value="encode">Encode (Text → URL Encoded)</FluentOption>
-                <FluentOption Value="decode">Decode (URL Encoded → Text)</FluentOption>
+            <FluentSelect TOption="string" @bind-Value="@mode" Style="min-width: 260px;" @bind-Value:after="Process">
+                <FluentOption Value="encode">🔐 Encode (Text → URL Encoded)</FluentOption>
+                <FluentOption Value="decode">🔓 Decode (URL Encoded → Text)</FluentOption>
             </FluentSelect>
         </div>
     </OptionsContent>

@@ -7,8 +7,8 @@
 <ToolPageLayout Title="String Formatter" Description="Test and explore C# string formatting, interpolation, and composite formatting.">
     <ChildContent>
         <div class="formatter-layout">
-            <!-- Numeric Formatting Section -->
-            <CollapsiblePanel Title="Numeric Formatting" @bind-IsExpanded="numericExpanded">
+            <div>
+                <CollapsiblePanel Title="Numeric Formatting" @bind-IsExpanded="numericExpanded">
                 <div class="panel-content">
                     <div class="input-row">
                         <div class="option-group">
@@ -34,10 +34,11 @@
                         }
                     </div>
                 </div>
-            </CollapsiblePanel>
+                </CollapsiblePanel>
+            </div>
 
-            <!-- String Padding Section -->
-            <CollapsiblePanel Title="String Padding & Alignment" @bind-IsExpanded="paddingExpanded">
+            <div style="margin-top: 12px;">
+                <CollapsiblePanel Title="String Padding & Alignment" @bind-IsExpanded="paddingExpanded">
                 <div class="panel-content">
                     <div class="input-row">
                         <div class="option-group">
@@ -61,10 +62,11 @@
                         }
                     </div>
                 </div>
-            </CollapsiblePanel>
+                </CollapsiblePanel>
+            </div>
 
-            <!-- Composite Formatting Section -->
-            <CollapsiblePanel Title="Composite Formatting (String.Format)" @bind-IsExpanded="compositeExpanded">
+            <div style="margin-top: 12px;">
+                <CollapsiblePanel Title="Composite Formatting (String.Format)" @bind-IsExpanded="compositeExpanded">
                 <div class="panel-content">
                     <div class="composite-input">
                         <FluentTextField @bind-Value="@compositeFormat" 
@@ -92,10 +94,11 @@
                         <CopyButton Text="@compositeResult" />
                     </div>
                 </div>
-            </CollapsiblePanel>
+                </CollapsiblePanel>
+            </div>
 
-            <!-- Escape Sequences Section -->
-            <CollapsiblePanel Title="Escape Sequences" @bind-IsExpanded="escapeExpanded">
+            <div style="margin-top: 12px;">
+                <CollapsiblePanel Title="Escape Sequences" @bind-IsExpanded="escapeExpanded">
                 <div class="panel-content">
                     <div class="escape-grid">
                         @foreach (var esc in escapeSequences)
@@ -108,10 +111,11 @@
                         }
                     </div>
                 </div>
-            </CollapsiblePanel>
+                </CollapsiblePanel>
+            </div>
 
-            <!-- String Methods Section -->
-            <CollapsiblePanel Title="Common String Methods" @bind-IsExpanded="methodsExpanded">
+            <div style="margin-top: 12px;">
+                <CollapsiblePanel Title="Common String Methods" @bind-IsExpanded="methodsExpanded">
                 <div class="panel-content">
                     <div class="input-row">
                         <div class="option-group">
@@ -130,10 +134,11 @@
                         }
                     </div>
                 </div>
-            </CollapsiblePanel>
-        </div>
-    </ChildContent>
-</ToolPageLayout>
+                            </CollapsiblePanel>
+                        </div>
+                    </div>
+                </ChildContent>
+            </ToolPageLayout>
 
 <style>
     .formatter-layout {

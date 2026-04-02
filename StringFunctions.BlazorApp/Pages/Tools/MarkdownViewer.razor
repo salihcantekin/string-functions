@@ -1,0 +1,861 @@
+@page "/markdown-viewer"
+
+<SeoHead Route="markdown-viewer" />
+
+<PageTitle>Markdown Viewer</PageTitle>
+
+<ToolPageLayout Title="Markdown Viewer" Description="Write and preview Markdown in real-time with syntax highlighting.">
+    <OptionsContent>
+        <div class="option-group">
+            <span class="option-label">Mode:</span>
+            <FluentSelect TOption="string" @bind-Value="@viewMode" Style="min-width: 160px;" @bind-Value:after="StateHasChanged">
+                <FluentOption Value="preview">👁️ Preview</FluentOption>
+                <FluentOption Value="split">📄 Split View</FluentOption>
+                <FluentOption Value="markdown">📝 Markdown Only</FluentOption>
+            </FluentSelect>
+        </div>
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@autoRefresh" Label="Auto refresh" />
+        <div class="option-divider"></div>
+        <FluentCheckbox @bind-Value="@showLineNumbers" Label="Line numbers" @bind-Value:after="StateHasChanged" />
+    </OptionsContent>
+    <ChildContent>
+        <div class="stats-bar">
+            <span>@markdownContent.Length chars</span>
+            <span>@(markdownContent.Split('\n').Length) lines</span>
+            <span>~@((int)(markdownContent.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length / 200.0)) min read</span>
+        </div>
+
+        <div class="markdown-viewer-layout @viewMode">
+            @if (viewMode == "markdown" || viewMode == "split")
+            {
+                <div class="markdown-editor">
+                    <div class="panel-header">
+                        <span class="panel-title">📝 Markdown</span>
+                        <div class="panel-actions">
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.ArrowExpand())"
+                                         @onclick="OpenMarkdownFullscreen"
+                                         title="Open in fullscreen">
+                            </FluentButton>
+                            <CopyButton Text="@markdownContent" />
+                        </div>
+                    </div>
+                    <FluentTextArea @bind-Value="@markdownContent"
+                                   Placeholder="# Enter Markdown here...&#10;&#10;Start typing to see live preview!"
+                                   Resize="TextAreaResize.Vertical"
+                                   @oninput="OnMarkdownChanged"
+                                   Class="@($"code-editor {(showLineNumbers ? "show-line-numbers" : "")}")"
+                                   Style="font-family: 'Consolas', 'Courier New', monospace;" />
+                </div>
+            }
+
+            @if (viewMode == "preview" || viewMode == "split")
+            {
+                <div class="markdown-preview">
+                    <div class="panel-header">
+                        <span class="panel-title">👁️ Preview</span>
+                        <div class="panel-actions">
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.ArrowExpand())"
+                                         @onclick="OpenPreviewFullscreen"
+                                         title="Open in fullscreen">
+                            </FluentButton>
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.Document())"
+                                         @onclick="ExportMarkdownFile"
+                                         title="Save as Markdown">
+                            </FluentButton>
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.DocumentArrowDown())"
+                                         @onclick="ExportHtmlFile"
+                                         title="Save as HTML">
+                            </FluentButton>
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                         IconStart="@(new Icons.Regular.Size20.Copy())"
+                                         @onclick="CopyHtml"
+                                         title="Copy HTML to clipboard">
+                            </FluentButton>
+                        </div>
+                    </div>
+                    <div class="preview-content markdown-body">
+                        @((MarkupString)GetRenderedMarkdown())
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div style="margin-top: 20px;">
+            <CollapsiblePanel Title="Markdown Cheat Sheet" @bind-IsExpanded="@cheatSheetExpanded">
+            <div class="cheatsheet">
+                <div class="cheat-section">
+                    <h4>Headers</h4>
+                    <code># H1<br/## H2<br/>### H3</code>
+                </div>
+                <div class="cheat-section">
+                    <h4>Emphasis</h4>
+                    <code>*italic* or _italic_<br/>**bold** or __bold__<br/>~~strikethrough~~</code>
+                </div>
+                <div class="cheat-section">
+                    <h4>Lists</h4>
+                    <code>- Item 1<br/>- Item 2<br/>  - Nested<br/><br/>1. First<br/>2. Second</code>
+                </div>
+                <div class="cheat-section">
+                    <h4>Links & Images</h4>
+                    <code>[Link text](url)<br/>![Alt text](image.jpg)</code>
+                </div>
+                <div class="cheat-section">
+                    <h4>Code</h4>
+                    <code>`inline code`<br/><br/>```language<br/>code block<br/>```</code>
+                </div>
+                <div class="cheat-section">
+                    <h4>Blockquotes</h4>
+                    <code>&gt; Quote<br/>&gt; Continues</code>
+                </div>
+                <div class="cheat-section">
+                    <h4>Tables</h4>
+                    <code>| Col1 | Col2 |<br/>|------|------|<br/>| A    | B    |</code>
+                </div>
+                <div class="cheat-section">
+                    <h4>Horizontal Rule</h4>
+                    <code>---<br/>***<br/>___</code>
+                </div>
+            </div>
+        </CollapsiblePanel>
+
+        <div style="margin-top: 12px;">
+            <CollapsiblePanel Title="Markdown Templates" @bind-IsExpanded="@templatesExpanded">
+            <div class="templates-grid">
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("readme"))">
+                    📄 README
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("blog"))">
+                    📝 Blog Post
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("docs"))">
+                    📚 Documentation
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("notes"))">
+                    📓 Meeting Notes
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("todo"))">
+                    ✅ Todo List
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => LoadTemplate("changelog"))">
+                    📋 Changelog
+                </FluentButton>
+            </div>
+        </CollapsiblePanel>
+        </div>
+        </div>
+    </ChildContent>
+</ToolPageLayout>
+
+<OutputViewer @bind-IsOpen="@isMarkdownViewerOpen"
+             Title="Markdown Source"
+             Content="@markdownContent"
+             ContentChanged="@((value) => { markdownContent = value; StateHasChanged(); })"
+             IsEditable="true"
+             Footer="@($"{markdownContent.Length} chars, {markdownContent.Split('\n').Length} lines, ~{(int)(markdownContent.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length / 200.0)} min read")" />
+
+<OutputViewer @bind-IsOpen="@isPreviewViewerOpen"
+             Title="Markdown Preview (Rendered)"
+             Footer="Rendered HTML output"
+             ShowCopyButton="false">
+    <div class="markdown-body" style="padding: 20px; height: 100%; overflow-y: auto; background: white;">
+        @((MarkupString)GetRenderedMarkdown())
+    </div>
+</OutputViewer>
+
+<style>
+    .stats-bar {
+        display: flex;
+        gap: 16px;
+        padding: 8px 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .markdown-viewer-layout {
+        display: grid;
+        gap: 16px;
+        min-height: 600px;
+        margin-bottom: 20px;
+    }
+
+    .markdown-viewer-layout.preview {
+        grid-template-columns: 1fr;
+    }
+
+    .markdown-viewer-layout.split {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .markdown-viewer-layout.markdown {
+        grid-template-columns: 1fr;
+    }
+
+    .markdown-editor,
+    .markdown-preview {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: 600px;
+        max-height: 600px;
+    }
+
+    .markdown-editor .code-editor {
+        flex: 1;
+        height: 100%;
+    }
+
+    .markdown-editor .code-editor::part(control) {
+        height: 100% !important;
+        max-height: 100%;
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .panel-title {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .preview-content {
+        flex: 1;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        overflow-y: auto;
+        background: white;
+        height: 100%;
+        max-height: 100%;
+    }
+
+    .markdown-body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+    }
+
+    .markdown-body h1 { font-size: 2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; margin-top: 0; }
+    .markdown-body h2 { font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    .markdown-body h3 { font-size: 1.25em; }
+    .markdown-body h4 { font-size: 1em; }
+    .markdown-body h5 { font-size: 0.875em; }
+    .markdown-body h6 { font-size: 0.85em; color: #6a737d; }
+    
+    .markdown-body p { margin-top: 0; margin-bottom: 16px; }
+    
+    .markdown-body code {
+        padding: 2px 6px;
+        background: #f6f8fa;
+        border-radius: 3px;
+        font-family: 'Consolas', monospace;
+        font-size: 85%;
+    }
+    
+    .markdown-body pre {
+        padding: 16px;
+        background: #f6f8fa;
+        border-radius: 6px;
+        overflow: auto;
+        line-height: 1.45;
+    }
+    
+    .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+    }
+    
+    .markdown-body blockquote {
+        padding: 0 1em;
+        color: #6a737d;
+        border-left: 4px solid #dfe2e5;
+        margin: 0 0 16px 0;
+    }
+    
+    .markdown-body ul, .markdown-body ol {
+        padding-left: 2em;
+        margin-bottom: 16px;
+    }
+    
+    .markdown-body table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 16px;
+    }
+    
+    .markdown-body table th,
+    .markdown-body table td {
+        padding: 6px 13px;
+        border: 1px solid #dfe2e5;
+    }
+    
+    .markdown-body table th {
+        background: #f6f8fa;
+        font-weight: 600;
+    }
+    
+    .markdown-body hr {
+        height: 2px;
+        padding: 0;
+        margin: 24px 0;
+        background-color: #e1e4e8;
+        border: 0;
+    }
+    
+    .markdown-body a {
+        color: #0366d6;
+        text-decoration: none;
+    }
+    
+    .markdown-body a:hover {
+        text-decoration: underline;
+    }
+
+    .cheatsheet {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+    }
+
+    .cheat-section {
+        padding: 12px;
+        background: var(--bg-secondary);
+        border-radius: 4px;
+    }
+
+    .cheat-section h4 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+
+    .cheat-section code {
+        display: block;
+        font-size: 0.85em;
+        line-height: 1.6;
+        color: var(--text-secondary);
+    }
+
+    .templates-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    @@media (max-width: 768px) {
+        .markdown-viewer-layout.split {
+            grid-template-columns: 1fr;
+        }
+
+        .cheatsheet {
+            grid-template-columns: 1fr;
+        }
+
+        .templates-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    private string markdownContent = @"# Welcome to Markdown Viewer! 👋
+
+## Features
+- **Real-time preview** as you type
+- Syntax highlighting for code blocks
+- Support for tables, lists, and more
+- Export to HTML
+
+## Example
+
+Here's some *italic* and **bold** text.
+
+### Code Example
+```csharp
+public class Example 
+{
+    public string Message { get; set; } = ""Hello World!"";
+}
+```
+
+### Task List
+- [x] Learn Markdown
+- [ ] Build something awesome
+- [ ] Share with others
+
+> This is a blockquote
+
+---
+
+**Start editing** to see your changes!";
+
+    private string viewMode = "split";
+    private bool autoRefresh = true;
+    private bool showLineNumbers = false;
+    private bool cheatSheetExpanded = false;
+    private bool templatesExpanded = false;
+    private bool isMarkdownViewerOpen = false;
+    private bool isPreviewViewerOpen = false;
+
+    private void OnMarkdownChanged(ChangeEventArgs e)
+    {
+        markdownContent = e.Value?.ToString() ?? string.Empty;
+        if (autoRefresh)
+        {
+            StateHasChanged();
+        }
+    }
+
+    private string GetRenderedMarkdown()
+    {
+        if (string.IsNullOrWhiteSpace(markdownContent))
+            return "<p style='color:#999;'>Enter Markdown to preview...</p>";
+
+        return ConvertMarkdownToHtml(markdownContent);
+    }
+
+    private Task ExportMarkdownFile() => ExportMarkdown("md");
+    private Task ExportHtmlFile() => ExportMarkdown("html");
+
+    private string ConvertMarkdownToHtml(string markdown)
+    {
+        var html = markdown;
+
+        // Headers
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^######\s+(.+)$", "<h6>$1</h6>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^#####\s+(.+)$", "<h5>$1</h5>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^####\s+(.+)$", "<h4>$1</h4>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^###\s+(.+)$", "<h3>$1</h3>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^##\s+(.+)$", "<h2>$1</h2>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^#\s+(.+)$", "<h1>$1</h1>", System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        // Code blocks
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"```(\w+)?\n([\s\S]*?)```", "<pre><code>$2</code></pre>");
+
+        // Bold
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"__(.+?)__", "<strong>$1</strong>");
+
+        // Italic
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"\*(.+?)\*", "<em>$1</em>");
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"_(.+?)_", "<em>$1</em>");
+
+        // Strikethrough
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"~~(.+?)~~", "<del>$1</del>");
+
+        // Inline code
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"`(.+?)`", "<code>$1</code>");
+
+        // Links
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"\[([^\]]+)\]\(([^\)]+)\)", "<a href='$2'>$1</a>");
+
+        // Images
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"!\[([^\]]*)\]\(([^\)]+)\)", "<img src='$2' alt='$1' />");
+
+        // Blockquotes
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^&gt;\s+(.+)$", "<blockquote>$1</blockquote>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^>\s+(.+)$", "<blockquote>$1</blockquote>", System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        // Horizontal rules
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^---$", "<hr/>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^\*\*\*$", "<hr/>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^___$", "<hr/>", System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        // Unordered lists
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"^\s*[-*+]\s+(.+)$", "<li>$1</li>", System.Text.RegularExpressions.RegexOptions.Multiline);
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"(<li>.*?</li>)", "<ul>$1</ul>");
+
+        // Task lists
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"<li>\s*\[\s*x\s*\]\s+(.+)</li>", "<li><input type='checkbox' checked disabled> $1</li>");
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"<li>\s*\[\s*\]\s+(.+)</li>", "<li><input type='checkbox' disabled> $1</li>");
+
+        // Paragraphs
+        var lines = html.Split('\n');
+        var result = new System.Text.StringBuilder();
+        var inParagraph = false;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+            {
+                if (inParagraph)
+                {
+                    result.Append("</p>");
+                    inParagraph = false;
+                }
+                continue;
+            }
+
+            if (trimmed.StartsWith("<h") || trimmed.StartsWith("<ul") || trimmed.StartsWith("<pre") || 
+                trimmed.StartsWith("<hr") || trimmed.StartsWith("<blockquote"))
+            {
+                if (inParagraph)
+                {
+                    result.Append("</p>");
+                    inParagraph = false;
+                }
+                result.AppendLine(line);
+            }
+            else if (!trimmed.StartsWith("<li>"))
+            {
+                if (!inParagraph)
+                {
+                    result.Append("<p>");
+                    inParagraph = true;
+                }
+                result.Append(line);
+            }
+            else
+            {
+                result.AppendLine(line);
+            }
+        }
+
+        if (inParagraph)
+        {
+            result.Append("</p>");
+        }
+
+        return result.ToString();
+    }
+
+    private async Task CopyHtml()
+    {
+        // Copy HTML to clipboard
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", GetRenderedMarkdown());
+    }
+
+    private void OpenMarkdownFullscreen()
+    {
+        isMarkdownViewerOpen = true;
+    }
+
+    private void OpenPreviewFullscreen()
+    {
+        isPreviewViewerOpen = true;
+    }
+
+    private async Task ExportMarkdown(string format)
+    {
+        try
+        {
+            string content;
+            string fileName;
+            string mimeType;
+
+            if (format == "md")
+            {
+                content = markdownContent;
+                fileName = "document.md";
+                mimeType = "text/markdown";
+            }
+            else // html
+            {
+                content = GetRenderedHtml();
+                fileName = "document.html";
+                mimeType = "text/html";
+            }
+
+            var escapedContent = content.Replace("\\", "\\\\").Replace("'", "\\'").Replace("\n", "\\n").Replace("\r", "");
+
+            await JSRuntime.InvokeVoidAsync("eval", $@"
+                const blob = new Blob(['{escapedContent}'], {{ type: '{mimeType}' }});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = '{fileName}';
+                link.click();
+                URL.revokeObjectURL(url);
+            ");
+        }
+        catch (Exception ex)
+        {
+            // Error handling - could show a message
+            Console.WriteLine($"Export failed: {ex.Message}");
+        }
+    }
+
+    private string GetRenderedHtml()
+    {
+        var fullHtml = $@"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Markdown Document</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+        h1 {{ font-size: 2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }}
+        h2 {{ font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }}
+        code {{
+            padding: 2px 6px;
+            background: #f6f8fa;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+        }}
+        pre {{
+            padding: 16px;
+            background: #f6f8fa;
+            border-radius: 6px;
+            overflow: auto;
+        }}
+        blockquote {{
+            padding: 0 1em;
+            color: #6a737d;
+            border-left: 4px solid #dfe2e5;
+        }}
+        table {{
+            border-collapse: collapse;
+            width: 100%;
+        }}
+        table th, table td {{
+            padding: 6px 13px;
+            border: 1px solid #dfe2e5;
+        }}
+        table th {{
+            background: #f6f8fa;
+            font-weight: 600;
+        }}
+    </style>
+</head>
+<body>
+    {ConvertMarkdownToHtml(markdownContent)}
+</body>
+</html>";
+        return fullHtml;
+    }
+
+    private void LoadTemplate(string templateName)
+    {
+        markdownContent = templateName switch
+        {
+            "readme" => @"# Project Name
+
+## Description
+A brief description of what this project does and who it's for.
+
+## Features
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+```bash
+npm install project-name
+```
+
+## Usage
+```javascript
+import { Something } from 'project-name';
+
+const example = new Something();
+```
+
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first.
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)",
+
+            "blog" => @"# Blog Post Title
+
+**Author:** Your Name  
+**Date:** " + DateTime.Now.ToString("MMMM dd, yyyy") + @"  
+**Tags:** #tag1 #tag2
+
+---
+
+## Introduction
+
+Start with an engaging introduction that hooks the reader...
+
+## Main Content
+
+### Section 1
+Your first main point with supporting details.
+
+### Section 2
+Your second main point with examples.
+
+## Conclusion
+
+Wrap up with key takeaways and a call to action.
+
+---
+
+*What are your thoughts? Share in the comments below!*",
+
+            "docs" => @"# API Documentation
+
+## Overview
+Brief overview of the API and its purpose.
+
+## Authentication
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Endpoints
+
+### GET /api/users
+Retrieves a list of users.
+
+**Parameters:**
+- `page` (integer): Page number
+- `limit` (integer): Items per page
+
+**Response:**
+```json
+{
+  ""users"": [],
+  ""total"": 0
+}
+```
+
+### POST /api/users
+Creates a new user.
+
+**Request Body:**
+```json
+{
+  ""name"": ""John Doe"",
+  ""email"": ""john@example.com""
+}
+```
+
+## Error Codes
+| Code | Description |
+|------|-------------|
+| 400  | Bad Request |
+| 401  | Unauthorized |
+| 404  | Not Found |
+| 500  | Server Error |",
+
+            "notes" => @"# Meeting Notes - " + DateTime.Now.ToString("yyyy-MM-dd") + @"
+
+## Attendees
+- Person 1
+- Person 2
+- Person 3
+
+## Agenda
+1. Topic 1
+2. Topic 2
+3. Topic 3
+
+## Discussion
+
+### Topic 1
+- Key point 1
+- Key point 2
+- Decision: ...
+
+### Topic 2
+- Key point 1
+- Key point 2
+- Decision: ...
+
+## Action Items
+- [ ] Task 1 - Assigned to: Person
+- [ ] Task 2 - Assigned to: Person
+- [ ] Task 3 - Assigned to: Person
+
+## Next Meeting
+**Date:** TBD  
+**Topics:** TBD",
+
+            "todo" => @"# Todo List
+
+## Today
+- [ ] High priority task
+- [ ] Important meeting at 2 PM
+- [ ] Review pull requests
+
+## This Week
+- [ ] Complete feature X
+- [ ] Write documentation
+- [ ] Team standup (Monday/Wednesday/Friday)
+
+## Backlog
+- [ ] Refactor old code
+- [ ] Update dependencies
+- [ ] Research new tools
+
+## Completed ✅
+- [x] Yesterday's task
+- [x] Last week's project
+- [x] Old feature",
+
+            "changelog" => @"# Changelog
+All notable changes to this project will be documented in this file.
+
+## [Unreleased]
+### Added
+- New feature description
+
+### Changed
+- Change description
+
+### Fixed
+- Bug fix description
+
+## [1.0.0] - " + DateTime.Now.ToString("yyyy-MM-dd") + @"
+### Added
+- Initial release
+- Feature 1
+- Feature 2
+- Feature 3
+
+### Changed
+- Improved performance
+
+### Fixed
+- Fixed critical bug
+
+## [0.9.0] - 2024-01-15
+### Added
+- Beta release
+- Core functionality
+
+---
+
+**Format:** Based on [Keep a Changelog](https://keepachangelog.com/)  
+**Versioning:** [Semantic Versioning](https://semver.org/)",
+
+            _ => markdownContent
+        };
+
+        StateHasChanged();
+    }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+}

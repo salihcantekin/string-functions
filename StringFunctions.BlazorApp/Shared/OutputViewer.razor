@@ -13,7 +13,10 @@
                                  @onclick="ToggleFullscreen"
                                  title="@(isFullscreen ? "Exit fullscreen" : "Enter fullscreen")">
                     </FluentButton>
-                    <CopyButton Text="@Content" />
+                    @if (ShowCopyButton && !string.IsNullOrEmpty(Content))
+                    {
+                        <CopyButton Text="@Content" />
+                    }
                     <FluentButton Appearance="Appearance.Lightweight" 
                                  IconStart="@(new Icons.Regular.Size20.Dismiss())"
                                  @onclick="Close"
@@ -22,10 +25,18 @@
                 </div>
             </div>
             <div class="output-viewer-content">
-                <FluentTextArea Value="@Content" 
-                               ReadOnly="true"
-                               Resize="TextAreaResize.Vertical"
-                               Class="viewer-textarea" />
+                @if (ChildContent != null)
+                {
+                    @ChildContent
+                }
+                else
+                {
+                    <FluentTextArea Value="@Content" 
+                                   ValueChanged="@OnContentChanged"
+                                   ReadOnly="@(!IsEditable)"
+                                   Resize="TextAreaResize.Vertical"
+                                   Class="viewer-textarea" />
+                }
             </div>
             @if (!string.IsNullOrEmpty(Footer))
             {
@@ -176,6 +187,18 @@
     public string Footer { get; set; } = string.Empty;
 
     [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool ShowCopyButton { get; set; } = true;
+
+    [Parameter]
+    public bool IsEditable { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<string> ContentChanged { get; set; }
+
+    [Parameter]
     public EventCallback OnClose { get; set; }
 
     private bool isFullscreen = false;
@@ -191,6 +214,12 @@
     private void ToggleFullscreen()
     {
         isFullscreen = !isFullscreen;
+    }
+
+    private async Task OnContentChanged(string value)
+    {
+        Content = value;
+        await ContentChanged.InvokeAsync(value);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
